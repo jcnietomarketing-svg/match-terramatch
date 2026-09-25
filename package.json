@@ -25,4 +25,4 @@
     "globals": "^17.4.0",
     "vite": "^8.0.0"
   }
-}
+}npm install @supabase/supabase-js
