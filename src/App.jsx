@@ -40,18 +40,26 @@ function App() {
     }
   }
 
+  // CORRECCIÓN AQUÍ: Ahora busca por EMAIL en lugar de por ID para evitar desfases
   async function loadProfile(userId) {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email;
+      
+      if (!userEmail) {
+        setProfile({ nombre: 'Usuario', apellido: '' });
+        return;
+      }
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('email', userEmail)
         .single();
       
       if (data) {
         setProfile(data);
       } else {
-        // Fallback por si acaso
         setProfile({ nombre: 'Usuario', apellido: '' });
       }
     } catch (error) {
@@ -85,7 +93,6 @@ function App() {
     );
   }
 
-  // Nombre seguro para usar en toda la app
   const safeName = profile?.nombre || 'Usuario';
 
   return (
@@ -295,7 +302,8 @@ function LoginView({ supabase, onSuccess, showToast }) {
       });
       if (error) throw error;
 
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+      // CORRECCIÓN AQUÍ TAMBIÉN: Buscar por email al iniciar sesión
+      const { data: profile } = await supabase.from('profiles').select('*').eq('email', form.email).single();
       showToast(`¡Bienvenido, ${profile?.nombre || 'Usuario'}!`);
       onSuccess(data.user, profile || { nombre: 'Usuario' });
     } catch (error) {
