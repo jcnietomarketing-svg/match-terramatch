@@ -24,22 +24,17 @@ function App() {
         setUser(session.user);
         await loadProfile(session.user.email);
         setView('dashboard');
-      } else {
-        setView('landing');
-      }
+      } else { setView('landing'); }
     } catch (error) {
       console.error('Error session:', error);
       setView('landing');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   async function loadProfile(userEmail) {
     try {
-      const { data, error } = await supabase.from('profiles').select('*').eq('email', userEmail).single();
-      if (data) setProfile(data);
-      else setProfile({ nombre: 'Usuario', apellido: '', email: userEmail });
+      const { data } = await supabase.from('profiles').select('*').eq('email', userEmail).single();
+      setProfile(data || { nombre: 'Usuario', apellido: '', email: userEmail });
     } catch (error) {
       setProfile({ nombre: 'Usuario', apellido: '', email: userEmail });
     }
@@ -52,9 +47,7 @@ function App() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    setUser(null);
-    setProfile(null);
-    setView('landing');
+    setUser(null); setProfile(null); setView('landing');
     showToast('Sesión cerrada');
   }
 
@@ -113,7 +106,7 @@ function Navbar({ nombre, isLoggedIn, isAdmin, onNavigate, onLogout }) {
 }
 
 // ==========================================
-// LANDING VIEW (Con los 2 caminos claros)
+// LANDING VIEW
 // ==========================================
 function LandingView({ onNavigate }) {
   return (
@@ -122,7 +115,6 @@ function LandingView({ onNavigate }) {
       <p style={{ fontSize: '1.2rem', color: '#4A5568', marginBottom: '48px', maxWidth: '600px' }}>Estandarizamos los requerimientos inmobiliarios para conectar propietarios y empresarios sin intermediarios innecesarios.</p>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', maxWidth: '800px', width: '100%' }}>
-        {/* Camino 1: Tengo Locales */}
         <div onClick={() => onNavigate('oferta')} style={{ background: 'white', padding: '40px 32px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.3s' }}
              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#E74C3C'; e.currentTarget.style.transform = 'translateY(-5px)'; }}
              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}>
@@ -132,7 +124,6 @@ function LandingView({ onNavigate }) {
           <button style={{ marginTop: '24px', padding: '12px 24px', background: '#1a202c', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>Continuar →</button>
         </div>
 
-        {/* Camino 2: Busco Locales */}
         <div onClick={() => onNavigate('iub')} style={{ background: 'white', padding: '40px 32px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.3s' }}
              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#E74C3C'; e.currentTarget.style.transform = 'translateY(-5px)'; }}
              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}>
@@ -147,16 +138,29 @@ function LandingView({ onNavigate }) {
 }
 
 // ==========================================
-// OFERTA VIEW (Tengo Locales - Nuevo Flujo)
+// OFERTA VIEW (COMPLETA Y DETALLADA)
 // ==========================================
 function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
   const [step, setStep] = useState(1);
   const [rol, setRol] = useState('');
   const [form, setForm] = useState({ 
     tipo_inmueble: 'local', operacion: 'arrendar', ciudad: 'Bogotá', zona: 'Norte', 
-    area: 100, precio: 5000000, titulo: '', descripcion: '' 
+    direccion: '', area: 100, area_util: 80, banos: 1, parqueaderos: 0,
+    precio: 5000000, admin_incluido: false, descripcion: '',
+    contacto_nombre: profile?.nombre + ' ' + profile?.apellido || '',
+    contacto_celular: profile?.celular || '',
+    caracteristicas: []
   });
   const [loading, setLoading] = useState(false);
+
+  const toggleCaracteristica = (car) => {
+    setForm(prev => ({
+      ...prev,
+      caracteristicas: prev.caracteristicas.includes(car) 
+        ? prev.caracteristicas.filter(c => c !== car)
+        : [...prev.caracteristicas, car]
+    }));
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -169,11 +173,19 @@ function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
         operacion: form.operacion,
         ciudad: form.ciudad,
         zona: form.zona,
+        direccion: form.direccion,
         area: form.area,
+        area_util: form.area_util,
+        banos: form.banos,
+        parqueaderos: form.parqueaderos,
         precio: form.precio,
-        titulo: form.titulo || `${form.tipo_inmueble} en ${form.zona}, ${form.ciudad}`,
-        caracteristicas: JSON.stringify({ rol_publicante: rol }),
-        disponible: true
+        admin_incluido: form.admin_incluido,
+        descripcion: form.descripcion,
+        contacto_nombre: form.contacto_nombre,
+        contacto_celular: form.contacto_celular,
+        caracteristicas: JSON.stringify(form.caracteristicas),
+        disponible: true,
+        titulo: `${form.tipo_inmueble} en ${form.zona}, ${form.ciudad}`
       }]);
 
       if (error) throw error;
@@ -195,7 +207,6 @@ function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
         <div style={{ background: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', textAlign: 'center' }}>
           <h2 style={{ marginBottom: '8px' }}>¿Cuál es tu rol?</h2>
           <p style={{ color: '#7F8C8D', marginBottom: '32px' }}>Selecciona cómo deseas publicar tu inmueble</p>
-          
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {['Propietario directo', 'Agencia Inmobiliaria', 'Constructora / Desarrollador'].map((r) => (
               <button key={r} onClick={() => { setRol(r); setStep(2); }} 
@@ -213,14 +224,15 @@ function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
   }
 
   return (
-    <div style={{ padding: '40px 24px', maxWidth: '720px', margin: '0 auto' }}>
+    <div style={{ padding: '40px 24px', maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ background: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h2 style={{ margin: 0 }}>Publicar Inmueble</h2>
-          <span style={{ background: '#E74C3C', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600 }}>{rol}</span>
+          <span style={{ background: '#E74C3C', color: 'white', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600 }}>{rol}</span>
         </div>
         
         <form onSubmit={handleSubmit}>
+          <h4 style={{ marginBottom: '16px', color: '#E74C3C', borderBottom: '1px solid #ECF0F1', paddingBottom: '8px' }}>1. Información Básica</h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div>
               <label style={labelStyle}>Tipo de inmueble</label>
@@ -240,6 +252,7 @@ function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
             </div>
           </div>
 
+          <h4 style={{ marginBottom: '16px', color: '#E74C3C', borderBottom: '1px solid #ECF0F1', paddingBottom: '8px', marginTop: '24px' }}>2. Ubicación y Medidas</h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div>
               <label style={labelStyle}>Ciudad</label>
@@ -259,26 +272,72 @@ function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
               </select>
             </div>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div>
+            <label style={labelStyle}>Dirección exacta</label>
+            <input style={inputStyle} placeholder="Ej: Calle 85 # 15-30" value={form.direccion} onChange={e => setForm({...form, direccion: e.target.value})} required />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px' }}>
             <div>
-              <label style={labelStyle}>Área total (m²)</label>
+              <label style={labelStyle}>Área Total (m²)</label>
               <input type="number" style={inputStyle} value={form.area} onChange={e => setForm({...form, area: parseInt(e.target.value) || 0})} required />
             </div>
+            <div>
+              <label style={labelStyle}>Área Útil (m²)</label>
+              <input type="number" style={inputStyle} value={form.area_util} onChange={e => setForm({...form, area_util: parseInt(e.target.value) || 0})} required />
+            </div>
+            <div>
+              <label style={labelStyle}>Baños</label>
+              <input type="number" style={inputStyle} value={form.banos} onChange={e => setForm({...form, banos: parseInt(e.target.value) || 0})} required />
+            </div>
+            <div>
+              <label style={labelStyle}>Parqueaderos</label>
+              <input type="number" style={inputStyle} value={form.parqueaderos} onChange={e => setForm({...form, parqueaderos: parseInt(e.target.value) || 0})} required />
+            </div>
+          </div>
+
+          <h4 style={{ marginBottom: '16px', color: '#E74C3C', borderBottom: '1px solid #ECF0F1', paddingBottom: '8px', marginTop: '24px' }}>3. Condiciones Económicas</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'end' }}>
             <div>
               <label style={labelStyle}>Precio (COP)</label>
               <input type="number" style={inputStyle} value={form.precio} onChange={e => setForm({...form, precio: parseInt(e.target.value) || 0})} required />
             </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 600 }}>
+                <input type="checkbox" checked={form.admin_incluido} onChange={e => setForm({...form, admin_incluido: e.target.checked})} style={{ transform: 'scale(1.2)' }} />
+                Precio incluye administración
+              </label>
+            </div>
           </div>
 
+          <h4 style={{ marginBottom: '16px', color: '#E74C3C', borderBottom: '1px solid #ECF0F1', paddingBottom: '8px', marginTop: '24px' }}>4. Características Destacadas</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+            {['Esquinero', 'Vía principal', 'Doble altura', 'Seguridad 24h', 'Muelles de carga', 'Aire acondicionado', 'Permiso de suelos'].map(car => (
+              <label key={car} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '8px', background: form.caracteristicas.includes(car) ? '#FFF5F5' : '#f8f9fa', borderRadius: '8px', border: `1px solid ${form.caracteristicas.includes(car) ? '#E74C3C' : '#ECF0F1'}` }}>
+                <input type="checkbox" checked={form.caracteristicas.includes(car)} onChange={() => toggleCaracteristica(car)} />
+                <span style={{ fontSize: '0.9rem' }}>{car}</span>
+              </label>
+            ))}
+          </div>
+
+          <h4 style={{ marginBottom: '16px', color: '#E74C3C', borderBottom: '1px solid #ECF0F1', paddingBottom: '8px', marginTop: '24px' }}>5. Descripción y Contacto</h4>
           <div>
-            <label style={labelStyle}>Título del anuncio (Opcional)</label>
-            <input style={inputStyle} placeholder="Ej: Local esquinero sobre vía principal" value={form.titulo} onChange={e => setForm({...form, titulo: e.target.value})} />
+            <label style={labelStyle}>Descripción del inmueble</label>
+            <textarea style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }} placeholder="Describe las bondades del inmueble, estado, etc." value={form.descripcion} onChange={e => setForm({...form, descripcion: e.target.value})} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>Nombre de contacto</label>
+              <input style={inputStyle} value={form.contacto_nombre} onChange={e => setForm({...form, contacto_nombre: e.target.value})} required />
+            </div>
+            <div>
+              <label style={labelStyle}>Celular / WhatsApp</label>
+              <input style={inputStyle} value={form.contacto_celular} onChange={e => setForm({...form, contacto_celular: e.target.value})} required />
+            </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
+          <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
             <button type="button" onClick={() => setStep(1)} style={{ flex: 1, padding: '14px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Atrás</button>
-            <button type="submit" disabled={loading} style={{ flex: 2, padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+            <button type="submit" disabled={loading} style={{ flex: 2, padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '1.05rem' }}>
               {loading ? 'Publicando...' : 'Publicar Inmueble'}
             </button>
           </div>
@@ -294,21 +353,14 @@ function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
 function LoginView({ supabase, onSuccess, showToast, onNavigate }) {
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
-
   async function handleSubmit(e) {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault(); setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
       if (error) throw error;
       onSuccess(data.user, form.email);
-    } catch (error) {
-      showToast(error.message || 'Credenciales incorrectas', 'error');
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { showToast(error.message || 'Credenciales incorrectas', 'error'); } finally { setLoading(false); }
   }
-
   return (
     <div style={{ padding: '50px', maxWidth: '400px', margin: '40px auto', background: 'white', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
       <h2 style={{ textAlign: 'center', marginBottom: '32px' }}>Iniciar Sesión</h2>
@@ -317,9 +369,7 @@ function LoginView({ supabase, onSuccess, showToast, onNavigate }) {
         <input type="password" placeholder="Contraseña" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required style={{ width: '100%', padding: '12px', marginBottom: '16px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box' }} />
         <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>{loading ? 'Entrando...' : 'Ingresar'}</button>
       </form>
-      <p style={{ textAlign: 'center', marginTop: '20px', color: '#7F8C8D', fontSize: '0.9rem' }}>
-        ¿No tienes cuenta? <button onClick={() => onNavigate('register')} style={{ background: 'none', border: 'none', color: '#E74C3C', cursor: 'pointer', fontWeight: 600, padding: 0 }}>Regístrate aquí</button>
-      </p>
+      <p style={{ textAlign: 'center', marginTop: '20px', color: '#7F8C8D', fontSize: '0.9rem' }}>¿No tienes cuenta? <button onClick={() => onNavigate('register')} style={{ background: 'none', border: 'none', color: '#E74C3C', cursor: 'pointer', fontWeight: 600, padding: 0 }}>Regístrate aquí</button></p>
     </div>
   );
 }
@@ -344,20 +394,14 @@ function RegisterView({ supabase, onSuccess, showToast }) {
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({ email: form.email, password: form.password });
       if (authError) throw authError;
-
-      const { data: profileData, error: profileError } = await supabase.from('profiles').insert([{
+      const { error: profileError } = await supabase.from('profiles').insert([{
         id: authData.user.id, nombre: form.nombre, apellido: form.apellido, email: form.email, celular: form.celular,
         tipo_usuario: form.tipo_usuario, segmento_preferido: form.segmento_preferido,
         acepto_terminos: true, acepto_privacidad: true, autorizo_datos: true, fecha_aceptacion: new Date().toISOString()
-      }]).select().single();
-      
+      }]);
       if (profileError) throw profileError;
       onSuccess(authData.user, form.email);
-    } catch (error) {
-      showToast(error.message || 'Error al crear cuenta', 'error');
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { showToast(error.message || 'Error al crear cuenta', 'error'); } finally { setLoading(false); }
   }
 
   const inputStyle = { width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box', marginBottom: '16px', fontSize: '1rem' };
@@ -373,32 +417,13 @@ function RegisterView({ supabase, onSuccess, showToast }) {
             <div><label style={labelStyle}>Nombres *</label><input style={inputStyle} value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} required /></div>
             <div><label style={labelStyle}>Apellidos *</label><input style={inputStyle} value={form.apellido} onChange={e => setForm({...form, apellido: e.target.value})} required /></div>
           </div>
-          <label style={labelStyle}>Email *</label>
-          <input type="email" style={inputStyle} value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
-          <label style={labelStyle}>Celular *</label>
-          <input style={inputStyle} value={form.celular} onChange={e => setForm({...form, celular: e.target.value})} required />
+          <label style={labelStyle}>Email *</label><input type="email" style={inputStyle} value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+          <label style={labelStyle}>Celular *</label><input style={inputStyle} value={form.celular} onChange={e => setForm({...form, celular: e.target.value})} required />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>Tipo de usuario *</label>
-              <select style={inputStyle} value={form.tipo_usuario} onChange={e => setForm({...form, tipo_usuario: e.target.value})}>
-                <option value="buscador">Buscador de inmuebles</option>
-                <option value="propietario">Propietario / Inmobiliaria</option>
-                <option value="agencia">Agencia inmobiliaria</option>
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Segmento de interés *</label>
-              <select style={inputStyle} value={form.segmento_preferido} onChange={e => setForm({...form, segmento_preferido: e.target.value})}>
-                <option value="locales">Locales Comerciales</option>
-                <option value="vivienda">Vivienda</option>
-                <option value="oficinas">Oficinas</option>
-                <option value="industrial">Industrial</option>
-                <option value="lujo">Private Estates (Lujo)</option>
-              </select>
-            </div>
+            <div><label style={labelStyle}>Tipo de usuario *</label><select style={inputStyle} value={form.tipo_usuario} onChange={e => setForm({...form, tipo_usuario: e.target.value})}><option value="buscador">Buscador</option><option value="propietario">Propietario</option><option value="agencia">Agencia</option></select></div>
+            <div><label style={labelStyle}>Segmento *</label><select style={inputStyle} value={form.segmento_preferido} onChange={e => setForm({...form, segmento_preferido: e.target.value})}><option value="locales">Locales</option><option value="vivienda">Vivienda</option><option value="oficinas">Oficinas</option></select></div>
           </div>
-          <label style={labelStyle}>Contraseña * (mínimo 6 caracteres)</label>
-          <input type="password" style={inputStyle} value={form.password} onChange={e => setForm({...form, password: e.target.value})} required minLength="6" />
+          <label style={labelStyle}>Contraseña * (mínimo 6 caracteres)</label><input type="password" style={inputStyle} value={form.password} onChange={e => setForm({...form, password: e.target.value})} required minLength="6" />
 
           <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', marginBottom: '24px', border: '1px solid #e9ecef' }}>
             <h4 style={{ margin: '0 0 16px 0', color: '#1a202c', fontSize: '1rem' }}>📄 Documentos Legales *</h4>
@@ -415,10 +440,7 @@ function RegisterView({ supabase, onSuccess, showToast }) {
               <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>Autorizo el tratamiento de mis datos (Ley 1581 de 2012) *</span>
             </label>
           </div>
-
-          <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '1rem' }}>
-            {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
-          </button>
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '1rem' }}>{loading ? 'Creando cuenta...' : 'Crear Cuenta'}</button>
         </form>
       </div>
     </div>
@@ -433,33 +455,23 @@ function IUBView({ user, supabase, showToast, onNavigate }) {
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault(); setLoading(true);
     try {
       const prefix = form.operacion === 'comprar' ? 'V' : 'A';
       const codigoIub = `TM-${prefix}-LOC-${form.ciudad.substring(0,3).toUpperCase()}-${form.zona.substring(0,3).toUpperCase()}-${Math.floor(form.area/10)}-${Math.floor(form.presupuesto/1000)}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
-
       const { data: iub, error: iubError } = await supabase.from('iubs').insert([{
         user_id: user.id, codigo_iub: codigoIub, segmento: 'locales', operacion: form.operacion, ciudad: form.ciudad, zona: form.zona, area_min: form.area, presupuesto_max: form.presupuesto, tipo_inmueble: form.tipo_inmueble
       }]).select().single();
-
       if (iubError) throw iubError;
 
       const { data: propiedades } = await supabase.from('propiedades').select('*').eq('segmento', 'locales').eq('operacion', form.operacion).eq('disponible', true).eq('ciudad', form.ciudad);
-
       if (propiedades && propiedades.length > 0) {
         const matches = propiedades.map(prop => ({ iub_id: iub.id, propiedad_id: prop.id, user_id: user.id, score: Math.floor(Math.random() * 30) + 70, estado: 'pendiente' }));
         await supabase.from('matches').insert(matches);
         showToast(`¡IUB creado! Se encontraron ${matches.length} matches.`);
-      } else {
-        showToast('IUB creado, pero no hay propiedades disponibles aún.');
-      }
+      } else { showToast('IUB creado, pero no hay propiedades disponibles aún.'); }
       onNavigate('dashboard');
-    } catch (error) {
-      showToast(error.message || 'Error al crear IUB', 'error');
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { showToast(error.message || 'Error al crear IUB', 'error'); } finally { setLoading(false); }
   }
 
   return (
@@ -469,25 +481,10 @@ function IUBView({ user, supabase, showToast, onNavigate }) {
         <p style={{ textAlign: 'center', color: '#7F8C8D', marginBottom: '32px' }}>Indicador Único de Búsqueda</p>
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Operación</label>
-              <select value={form.operacion} onChange={e => setForm({...form, operacion: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }}>
-                <option value="arrendar">Arrendar</option><option value="comprar">Comprar</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Ciudad</label>
-              <select value={form.ciudad} onChange={e => setForm({...form, ciudad: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }}>
-                <option value="Bogotá">Bogotá</option><option value="Medellín">Medellín</option><option value="Cali">Cali</option>
-              </select>
-            </div>
+            <div><label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Operación</label><select value={form.operacion} onChange={e => setForm({...form, operacion: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }}><option value="arrendar">Arrendar</option><option value="comprar">Comprar</option></select></div>
+            <div><label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Ciudad</label><select value={form.ciudad} onChange={e => setForm({...form, ciudad: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }}><option value="Bogotá">Bogotá</option><option value="Medellín">Medellín</option><option value="Cali">Cali</option></select></div>
           </div>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Zona</label>
-            <select value={form.zona} onChange={e => setForm({...form, zona: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }}>
-              <option value="Norte">Norte</option><option value="Sur">Sur</option><option value="Centro">Centro</option>
-            </select>
-          </div>
+          <div style={{ marginBottom: '16px' }}><label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Zona</label><select value={form.zona} onChange={e => setForm({...form, zona: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }}><option value="Norte">Norte</option><option value="Sur">Sur</option><option value="Centro">Centro</option></select></div>
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span>Área mínima (m²)</span><span style={{ fontWeight: 'bold' }}>{form.area} m²</span></div>
             <input type="range" min="20" max="2000" step="10" value={form.area} onChange={e => setForm({...form, area: parseInt(e.target.value)})} style={{ width: '100%' }} />
@@ -520,10 +517,8 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
       setLoading(true);
       const { data: iubsData } = await supabase.from('iubs').select('*').eq('user_id', user.id).order('creado_en', { ascending: false });
       setIubs(iubsData || []);
-      
       const { data: matchesData } = await supabase.from('matches').select('*, propiedades(*)').eq('user_id', user.id).order('creado_en', { ascending: false });
       setMatches(matchesData || []);
-
       const { data: propsData } = await supabase.from('propiedades').select('*').eq('user_id', user.id).order('creado_en', { ascending: false });
       setMisPropiedades(propsData || []);
     } catch (error) { console.error('Error loading dashboard data:', error); } finally { setLoading(false); }
@@ -552,7 +547,6 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
-        {/* Sección IUBs */}
         <div style={{ background: 'white', padding: '28px', borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3>Tus Búsquedas (IUB)</h3>
@@ -567,7 +561,6 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
           ))}
         </div>
 
-        {/* Sección Mis Propiedades */}
         <div style={{ background: 'white', padding: '28px', borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3>Mis Propiedades</h3>
@@ -580,15 +573,12 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
                   <h4 style={{ margin: '0 0 4px 0', textTransform: 'capitalize' }}>{prop.tipo_inmueble} en {prop.zona}</h4>
                   <p style={{ margin: 0, color: '#7F8C8D', fontSize: '0.9rem' }}>{prop.area} m² · ${prop.precio?.toLocaleString('es-CO')}</p>
                 </div>
-                <span style={{ background: prop.disponible ? '#27ae60' : '#e74c3c', color: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>
-                  {prop.disponible ? 'Disponible' : 'No disponible'}
-                </span>
+                <span style={{ background: prop.disponible ? '#27ae60' : '#e74c3c', color: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>{prop.disponible ? 'Disponible' : 'No disponible'}</span>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Sección Matches */}
         <div style={{ background: 'white', padding: '28px', borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', gridColumn: '1 / -1' }}>
           <h3 style={{ marginBottom: '20px' }}>Matches Recientes</h3>
           {matches.length === 0 ? <p style={{ color: '#7F8C8D', textAlign: 'center', padding: '20px' }}>Configura un IUB para recibir matches.</p> : matches.map(match => (
@@ -616,7 +606,6 @@ function AdminView({ supabase, showToast }) {
   const [tab, setTab] = useState('overview');
 
   useEffect(() => { loadAdminData(); }, []);
-
   async function loadAdminData() {
     try {
       setLoading(true);
@@ -624,16 +613,10 @@ function AdminView({ supabase, showToast }) {
       const { count: iubsCount } = await supabase.from('iubs').select('*', { count: 'exact', head: true });
       const { count: matchesCount } = await supabase.from('matches').select('*', { count: 'exact', head: true });
       const { count: propCount } = await supabase.from('propiedades').select('*', { count: 'exact', head: true });
-
       setStats({ users: usersCount || 0, iubs: iubsCount || 0, matches: matchesCount || 0, properties: propCount || 0 });
       const { data: usersData } = await supabase.from('profiles').select('*').order('creado_en', { ascending: false });
       setUsers(usersData || []);
-    } catch (error) {
-      console.error('Admin load error:', error);
-      showToast('Error cargando datos de admin', 'error');
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { console.error('Admin load error:', error); showToast('Error cargando datos', 'error'); } finally { setLoading(false); }
   }
 
   if (loading) return <div style={{ padding: '50px', textAlign: 'center' }}>Cargando Panel de Administración...</div>;
@@ -644,55 +627,19 @@ function AdminView({ supabase, showToast }) {
         <h2 style={{ color: 'white', marginBottom: '8px' }}>🛡️ Panel de Administrador</h2>
         <p style={{ opacity: 0.8, margin: 0 }}>Gestión global de la plataforma TerraMatch</p>
       </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderLeft: '4px solid #E74C3C' }}>
-          <div style={{ color: '#7F8C8D', fontSize: '0.85rem', marginBottom: '8px' }}>USUARIOS TOTALES</div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#1a202c' }}>{stats.users}</div>
-        </div>
-        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderLeft: '4px solid #3498db' }}>
-          <div style={{ color: '#7F8C8D', fontSize: '0.85rem', marginBottom: '8px' }}>IUBs CREADOS</div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#1a202c' }}>{stats.iubs}</div>
-        </div>
-        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderLeft: '4px solid #27ae60' }}>
-          <div style={{ color: '#7F8C8D', fontSize: '0.85rem', marginBottom: '8px' }}>MATCHES GENERADOS</div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#1a202c' }}>{stats.matches}</div>
-        </div>
-        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderLeft: '4px solid #f39c12' }}>
-          <div style={{ color: '#7F8C8D', fontSize: '0.85rem', marginBottom: '8px' }}>PROPIEDADES ACTIVAS</div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#1a202c' }}>{stats.properties}</div>
-        </div>
+        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderLeft: '4px solid #E74C3C' }}><div style={{ color: '#7F8C8D', fontSize: '0.85rem', marginBottom: '8px' }}>USUARIOS TOTALES</div><div style={{ fontSize: '2rem', fontWeight: 800, color: '#1a202c' }}>{stats.users}</div></div>
+        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderLeft: '4px solid #3498db' }}><div style={{ color: '#7F8C8D', fontSize: '0.85rem', marginBottom: '8px' }}>IUBs CREADOS</div><div style={{ fontSize: '2rem', fontWeight: 800, color: '#1a202c' }}>{stats.iubs}</div></div>
+        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderLeft: '4px solid #27ae60' }}><div style={{ color: '#7F8C8D', fontSize: '0.85rem', marginBottom: '8px' }}>MATCHES GENERADOS</div><div style={{ fontSize: '2rem', fontWeight: 800, color: '#1a202c' }}>{stats.matches}</div></div>
+        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderLeft: '4px solid #f39c12' }}><div style={{ color: '#7F8C8D', fontSize: '0.85rem', marginBottom: '8px' }}>PROPIEDADES ACTIVAS</div><div style={{ fontSize: '2rem', fontWeight: 800, color: '#1a202c' }}>{stats.properties}</div></div>
       </div>
-
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #ECF0F1', paddingBottom: '10px', flexWrap: 'wrap' }}>
         <button onClick={() => setTab('overview')} style={{ padding: '10px 20px', background: tab === 'overview' ? '#1a202c' : 'white', color: tab === 'overview' ? 'white' : '#1a202c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Resumen</button>
         <button onClick={() => setTab('users')} style={{ padding: '10px 20px', background: tab === 'users' ? '#1a202c' : 'white', color: tab === 'users' ? 'white' : '#1a202c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Usuarios</button>
       </div>
-
       <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-        {tab === 'overview' && (
-          <div>
-            <h3 style={{ marginBottom: '16px' }}>Actividad Reciente</h3>
-            <p style={{ color: '#7F8C8D' }}>Bienvenido al panel de control. Aquí podrás gestionar todos los aspectos de TerraMatch.</p>
-          </div>
-        )}
-        {tab === 'users' && (
-          <div>
-            <h3 style={{ marginBottom: '16px' }}>Usuarios Registrados ({users.length})</h3>
-            {users.length === 0 ? <p>No hay usuarios registrados.</p> : (
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr style={{ borderBottom: '2px solid #ECF0F1', textAlign: 'left' }}><th style={{ padding: '12px' }}>Nombre</th><th style={{ padding: '12px' }}>Email</th><th style={{ padding: '12px' }}>Tipo</th></tr></thead>
-                <tbody>{users.map(u => (
-                  <tr key={u.id} style={{ borderBottom: '1px solid #ECF0F1' }}>
-                    <td style={{ padding: '12px' }}>{u.nombre} {u.apellido}</td>
-                    <td style={{ padding: '12px' }}>{u.email}</td>
-                    <td style={{ padding: '12px' }}><span style={{ background: '#E74C3C', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>{u.tipo_usuario}</span></td>
-                  </tr>
-                ))}</tbody>
-              </table>
-            )}
-          </div>
-        )}
+        {tab === 'overview' && <div><h3 style={{ marginBottom: '16px' }}>Actividad Reciente</h3><p style={{ color: '#7F8C8D' }}>Bienvenido al panel de control.</p></div>}
+        {tab === 'users' && <div><h3 style={{ marginBottom: '16px' }}>Usuarios Registrados ({users.length})</h3>{users.length === 0 ? <p>No hay usuarios.</p> : (<table style={{ width: '100%', borderCollapse: 'collapse' }}><thead><tr style={{ borderBottom: '2px solid #ECF0F1', textAlign: 'left' }}><th style={{ padding: '12px' }}>Nombre</th><th style={{ padding: '12px' }}>Email</th><th style={{ padding: '12px' }}>Tipo</th></tr></thead><tbody>{users.map(u => (<tr key={u.id} style={{ borderBottom: '1px solid #ECF0F1' }}><td style={{ padding: '12px' }}>{u.nombre} {u.apellido}</td><td style={{ padding: '12px' }}>{u.email}</td><td style={{ padding: '12px' }}><span style={{ background: '#E74C3C', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>{u.tipo_usuario}</span></td></tr>))}</tbody></table>)}</div>}
       </div>
     </div>
   );
