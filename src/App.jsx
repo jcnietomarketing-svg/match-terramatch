@@ -1,20 +1,13 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// ==========================================
-// CONFIGURACIÓN SUPABASE
-// ==========================================
 const SUPABASE_URL = 'https://wqzwwzmeetykcvhekerl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indxend3em1lZXR5a2N2aGVrZXJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNDg3OTcsImV4cCI6MjEwNTkyNDc5N30.6NJ0fA475cC5EKWGW4EYJyuSHOI9XPor41PTnWNHsRY';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// URLs de documentos legales
-const DOC_TERMINOS = 'https://github.com/jcnietomarketing-svg/match-terramatch/raw/main/T%26C_TerraMatch%20act%202024.pdf';
-const DOC_PRIVACIDAD = 'https://github.com/jcnietomarketing-svg/match-terramatch/raw/main/Politica%20de%20privacidad%20y%20proteccion%20de%20datos_TerraMatch_act2023.pdf';
+const DOC_TERMINOS = 'https://github.com/jcnietomarketing-svg/match-terramatch/raw/main/T%26C_TerraMatch%20act%202024.docx';
+const DOC_PRIVACIDAD = 'https://github.com/jcnietomarketing-svg/match-terramatch/raw/main/Politica%20de%20privacidad%20y%20proteccion%20de%20datos_TerraMatch_act2023.docx';
 
-// ==========================================
-// COMPONENTE PRINCIPAL
-// ==========================================
 function App() {
   const [view, setView] = useState('landing');
   const [user, setUser] = useState(null);
@@ -48,7 +41,6 @@ function App() {
       if (data) setProfile(data);
       else setProfile({ nombre: 'Usuario', apellido: '', email: userEmail });
     } catch (error) {
-      console.error('Error loading profile:', error);
       setProfile({ nombre: 'Usuario', apellido: '', email: userEmail });
     }
   }
@@ -74,18 +66,16 @@ function App() {
   return (
     <div className="app" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navbar nombre={safeName} isLoggedIn={!!user} isAdmin={isAdmin} onNavigate={setView} onLogout={handleLogout} />
-      
       <main style={{ flex: 1 }}>
         {view === 'landing' && <LandingView onNavigate={setView} />}
-        {view === 'login' && <LoginView supabase={supabase} onSuccess={(u, email) => { setUser(u); loadProfile(email); setView('dashboard'); showToast('¡Bienvenido de vuelta!'); }} showToast={showToast} onNavigate={setView} />}
-        {view === 'register' && <RegisterView supabase={supabase} onSuccess={(u, email) => { setUser(u); loadProfile(email); setView('dashboard'); showToast('¡Cuenta creada exitosamente!'); }} showToast={showToast} />}
+        {view === 'login' && <LoginView supabase={supabase} onSuccess={(u, email) => { setUser(u); loadProfile(email); setView('dashboard'); showToast('¡Bienvenido!'); }} showToast={showToast} onNavigate={setView} />}
+        {view === 'register' && <RegisterView supabase={supabase} onSuccess={(u, email) => { setUser(u); loadProfile(email); setView('dashboard'); showToast('¡Cuenta creada!'); }} showToast={showToast} />}
         {view === 'iub' && user && <IUBView user={user} supabase={supabase} showToast={showToast} onNavigate={setView} />}
+        {view === 'oferta' && user && <OfertaView user={user} profile={profile} supabase={supabase} showToast={showToast} onNavigate={setView} />}
         {view === 'dashboard' && user && <DashboardView user={user} profile={profile} supabase={supabase} showToast={showToast} onNavigate={setView} />}
         {view === 'admin' && user && isAdmin && <AdminView supabase={supabase} showToast={showToast} />}
       </main>
-
       <Footer onNavigate={setView} />
-      
       {toast && <div style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.type === 'error' ? '#e74c3c' : '#27ae60', color: 'white', padding: '12px 24px', borderRadius: '8px', zIndex: 1000, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>{toast.message}</div>}
     </div>
   );
@@ -123,61 +113,176 @@ function Navbar({ nombre, isLoggedIn, isAdmin, onNavigate, onLogout }) {
 }
 
 // ==========================================
-// FOOTER CON ENLACES LEGALES
+// LANDING VIEW (Con los 2 caminos claros)
 // ==========================================
-function Footer({ onNavigate }) {
+function LandingView({ onNavigate }) {
   return (
-    <footer style={{ background: '#1a202c', color: '#CBD5E0', padding: '40px 24px 20px', marginTop: '60px' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '32px', marginBottom: '32px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <div style={{ width: '36px', height: '36px', background: '#E74C3C', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800 }}>TM</div>
-              <span style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', fontWeight: 700, color: 'white' }}>terramatch</span>
-            </div>
-            <p style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>El matchmaker inmobiliario inteligente de LATAM. Conectamos inmuebles con el negocio perfecto.</p>
-          </div>
-          <div>
-            <h4 style={{ color: 'white', marginBottom: '16px', fontSize: '1rem' }}>Plataforma</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '8px' }}><button onClick={() => onNavigate('landing')} style={{ background: 'none', border: 'none', color: '#CBD5E0', cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Inicio</button></li>
-              <li style={{ marginBottom: '8px' }}><button onClick={() => onNavigate('login')} style={{ background: 'none', border: 'none', color: '#CBD5E0', cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Ingresar</button></li>
-              <li style={{ marginBottom: '8px' }}><button onClick={() => onNavigate('register')} style={{ background: 'none', border: 'none', color: '#CBD5E0', cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Crear cuenta</button></li>
-            </ul>
-          </div>
-          <div>
-            <h4 style={{ color: 'white', marginBottom: '16px', fontSize: '1rem' }}>Legal</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '8px' }}><a href={DOC_TERMINOS} target="_blank" rel="noopener noreferrer" style={{ color: '#CBD5E0', textDecoration: 'none', fontSize: '0.9rem' }}>Términos y Condiciones</a></li>
-              <li style={{ marginBottom: '8px' }}><a href={DOC_PRIVACIDAD} target="_blank" rel="noopener noreferrer" style={{ color: '#CBD5E0', textDecoration: 'none', fontSize: '0.9rem' }}>Política de Privacidad</a></li>
-              <li style={{ marginBottom: '8px' }}><span style={{ color: '#CBD5E0', fontSize: '0.9rem' }}>Ley 1581 de 2012</span></li>
-            </ul>
-          </div>
-          <div>
-            <h4 style={{ color: 'white', marginBottom: '16px', fontSize: '1rem' }}>Contacto</h4>
-            <p style={{ fontSize: '0.9rem', marginBottom: '8px' }}>📧 jcnieto.marketing@gmail.com</p>
-            <p style={{ fontSize: '0.9rem' }}>🇨🇴 Bogotá, Colombia</p>
-          </div>
+    <div style={{ padding: '80px 24px', textAlign: 'center', background: 'linear-gradient(135deg, #D4E6F1 0%, white 100%)', minHeight: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+      <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', marginBottom: '16px', color: '#1a202c' }}>Encuentra tu <span style={{ color: '#E74C3C' }}>match perfecto</span></h1>
+      <p style={{ fontSize: '1.2rem', color: '#4A5568', marginBottom: '48px', maxWidth: '600px' }}>Estandarizamos los requerimientos inmobiliarios para conectar propietarios y empresarios sin intermediarios innecesarios.</p>
+      
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', maxWidth: '800px', width: '100%' }}>
+        {/* Camino 1: Tengo Locales */}
+        <div onClick={() => onNavigate('oferta')} style={{ background: 'white', padding: '40px 32px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.3s' }}
+             onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#E74C3C'; e.currentTarget.style.transform = 'translateY(-5px)'; }}
+             onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏪</div>
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '12px', color: '#1a202c' }}>Tengo Locales</h3>
+          <p style={{ color: '#7F8C8D', fontSize: '0.95rem', lineHeight: '1.5' }}>Soy propietario o inmobiliaria y quiero publicar un inmueble comercial para encontrar al empresario ideal.</p>
+          <button style={{ marginTop: '24px', padding: '12px 24px', background: '#1a202c', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>Continuar →</button>
         </div>
-        <div style={{ borderTop: '1px solid #2D3748', paddingTop: '20px', textAlign: 'center', fontSize: '0.85rem' }}>
-          <p style={{ margin: 0 }}>© 2026 TerraMatch. Todos los derechos reservados.</p>
+
+        {/* Camino 2: Busco Locales */}
+        <div onClick={() => onNavigate('iub')} style={{ background: 'white', padding: '40px 32px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.3s' }}
+             onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#E74C3C'; e.currentTarget.style.transform = 'translateY(-5px)'; }}
+             onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div>
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '12px', color: '#1a202c' }}>Busco Locales</h3>
+          <p style={{ color: '#7F8C8D', fontSize: '0.95rem', lineHeight: '1.5' }}>Soy empresario o persona natural y necesito encontrar el local o inmueble ideal para mi negocio.</p>
+          <button style={{ marginTop: '24px', padding: '12px 24px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>Continuar →</button>
         </div>
       </div>
-    </footer>
+    </div>
   );
 }
 
 // ==========================================
-// LANDING VIEW
+// OFERTA VIEW (Tengo Locales - Nuevo Flujo)
 // ==========================================
-function LandingView({ onNavigate }) {
+function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
+  const [step, setStep] = useState(1);
+  const [rol, setRol] = useState('');
+  const [form, setForm] = useState({ 
+    tipo_inmueble: 'local', operacion: 'arrendar', ciudad: 'Bogotá', zona: 'Norte', 
+    area: 100, precio: 5000000, titulo: '', descripcion: '' 
+  });
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('propiedades').insert([{
+        user_id: user.id,
+        segmento: 'locales',
+        tipo_inmueble: form.tipo_inmueble,
+        operacion: form.operacion,
+        ciudad: form.ciudad,
+        zona: form.zona,
+        area: form.area,
+        precio: form.precio,
+        titulo: form.titulo || `${form.tipo_inmueble} en ${form.zona}, ${form.ciudad}`,
+        caracteristicas: JSON.stringify({ rol_publicante: rol }),
+        disponible: true
+      }]);
+
+      if (error) throw error;
+      showToast('¡Inmueble publicado exitosamente!');
+      onNavigate('dashboard');
+    } catch (error) {
+      showToast(error.message || 'Error al publicar', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const inputStyle = { width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box', marginBottom: '16px', fontSize: '1rem' };
+  const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 600, color: '#1a202c' };
+
+  if (step === 1) {
+    return (
+      <div style={{ padding: '40px 24px', maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ background: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', textAlign: 'center' }}>
+          <h2 style={{ marginBottom: '8px' }}>¿Cuál es tu rol?</h2>
+          <p style={{ color: '#7F8C8D', marginBottom: '32px' }}>Selecciona cómo deseas publicar tu inmueble</p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {['Propietario directo', 'Agencia Inmobiliaria', 'Constructora / Desarrollador'].map((r) => (
+              <button key={r} onClick={() => { setRol(r); setStep(2); }} 
+                style={{ padding: '20px', background: 'white', border: '2px solid #ECF0F1', borderRadius: '12px', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 600, color: '#1a202c', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#E74C3C'; e.currentTarget.style.background = '#FFF5F5'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#ECF0F1'; e.currentTarget.style.background = 'white'; }}>
+                {r}
+              </button>
+            ))}
+          </div>
+          <button onClick={() => onNavigate('landing')} style={{ marginTop: '24px', background: 'none', border: 'none', color: '#7F8C8D', cursor: 'pointer', textDecoration: 'underline' }}>← Volver al inicio</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: '100px 24px', textAlign: 'center', background: 'linear-gradient(135deg, #D4E6F1 0%, white 100%)', minHeight: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-      <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', marginBottom: '20px', color: '#1a202c' }}>Hagamos Match entre tu <span style={{ color: '#E74C3C' }}>Inmueble</span> y el <span style={{ color: '#E74C3C' }}>Negocio Perfecto</span></h1>
-      <p style={{ fontSize: '1.2rem', color: '#4A5568', marginBottom: '32px', maxWidth: '600px' }}>Locales · Vivienda · Oficinas · Industrial · Lujo.</p>
-      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button onClick={() => onNavigate('login')} style={{ padding: '14px 32px', fontSize: '1rem', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Ingresar</button>
-        <button onClick={() => onNavigate('register')} style={{ padding: '14px 32px', fontSize: '1rem', background: 'white', color: '#E74C3C', border: '2px solid #E74C3C', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Crear cuenta</button>
+    <div style={{ padding: '40px 24px', maxWidth: '720px', margin: '0 auto' }}>
+      <div style={{ background: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ margin: 0 }}>Publicar Inmueble</h2>
+          <span style={{ background: '#E74C3C', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600 }}>{rol}</span>
+        </div>
+        
+        <form onSubmit={handleSubmit}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>Tipo de inmueble</label>
+              <select style={inputStyle} value={form.tipo_inmueble} onChange={e => setForm({...form, tipo_inmueble: e.target.value})}>
+                <option value="local">Local Comercial</option>
+                <option value="oficina">Oficina</option>
+                <option value="bodega">Bodega</option>
+                <option value="consultorio">Consultorio</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Operación</label>
+              <select style={inputStyle} value={form.operacion} onChange={e => setForm({...form, operacion: e.target.value})}>
+                <option value="arrendar">Arrendar</option>
+                <option value="vender">Vender</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>Ciudad</label>
+              <select style={inputStyle} value={form.ciudad} onChange={e => setForm({...form, ciudad: e.target.value})}>
+                <option value="Bogotá">Bogotá</option>
+                <option value="Medellín">Medellín</option>
+                <option value="Cali">Cali</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Zona / Localidad</label>
+              <select style={inputStyle} value={form.zona} onChange={e => setForm({...form, zona: e.target.value})}>
+                <option value="Norte">Norte</option>
+                <option value="Sur">Sur</option>
+                <option value="Centro">Centro</option>
+                <option value="Occidente">Occidente</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>Área total (m²)</label>
+              <input type="number" style={inputStyle} value={form.area} onChange={e => setForm({...form, area: parseInt(e.target.value) || 0})} required />
+            </div>
+            <div>
+              <label style={labelStyle}>Precio (COP)</label>
+              <input type="number" style={inputStyle} value={form.precio} onChange={e => setForm({...form, precio: parseInt(e.target.value) || 0})} required />
+            </div>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Título del anuncio (Opcional)</label>
+            <input style={inputStyle} placeholder="Ej: Local esquinero sobre vía principal" value={form.titulo} onChange={e => setForm({...form, titulo: e.target.value})} />
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
+            <button type="button" onClick={() => setStep(1)} style={{ flex: 1, padding: '14px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Atrás</button>
+            <button type="submit" disabled={loading} style={{ flex: 2, padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+              {loading ? 'Publicando...' : 'Publicar Inmueble'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -220,13 +325,10 @@ function LoginView({ supabase, onSuccess, showToast, onNavigate }) {
 }
 
 // ==========================================
-// REGISTER VIEW (Con documentos legales)
+// REGISTER VIEW
 // ==========================================
 function RegisterView({ supabase, onSuccess, showToast }) {
-  const [form, setForm] = useState({ 
-    nombre: '', apellido: '', email: '', celular: '', 
-    tipo_usuario: 'buscador', segmento_preferido: 'locales', password: '' 
-  });
+  const [form, setForm] = useState({ nombre: '', apellido: '', email: '', celular: '', tipo_usuario: 'buscador', segmento_preferido: 'locales', password: '' });
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
   const [autorizaDatos, setAutorizaDatos] = useState(false);
@@ -234,39 +336,24 @@ function RegisterView({ supabase, onSuccess, showToast }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    
     if (!aceptaTerminos || !aceptaPrivacidad || !autorizaDatos) {
       showToast('Debes aceptar los Términos, Políticas de Privacidad y autorizar el tratamiento de datos', 'error');
       return;
     }
-    
     setLoading(true);
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password
-      });
+      const { data: authData, error: authError } = await supabase.auth.signUp({ email: form.email, password: form.password });
       if (authError) throw authError;
 
       const { data: profileData, error: profileError } = await supabase.from('profiles').insert([{
-        id: authData.user.id,
-        nombre: form.nombre,
-        apellido: form.apellido,
-        email: form.email,
-        celular: form.celular,
-        tipo_usuario: form.tipo_usuario,
-        segmento_preferido: form.segmento_preferido,
-        acepto_terminos: true,
-        acepto_privacidad: true,
-        autorizo_datos: true,
-        fecha_aceptacion: new Date().toISOString()
+        id: authData.user.id, nombre: form.nombre, apellido: form.apellido, email: form.email, celular: form.celular,
+        tipo_usuario: form.tipo_usuario, segmento_preferido: form.segmento_preferido,
+        acepto_terminos: true, acepto_privacidad: true, autorizo_datos: true, fecha_aceptacion: new Date().toISOString()
       }]).select().single();
       
       if (profileError) throw profileError;
-
       onSuccess(authData.user, form.email);
     } catch (error) {
-      console.error('Error en registro:', error);
       showToast(error.message || 'Error al crear cuenta', 'error');
     } finally {
       setLoading(false);
@@ -283,14 +370,8 @@ function RegisterView({ supabase, onSuccess, showToast }) {
         <p style={{ textAlign: 'center', color: '#7F8C8D', marginBottom: '32px' }}>Únete al matchmaker inmobiliario de LATAM</p>
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>Nombres *</label>
-              <input style={inputStyle} value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} required />
-            </div>
-            <div>
-              <label style={labelStyle}>Apellidos *</label>
-              <input style={inputStyle} value={form.apellido} onChange={e => setForm({...form, apellido: e.target.value})} required />
-            </div>
+            <div><label style={labelStyle}>Nombres *</label><input style={inputStyle} value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} required /></div>
+            <div><label style={labelStyle}>Apellidos *</label><input style={inputStyle} value={form.apellido} onChange={e => setForm({...form, apellido: e.target.value})} required /></div>
           </div>
           <label style={labelStyle}>Email *</label>
           <input type="email" style={inputStyle} value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
@@ -319,29 +400,19 @@ function RegisterView({ supabase, onSuccess, showToast }) {
           <label style={labelStyle}>Contraseña * (mínimo 6 caracteres)</label>
           <input type="password" style={inputStyle} value={form.password} onChange={e => setForm({...form, password: e.target.value})} required minLength="6" />
 
-          {/* DOCUMENTOS LEGALES */}
           <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', marginBottom: '24px', border: '1px solid #e9ecef' }}>
-            <h4 style={{ margin: '0 0 16px 0', color: '#1a202c', fontSize: '1rem' }}> Documentos Legales *</h4>
-            
+            <h4 style={{ margin: '0 0 16px 0', color: '#1a202c', fontSize: '1rem' }}>📄 Documentos Legales *</h4>
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
               <input type="checkbox" checked={aceptaTerminos} onChange={e => setAceptaTerminos(e.target.checked)} style={{ marginTop: '3px', transform: 'scale(1.2)' }} />
-              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>
-                Acepto los <a href={DOC_TERMINOS} target="_blank" rel="noopener noreferrer" style={{ color: '#E74C3C', textDecoration: 'underline', fontWeight: 600 }}>Términos y Condiciones</a> de TerraMatch *
-              </span>
+              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>Acepto los <a href={DOC_TERMINOS} target="_blank" rel="noopener noreferrer" style={{ color: '#E74C3C', textDecoration: 'underline', fontWeight: 600 }}>Términos y Condiciones</a> *</span>
             </label>
-
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
               <input type="checkbox" checked={aceptaPrivacidad} onChange={e => setAceptaPrivacidad(e.target.checked)} style={{ marginTop: '3px', transform: 'scale(1.2)' }} />
-              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>
-                Acepto la <a href={DOC_PRIVACIDAD} target="_blank" rel="noopener noreferrer" style={{ color: '#E74C3C', textDecoration: 'underline', fontWeight: 600 }}>Política de Privacidad y Protección de Datos</a> *
-              </span>
+              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>Acepto la <a href={DOC_PRIVACIDAD} target="_blank" rel="noopener noreferrer" style={{ color: '#E74C3C', textDecoration: 'underline', fontWeight: 600 }}>Política de Privacidad</a> *</span>
             </label>
-
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
               <input type="checkbox" checked={autorizaDatos} onChange={e => setAutorizaDatos(e.target.checked)} style={{ marginTop: '3px', transform: 'scale(1.2)' }} />
-              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>
-                Autorizo el tratamiento de mis datos personales conforme a la <strong>Ley 1581 de 2012</strong> (Colombia) *
-              </span>
+              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>Autorizo el tratamiento de mis datos (Ley 1581 de 2012) *</span>
             </label>
           </div>
 
@@ -355,7 +426,7 @@ function RegisterView({ supabase, onSuccess, showToast }) {
 }
 
 // ==========================================
-// IUB VIEW (Usuario)
+// IUB VIEW (Busco Locales)
 // ==========================================
 function IUBView({ user, supabase, showToast, onNavigate }) {
   const [form, setForm] = useState({ operacion: 'arrendar', ciudad: 'Bogotá', zona: 'Norte', tipo_inmueble: 'local', area: 100, presupuesto: 5000000 });
@@ -433,11 +504,12 @@ function IUBView({ user, supabase, showToast, onNavigate }) {
 }
 
 // ==========================================
-// DASHBOARD VIEW (Usuario)
+// DASHBOARD VIEW
 // ==========================================
 function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
   const [iubs, setIubs] = useState([]);
   const [matches, setMatches] = useState([]);
+  const [misPropiedades, setMisPropiedades] = useState([]);
   const [loading, setLoading] = useState(true);
   const safeName = profile?.nombre || 'Usuario';
 
@@ -448,8 +520,12 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
       setLoading(true);
       const { data: iubsData } = await supabase.from('iubs').select('*').eq('user_id', user.id).order('creado_en', { ascending: false });
       setIubs(iubsData || []);
+      
       const { data: matchesData } = await supabase.from('matches').select('*, propiedades(*)').eq('user_id', user.id).order('creado_en', { ascending: false });
       setMatches(matchesData || []);
+
+      const { data: propsData } = await supabase.from('propiedades').select('*').eq('user_id', user.id).order('creado_en', { ascending: false });
+      setMisPropiedades(propsData || []);
     } catch (error) { console.error('Error loading dashboard data:', error); } finally { setLoading(false); }
   }
 
@@ -470,27 +546,50 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
         <p style={{ opacity: 0.9 }}>Bienvenido a tu panel de control TerraMatch</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginTop: '24px' }}>
           <div style={{ background: 'rgba(255,255,255,0.15)', padding: '20px', borderRadius: '12px', textAlign: 'center' }}><div style={{ fontSize: '2.2rem', fontWeight: 700 }}>{iubs.length}</div><div style={{ fontSize: '0.85rem', opacity: 0.9 }}>IUBs Activos</div></div>
-          <div style={{ background: 'rgba(255,255,255,0.15)', padding: '20px', borderRadius: '12px', textAlign: 'center' }}><div style={{ fontSize: '2.2rem', fontWeight: 700 }}>{matches.length}</div><div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Matches Totales</div></div>
-          <div style={{ background: 'rgba(255,255,255,0.15)', padding: '20px', borderRadius: '12px', textAlign: 'center' }}><div style={{ fontSize: '2.2rem', fontWeight: 700 }}>{matches.filter(m => m.estado === 'aceptado').length}</div><div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Aceptados</div></div>
+          <div style={{ background: 'rgba(255,255,255,0.15)', padding: '20px', borderRadius: '12px', textAlign: 'center' }}><div style={{ fontSize: '2.2rem', fontWeight: 700 }}>{misPropiedades.length}</div><div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Mis Propiedades</div></div>
+          <div style={{ background: 'rgba(255,255,255,0.15)', padding: '20px', borderRadius: '12px', textAlign: 'center' }}><div style={{ fontSize: '2.2rem', fontWeight: 700 }}>{matches.length}</div><div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Matches</div></div>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
+        {/* Sección IUBs */}
         <div style={{ background: 'white', padding: '28px', borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3>Tus IUBs</h3>
+            <h3>Tus Búsquedas (IUB)</h3>
             <button onClick={() => onNavigate('iub')} style={{ padding: '8px 16px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>+ Nuevo IUB</button>
           </div>
           {iubs.length === 0 ? <p style={{ color: '#7F8C8D', textAlign: 'center', padding: '20px' }}>Aún no tienes IUBs.</p> : iubs.map(iub => (
             <div key={iub.id} style={{ background: 'linear-gradient(135deg, #E74C3C 0%, #FF6B6B 100%)', color: 'white', padding: '20px', borderRadius: '12px', marginBottom: '12px', textAlign: 'center' }}>
               <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>{iub.segmento} · {iub.operacion}</div>
-              <div style={{ fontFamily: 'monospace', fontSize: '1.2rem', fontWeight: 800, margin: '12px 0', background: 'rgba(255,255,255,0.2)', padding: '12px', borderRadius: '8px' }}>{iub.codigo_iub}</div>
+              <div style={{ fontFamily: 'monospace', fontSize: '1.1rem', fontWeight: 800, margin: '12px 0', background: 'rgba(255,255,255,0.2)', padding: '12px', borderRadius: '8px' }}>{iub.codigo_iub}</div>
               <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>{iub.ciudad}, {iub.zona} · {iub.area_min}m²</div>
             </div>
           ))}
         </div>
 
+        {/* Sección Mis Propiedades */}
         <div style={{ background: 'white', padding: '28px', borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3>Mis Propiedades</h3>
+            <button onClick={() => onNavigate('oferta')} style={{ padding: '8px 16px', background: '#1a202c', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>+ Publicar</button>
+          </div>
+          {misPropiedades.length === 0 ? <p style={{ color: '#7F8C8D', textAlign: 'center', padding: '20px' }}>Aún no has publicado inmuebles.</p> : misPropiedades.map(prop => (
+            <div key={prop.id} style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', marginBottom: '12px', border: '1px solid #ECF0F1' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4 style={{ margin: '0 0 4px 0', textTransform: 'capitalize' }}>{prop.tipo_inmueble} en {prop.zona}</h4>
+                  <p style={{ margin: 0, color: '#7F8C8D', fontSize: '0.9rem' }}>{prop.area} m² · ${prop.precio?.toLocaleString('es-CO')}</p>
+                </div>
+                <span style={{ background: prop.disponible ? '#27ae60' : '#e74c3c', color: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>
+                  {prop.disponible ? 'Disponible' : 'No disponible'}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Sección Matches */}
+        <div style={{ background: 'white', padding: '28px', borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', gridColumn: '1 / -1' }}>
           <h3 style={{ marginBottom: '20px' }}>Matches Recientes</h3>
           {matches.length === 0 ? <p style={{ color: '#7F8C8D', textAlign: 'center', padding: '20px' }}>Configura un IUB para recibir matches.</p> : matches.map(match => (
             <div key={match.id} style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '2px solid #ECF0F1', marginBottom: '12px', display: 'grid', gridTemplateColumns: '60px 1fr auto', gap: '16px', alignItems: 'center' }}>
@@ -508,13 +607,11 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
 }
 
 // ==========================================
-// ADMIN VIEW (Solo para jcnieto.marketing@gmail.com)
+// ADMIN VIEW
 // ==========================================
 function AdminView({ supabase, showToast }) {
   const [stats, setStats] = useState({ users: 0, iubs: 0, matches: 0, properties: 0 });
   const [users, setUsers] = useState([]);
-  const [iubs, setIubs] = useState([]);
-  const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('overview');
 
@@ -529,15 +626,8 @@ function AdminView({ supabase, showToast }) {
       const { count: propCount } = await supabase.from('propiedades').select('*', { count: 'exact', head: true });
 
       setStats({ users: usersCount || 0, iubs: iubsCount || 0, matches: matchesCount || 0, properties: propCount || 0 });
-
       const { data: usersData } = await supabase.from('profiles').select('*').order('creado_en', { ascending: false });
       setUsers(usersData || []);
-
-      const { data: iubsData } = await supabase.from('iubs').select('*').order('creado_en', { ascending: false });
-      setIubs(iubsData || []);
-
-      const { data: propData } = await supabase.from('propiedades').select('*').order('creado_en', { ascending: false });
-      setProperties(propData || []);
     } catch (error) {
       console.error('Admin load error:', error);
       showToast('Error cargando datos de admin', 'error');
@@ -577,8 +667,6 @@ function AdminView({ supabase, showToast }) {
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #ECF0F1', paddingBottom: '10px', flexWrap: 'wrap' }}>
         <button onClick={() => setTab('overview')} style={{ padding: '10px 20px', background: tab === 'overview' ? '#1a202c' : 'white', color: tab === 'overview' ? 'white' : '#1a202c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Resumen</button>
         <button onClick={() => setTab('users')} style={{ padding: '10px 20px', background: tab === 'users' ? '#1a202c' : 'white', color: tab === 'users' ? 'white' : '#1a202c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Usuarios</button>
-        <button onClick={() => setTab('iubs')} style={{ padding: '10px 20px', background: tab === 'iubs' ? '#1a202c' : 'white', color: tab === 'iubs' ? 'white' : '#1a202c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>IUBs</button>
-        <button onClick={() => setTab('properties')} style={{ padding: '10px 20px', background: tab === 'properties' ? '#1a202c' : 'white', color: tab === 'properties' ? 'white' : '#1a202c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Propiedades</button>
       </div>
 
       <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
@@ -586,67 +674,19 @@ function AdminView({ supabase, showToast }) {
           <div>
             <h3 style={{ marginBottom: '16px' }}>Actividad Reciente</h3>
             <p style={{ color: '#7F8C8D' }}>Bienvenido al panel de control. Aquí podrás gestionar todos los aspectos de TerraMatch.</p>
-            <div style={{ marginTop: '20px', padding: '20px', background: '#f8f9fa', borderRadius: '8px' }}>
-              <h4 style={{ marginTop: 0 }}>📊 Métricas Clave</h4>
-              <p>Tasa de conversión (IUBs a Matches): {stats.iubs > 0 ? ((stats.matches / stats.iubs) * 100).toFixed(1) : 0}%</p>
-              <p>Promedio de matches por IUB: {stats.iubs > 0 ? (stats.matches / stats.iubs).toFixed(1) : 0}</p>
-            </div>
           </div>
         )}
-
         {tab === 'users' && (
           <div>
             <h3 style={{ marginBottom: '16px' }}>Usuarios Registrados ({users.length})</h3>
             {users.length === 0 ? <p>No hay usuarios registrados.</p> : (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr style={{ borderBottom: '2px solid #ECF0F1', textAlign: 'left' }}><th style={{ padding: '12px' }}>Nombre</th><th style={{ padding: '12px' }}>Email</th><th style={{ padding: '12px' }}>Tipo</th><th style={{ padding: '12px' }}>Segmento</th></tr></thead>
+                <thead><tr style={{ borderBottom: '2px solid #ECF0F1', textAlign: 'left' }}><th style={{ padding: '12px' }}>Nombre</th><th style={{ padding: '12px' }}>Email</th><th style={{ padding: '12px' }}>Tipo</th></tr></thead>
                 <tbody>{users.map(u => (
                   <tr key={u.id} style={{ borderBottom: '1px solid #ECF0F1' }}>
                     <td style={{ padding: '12px' }}>{u.nombre} {u.apellido}</td>
                     <td style={{ padding: '12px' }}>{u.email}</td>
                     <td style={{ padding: '12px' }}><span style={{ background: '#E74C3C', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>{u.tipo_usuario}</span></td>
-                    <td style={{ padding: '12px', textTransform: 'capitalize' }}>{u.segmento_preferido}</td>
-                  </tr>
-                ))}</tbody>
-              </table>
-            )}
-          </div>
-        )}
-
-        {tab === 'iubs' && (
-          <div>
-            <h3 style={{ marginBottom: '16px' }}>IUBs Creados ({iubs.length})</h3>
-            {iubs.length === 0 ? <p>No hay IUBs creados.</p> : (
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr style={{ borderBottom: '2px solid #ECF0F1', textAlign: 'left' }}><th style={{ padding: '12px' }}>Código IUB</th><th style={{ padding: '12px' }}>Ciudad</th><th style={{ padding: '12px' }}>Operación</th><th style={{ padding: '12px' }}>Área</th><th style={{ padding: '12px' }}>Presupuesto</th></tr></thead>
-                <tbody>{iubs.map(i => (
-                  <tr key={i.id} style={{ borderBottom: '1px solid #ECF0F1' }}>
-                    <td style={{ padding: '12px', fontFamily: 'monospace', fontWeight: 600 }}>{i.codigo_iub}</td>
-                    <td style={{ padding: '12px' }}>{i.ciudad} - {i.zona}</td>
-                    <td style={{ padding: '12px', textTransform: 'capitalize' }}>{i.operacion}</td>
-                    <td style={{ padding: '12px' }}>{i.area_min} m²</td>
-                    <td style={{ padding: '12px' }}>${i.presupuesto_max?.toLocaleString('es-CO')}</td>
-                  </tr>
-                ))}</tbody>
-              </table>
-            )}
-          </div>
-        )}
-
-        {tab === 'properties' && (
-          <div>
-            <h3 style={{ marginBottom: '16px' }}>Inventario de Propiedades ({properties.length})</h3>
-            {properties.length === 0 ? <p>No hay propiedades en el inventario.</p> : (
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr style={{ borderBottom: '2px solid #ECF0F1', textAlign: 'left' }}><th style={{ padding: '12px' }}>Título</th><th style={{ padding: '12px' }}>Tipo</th><th style={{ padding: '12px' }}>Ciudad</th><th style={{ padding: '12px' }}>Área</th><th style={{ padding: '12px' }}>Precio</th><th style={{ padding: '12px' }}>Estado</th></tr></thead>
-                <tbody>{properties.map(p => (
-                  <tr key={p.id} style={{ borderBottom: '1px solid #ECF0F1' }}>
-                    <td style={{ padding: '12px', fontWeight: 600 }}>{p.titulo}</td>
-                    <td style={{ padding: '12px', textTransform: 'capitalize' }}>{p.tipo_inmueble}</td>
-                    <td style={{ padding: '12px' }}>{p.ciudad} - {p.zona}</td>
-                    <td style={{ padding: '12px' }}>{p.area} m²</td>
-                    <td style={{ padding: '12px' }}>${p.precio?.toLocaleString('es-CO')}</td>
-                    <td style={{ padding: '12px' }}><span style={{ background: p.disponible ? '#27ae60' : '#e74c3c', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>{p.disponible ? 'Disponible' : 'No disponible'}</span></td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -655,6 +695,37 @@ function AdminView({ supabase, showToast }) {
         )}
       </div>
     </div>
+  );
+}
+
+// ==========================================
+// FOOTER
+// ==========================================
+function Footer({ onNavigate }) {
+  return (
+    <footer style={{ background: '#1a202c', color: '#CBD5E0', padding: '40px 24px 20px', marginTop: '60px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '32px', marginBottom: '32px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+              <div style={{ width: '36px', height: '36px', background: '#E74C3C', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800 }}>TM</div>
+              <span style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', fontWeight: 700, color: 'white' }}>terramatch</span>
+            </div>
+            <p style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>El matchmaker inmobiliario inteligente de LATAM.</p>
+          </div>
+          <div>
+            <h4 style={{ color: 'white', marginBottom: '16px', fontSize: '1rem' }}>Legal</h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '8px' }}><a href={DOC_TERMINOS} target="_blank" rel="noopener noreferrer" style={{ color: '#CBD5E0', textDecoration: 'none', fontSize: '0.9rem' }}>Términos y Condiciones</a></li>
+              <li style={{ marginBottom: '8px' }}><a href={DOC_PRIVACIDAD} target="_blank" rel="noopener noreferrer" style={{ color: '#CBD5E0', textDecoration: 'none', fontSize: '0.9rem' }}>Política de Privacidad</a></li>
+            </ul>
+          </div>
+        </div>
+        <div style={{ borderTop: '1px solid #2D3748', paddingTop: '20px', textAlign: 'center', fontSize: '0.85rem' }}>
+          <p style={{ margin: 0 }}>© 2026 TerraMatch. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </footer>
   );
 }
 
