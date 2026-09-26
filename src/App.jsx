@@ -63,7 +63,7 @@ function App() {
         {view === 'landing' && <LandingView onNavigate={setView} />}
         {view === 'login' && <LoginView supabase={supabase} onSuccess={(u, email) => { setUser(u); loadProfile(email); setView('dashboard'); showToast('¡Bienvenido!'); }} showToast={showToast} onNavigate={setView} />}
         {view === 'register' && <RegisterView supabase={supabase} onSuccess={(u, email) => { setUser(u); loadProfile(email); setView('dashboard'); showToast('¡Cuenta creada!'); }} showToast={showToast} />}
-        {view === 'iub' && user && <IUBView user={user} supabase={supabase} showToast={showToast} onNavigate={setView} />}
+        {view === 'iub' && user && <IUBView user={user} profile={profile} supabase={supabase} showToast={showToast} onNavigate={setView} />}
         {view === 'oferta' && user && <OfertaView user={user} profile={profile} supabase={supabase} showToast={showToast} onNavigate={setView} />}
         {view === 'dashboard' && user && <DashboardView user={user} profile={profile} supabase={supabase} showToast={showToast} onNavigate={setView} />}
         {view === 'admin' && user && isAdmin && <AdminView supabase={supabase} showToast={showToast} />}
@@ -113,7 +113,6 @@ function LandingView({ onNavigate }) {
     <div style={{ padding: '80px 24px', textAlign: 'center', background: 'linear-gradient(135deg, #D4E6F1 0%, white 100%)', minHeight: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
       <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', marginBottom: '16px', color: '#1a202c' }}>Encuentra tu <span style={{ color: '#E74C3C' }}>match perfecto</span></h1>
       <p style={{ fontSize: '1.2rem', color: '#4A5568', marginBottom: '48px', maxWidth: '600px' }}>Estandarizamos los requerimientos inmobiliarios para conectar propietarios y empresarios sin intermediarios innecesarios.</p>
-      
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', maxWidth: '800px', width: '100%' }}>
         <div onClick={() => onNavigate('oferta')} style={{ background: 'white', padding: '40px 32px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.3s' }}
              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#E74C3C'; e.currentTarget.style.transform = 'translateY(-5px)'; }}
@@ -123,7 +122,6 @@ function LandingView({ onNavigate }) {
           <p style={{ color: '#7F8C8D', fontSize: '0.95rem', lineHeight: '1.5' }}>Soy propietario o inmobiliaria y quiero publicar un inmueble comercial para encontrar al empresario ideal.</p>
           <button style={{ marginTop: '24px', padding: '12px 24px', background: '#1a202c', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>Continuar →</button>
         </div>
-
         <div onClick={() => onNavigate('iub')} style={{ background: 'white', padding: '40px 32px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.3s' }}
              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#E74C3C'; e.currentTarget.style.transform = 'translateY(-5px)'; }}
              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}>
@@ -138,7 +136,464 @@ function LandingView({ onNavigate }) {
 }
 
 // ==========================================
-// OFERTA VIEW (COMPLETA Y DETALLADA)
+// IUB VIEW - FORMULARIO DE 6 PASOS (CORAZÓN DEL NEGOCIO)
+// ==========================================
+function IUBView({ user, profile, supabase, showToast, onNavigate }) {
+  const [step, setStep] = useState(1);
+  const [aceptoTerminos, setAceptoTerminos] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  const [form, setForm] = useState({
+    // Paso 1: Identificación
+    nombre_completo: profile?.nombre + ' ' + profile?.apellido || '',
+    nit_cedula: '',
+    celular: profile?.celular || '',
+    email_contacto: profile?.email || '',
+    tipo_negocio: '',
+    // Paso 2: Ubicación
+    ciudad: 'Bogotá',
+    zona: 'Norte',
+    barrio: '',
+    direccion_referencia: '',
+    // Paso 3: Inmueble
+    tipo_inmueble: 'local',
+    area_min: 50,
+    area_max: 200,
+    banos: 1,
+    parqueaderos: 0,
+    caracteristicas: [],
+    // Paso 4: Económico
+    operacion: 'arrendar',
+    presupuesto_min: 1000000,
+    presupuesto_max: 5000000,
+    admin_incluido: false,
+    // Paso 5: Decisión
+    tiempo_decision: '1-3 meses',
+    fecha_ocupacion: '',
+    observaciones: ''
+  });
+
+  const steps = [
+    { num: 1, name: 'Identificación', icon: '👤' },
+    { num: 2, name: 'Ubicación', icon: '📍' },
+    { num: 3, name: 'Inmueble', icon: '🏢' },
+    { num: 4, name: 'Económico', icon: '💰' },
+    { num: 5, name: 'Decisión', icon: '' },
+    { num: 6, name: 'Resumen', icon: '✅' }
+  ];
+
+  const toggleCaracteristica = (car) => {
+    setForm(prev => ({
+      ...prev,
+      caracteristicas: prev.caracteristicas.includes(car) 
+        ? prev.caracteristicas.filter(c => c !== car)
+        : [...prev.caracteristicas, car]
+    }));
+  };
+
+  const updateForm = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  const validateStep = () => {
+    if (step === 1) {
+      if (!form.nombre_completo || !form.celular || !form.email_contacto) {
+        showToast('Completa los campos obligatorios de identificación', 'error');
+        return false;
+      }
+    }
+    if (step === 2) {
+      if (!form.ciudad || !form.zona) {
+        showToast('Selecciona ciudad y zona', 'error');
+        return false;
+      }
+    }
+    if (step === 3) {
+      if (form.area_min > form.area_max) {
+        showToast('El área mínima no puede ser mayor que la máxima', 'error');
+        return false;
+      }
+    }
+    if (step === 4) {
+      if (form.presupuesto_min > form.presupuesto_max) {
+        showToast('El presupuesto mínimo no puede ser mayor que el máximo', 'error');
+        return false;
+      }
+    }
+    if (step === 6) {
+      if (!aceptoTerminos) {
+        showToast('Debes aceptar los Términos y Condiciones para generar el IUB', 'error');
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const nextStep = () => {
+    if (validateStep()) setStep(prev => Math.min(prev + 1, 6));
+  };
+
+  const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
+
+  async function handleSubmit() {
+    if (!validateStep()) return;
+    setLoading(true);
+    try {
+      const prefix = form.operacion === 'comprar' ? 'V' : 'A';
+      const codigoIub = `TM-${prefix}-LOC-${form.ciudad.substring(0,3).toUpperCase()}-${form.zona.substring(0,3).toUpperCase()}-${Math.floor(form.area_min/10)}-${Math.floor(form.presupuesto_max/1000)}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
+
+      const { data: iub, error: iubError } = await supabase.from('iubs').insert([{
+        user_id: user.id,
+        codigo_iub: codigoIub,
+        segmento: 'locales',
+        operacion: form.operacion,
+        ciudad: form.ciudad,
+        zona: form.zona,
+        area_min: form.area_min,
+        presupuesto_max: form.presupuesto_max,
+        tipo_inmueble: form.tipo_inmueble,
+        caracteristicas: JSON.stringify(form.caracteristicas),
+        // Nuevos campos de los 6 pasos
+        nombre_completo: form.nombre_completo,
+        nit_cedula: form.nit_cedula,
+        celular: form.celular,
+        email_contacto: form.email_contacto,
+        tipo_negocio: form.tipo_negocio,
+        barrio: form.barrio,
+        direccion_referencia: form.direccion_referencia,
+        area_max: form.area_max,
+        banos: form.banos,
+        parqueaderos: form.parqueaderos,
+        presupuesto_min: form.presupuesto_min,
+        admin_incluido: form.admin_incluido,
+        tiempo_decision: form.tiempo_decision,
+        fecha_ocupacion: form.fecha_ocupacion || null,
+        observaciones: form.observaciones,
+        acepto_terminos_iub: true
+      }]).select().single();
+
+      if (iubError) throw iubError;
+
+      // Motor de matching
+      const { data: propiedades } = await supabase.from('propiedades')
+        .select('*')
+        .eq('segmento', 'locales')
+        .eq('operacion', form.operacion)
+        .eq('disponible', true)
+        .eq('ciudad', form.ciudad);
+
+      if (propiedades && propiedades.length > 0) {
+        const matches = propiedades.map(prop => ({
+          iub_id: iub.id,
+          propiedad_id: prop.id,
+          user_id: user.id,
+          score: Math.floor(Math.random() * 30) + 70,
+          estado: 'pendiente'
+        }));
+        await supabase.from('matches').insert(matches);
+        showToast(`¡IUB ${codigoIub} generado! Se encontraron ${matches.length} matches.`);
+      } else {
+        showToast(`IUB ${codigoIub} creado. Buscaremos matches cuando haya propiedades.`);
+      }
+      onNavigate('dashboard');
+    } catch (error) {
+      showToast(error.message || 'Error al generar IUB', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const inputStyle = { width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box', marginBottom: '16px', fontSize: '1rem' };
+  const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 600, color: '#1a202c' };
+  const sectionTitle = { marginBottom: '16px', color: '#E74C3C', borderBottom: '1px solid #ECF0F1', paddingBottom: '8px' };
+
+  return (
+    <div style={{ padding: '40px 24px', maxWidth: '900px', margin: '0 auto' }}>
+      <div style={{ background: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
+        
+        {/* HEADER */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h2 style={{ marginBottom: '8px' }}>Indicador Único de Búsqueda</h2>
+          <p style={{ color: '#7F8C8D', margin: 0 }}>Completa los 6 pasos para generar tu IUB</p>
+        </div>
+
+        {/* BARRA DE PROGRESO */}
+        <div style={{ marginBottom: '40px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            {steps.map(s => (
+              <div key={s.num} style={{ flex: 1, textAlign: 'center', opacity: step >= s.num ? 1 : 0.4, transition: 'all 0.3s' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: step >= s.num ? '#E74C3C' : '#ECF0F1', color: step >= s.num ? 'white' : '#7F8C8D', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', fontWeight: 700, fontSize: '1.1rem' }}>
+                  {step > s.num ? '✓' : s.icon}
+                </div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: step >= s.num ? '#1a202c' : '#7F8C8D' }}>{s.name}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ height: '4px', background: '#ECF0F1', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${((step - 1) / 5) * 100}%`, background: '#E74C3C', transition: 'width 0.3s' }} />
+          </div>
+        </div>
+
+        {/* PASO 1: IDENTIFICACIÓN */}
+        {step === 1 && (
+          <div>
+            <h3 style={sectionTitle}>Paso 1: Identificación</h3>
+            <p style={{ color: '#7F8C8D', marginBottom: '24px' }}>¿Quién realiza la búsqueda?</p>
+            <div>
+              <label style={labelStyle}>Nombre completo / Razón social *</label>
+              <input style={inputStyle} value={form.nombre_completo} onChange={e => updateForm('nombre_completo', e.target.value)} placeholder="Ej: Juan Carlos Nieto o Mi Empresa SAS" />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>NIT / Cédula</label>
+                <input style={inputStyle} value={form.nit_cedula} onChange={e => updateForm('nit_cedula', e.target.value)} placeholder="Ej: 901.612.770-8" />
+              </div>
+              <div>
+                <label style={labelStyle}>Tipo de negocio / Giro comercial</label>
+                <input style={inputStyle} value={form.tipo_negocio} onChange={e => updateForm('tipo_negocio', e.target.value)} placeholder="Ej: Restaurante, Retail, Servicios" />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Celular / WhatsApp *</label>
+                <input style={inputStyle} value={form.celular} onChange={e => updateForm('celular', e.target.value)} placeholder="+57 300 000 0000" />
+              </div>
+              <div>
+                <label style={labelStyle}>Correo electrónico *</label>
+                <input type="email" style={inputStyle} value={form.email_contacto} onChange={e => updateForm('email_contacto', e.target.value)} placeholder="correo@ejemplo.com" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PASO 2: UBICACIÓN */}
+        {step === 2 && (
+          <div>
+            <h3 style={sectionTitle}>Paso 2: Ubicación</h3>
+            <p style={{ color: '#7F8C8D', marginBottom: '24px' }}>¿Dónde quieres ubicar tu negocio?</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Ciudad *</label>
+                <select style={inputStyle} value={form.ciudad} onChange={e => updateForm('ciudad', e.target.value)}>
+                  <option value="Bogotá">Bogotá</option>
+                  <option value="Medellín">Medellín</option>
+                  <option value="Cali">Cali</option>
+                  <option value="Barranquilla">Barranquilla</option>
+                  <option value="Cartagena">Cartagena</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Zona / Localidad *</label>
+                <select style={inputStyle} value={form.zona} onChange={e => updateForm('zona', e.target.value)}>
+                  <option value="Norte">Norte</option>
+                  <option value="Sur">Sur</option>
+                  <option value="Centro">Centro</option>
+                  <option value="Occidente">Occidente</option>
+                  <option value="Oriente">Oriente</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>Barrio (Opcional)</label>
+              <input style={inputStyle} value={form.barrio} onChange={e => updateForm('barrio', e.target.value)} placeholder="Ej: Chapinero, El Poblado, Granada" />
+            </div>
+            <div>
+              <label style={labelStyle}>Dirección aproximada o referencia</label>
+              <textarea style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} value={form.direccion_referencia} onChange={e => updateForm('direccion_referencia', e.target.value)} placeholder="Ej: Cerca al Centro Comercial Andino, sobre la Calle 85" />
+            </div>
+          </div>
+        )}
+
+        {/* PASO 3: INMUEBLE */}
+        {step === 3 && (
+          <div>
+            <h3 style={sectionTitle}>Paso 3: Inmueble</h3>
+            <p style={{ color: '#7F8C8D', marginBottom: '24px' }}>¿Qué tipo de inmueble necesitas?</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Tipo de inmueble</label>
+                <select style={inputStyle} value={form.tipo_inmueble} onChange={e => updateForm('tipo_inmueble', e.target.value)}>
+                  <option value="local">Local Comercial</option>
+                  <option value="oficina">Oficina</option>
+                  <option value="bodega">Bodega</option>
+                  <option value="consultorio">Consultorio</option>
+                  <option value="showroom">Showroom</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Baños requeridos</label>
+                <input type="number" style={inputStyle} value={form.banos} onChange={e => updateForm('banos', parseInt(e.target.value) || 0)} />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Área mínima (m²)</label>
+                <input type="number" style={inputStyle} value={form.area_min} onChange={e => updateForm('area_min', parseInt(e.target.value) || 0)} />
+              </div>
+              <div>
+                <label style={labelStyle}>Área máxima (m²)</label>
+                <input type="number" style={inputStyle} value={form.area_max} onChange={e => updateForm('area_max', parseInt(e.target.value) || 0)} />
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>Parqueaderos requeridos</label>
+              <input type="number" style={inputStyle} value={form.parqueaderos} onChange={e => updateForm('parqueaderos', parseInt(e.target.value) || 0)} />
+            </div>
+            <div style={{ marginTop: '24px' }}>
+              <label style={labelStyle}>Características deseables</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                {['Esquinero', 'Vía principal', 'Doble altura', 'Seguridad 24h', 'Muelles de carga', 'Aire acondicionado', 'Permiso de suelos', 'Vitral amplio'].map(car => (
+                  <label key={car} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '10px', background: form.caracteristicas.includes(car) ? '#FFF5F5' : '#f8f9fa', borderRadius: '8px', border: `1px solid ${form.caracteristicas.includes(car) ? '#E74C3C' : '#ECF0F1'}`, transition: 'all 0.2s' }}>
+                    <input type="checkbox" checked={form.caracteristicas.includes(car)} onChange={() => toggleCaracteristica(car)} />
+                    <span style={{ fontSize: '0.9rem' }}>{car}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PASO 4: ECONÓMICO */}
+        {step === 4 && (
+          <div>
+            <h3 style={sectionTitle}>Paso 4: Condiciones Económicas</h3>
+            <p style={{ color: '#7F8C8D', marginBottom: '24px' }}>¿Cuál es tu presupuesto?</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Operación</label>
+                <select style={inputStyle} value={form.operacion} onChange={e => updateForm('operacion', e.target.value)}>
+                  <option value="arrendar">Arrendar</option>
+                  <option value="comprar">Comprar</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 600 }}>
+                  <input type="checkbox" checked={form.admin_incluido} onChange={e => updateForm('admin_incluido', e.target.checked)} style={{ transform: 'scale(1.2)' }} />
+                  Presupuesto incluye administración
+                </label>
+              </div>
+            </div>
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={labelStyle}>Presupuesto mínimo</span>
+                <span style={{ fontWeight: 'bold', color: '#E74C3C' }}>${form.presupuesto_min.toLocaleString('es-CO')} COP</span>
+              </div>
+              <input type="range" min="500000" max="50000000" step="500000" value={form.presupuesto_min} onChange={e => updateForm('presupuesto_min', parseInt(e.target.value))} style={{ width: '100%', accentColor: '#E74C3C' }} />
+            </div>
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={labelStyle}>Presupuesto máximo</span>
+                <span style={{ fontWeight: 'bold', color: '#E74C3C' }}>${form.presupuesto_max.toLocaleString('es-CO')} COP</span>
+              </div>
+              <input type="range" min="500000" max="100000000" step="500000" value={form.presupuesto_max} onChange={e => updateForm('presupuesto_max', parseInt(e.target.value))} style={{ width: '100%', accentColor: '#E74C3C' }} />
+            </div>
+          </div>
+        )}
+
+        {/* PASO 5: DECISIÓN */}
+        {step === 5 && (
+          <div>
+            <h3 style={sectionTitle}>Paso 5: Tiempo de Decisión</h3>
+            <p style={{ color: '#7F8C8D', marginBottom: '24px' }}>¿Cuándo necesitas el inmueble?</p>
+            <div>
+              <label style={labelStyle}>Tiempo de decisión</label>
+              <select style={inputStyle} value={form.tiempo_decision} onChange={e => updateForm('tiempo_decision', e.target.value)}>
+                <option value="Inmediato">Inmediato (menos de 1 mes)</option>
+                <option value="1-3 meses">1 a 3 meses</option>
+                <option value="3-6 meses">3 a 6 meses</option>
+                <option value="6-12 meses">6 a 12 meses</option>
+                <option value="Más de 1 año">Más de 1 año</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Fecha estimada de ocupación / mudanza</label>
+              <input type="date" style={inputStyle} value={form.fecha_ocupacion} onChange={e => updateForm('fecha_ocupacion', e.target.value)} />
+            </div>
+            <div>
+              <label style={labelStyle}>Observaciones o requerimientos legales especiales</label>
+              <textarea style={{ ...inputStyle, minHeight: '120px', resize: 'vertical' }} value={form.observaciones} onChange={e => updateForm('observaciones', e.target.value)} placeholder="Ej: Necesito permiso de uso de suelos para restaurante, horario de operación 24/7, etc." />
+            </div>
+          </div>
+        )}
+
+        {/* PASO 6: RESUMEN */}
+        {step === 6 && (
+          <div>
+            <h3 style={sectionTitle}>Paso 6: Resumen y Confirmación</h3>
+            <p style={{ color: '#7F8C8D', marginBottom: '24px' }}>Revisa toda la información antes de generar tu IUB</p>
+            
+            <div style={{ background: '#f8f9fa', padding: '24px', borderRadius: '12px', marginBottom: '16px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#E74C3C' }}>👤 Identificación</h4>
+              <p style={{ margin: '4px 0' }}><strong>Nombre:</strong> {form.nombre_completo}</p>
+              {form.nit_cedula && <p style={{ margin: '4px 0' }}><strong>NIT/Cédula:</strong> {form.nit_cedula}</p>}
+              {form.tipo_negocio && <p style={{ margin: '4px 0' }}><strong>Giro:</strong> {form.tipo_negocio}</p>}
+              <p style={{ margin: '4px 0' }}><strong>Contacto:</strong> {form.celular} · {form.email_contacto}</p>
+            </div>
+
+            <div style={{ background: '#f8f9fa', padding: '24px', borderRadius: '12px', marginBottom: '16px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#E74C3C' }}>📍 Ubicación</h4>
+              <p style={{ margin: '4px 0' }}><strong>Ciudad:</strong> {form.ciudad} - {form.zona}</p>
+              {form.barrio && <p style={{ margin: '4px 0' }}><strong>Barrio:</strong> {form.barrio}</p>}
+              {form.direccion_referencia && <p style={{ margin: '4px 0' }}><strong>Referencia:</strong> {form.direccion_referencia}</p>}
+            </div>
+
+            <div style={{ background: '#f8f9fa', padding: '24px', borderRadius: '12px', marginBottom: '16px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#E74C3C' }}> Inmueble</h4>
+              <p style={{ margin: '4px 0' }}><strong>Tipo:</strong> {form.tipo_inmueble}</p>
+              <p style={{ margin: '4px 0' }}><strong>Área:</strong> {form.area_min} - {form.area_max} m²</p>
+              <p style={{ margin: '4px 0' }}><strong>Baños:</strong> {form.banos} · <strong>Parqueaderos:</strong> {form.parqueaderos}</p>
+              {form.caracteristicas.length > 0 && <p style={{ margin: '4px 0' }}><strong>Características:</strong> {form.caracteristicas.join(', ')}</p>}
+            </div>
+
+            <div style={{ background: '#f8f9fa', padding: '24px', borderRadius: '12px', marginBottom: '16px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#E74C3C' }}>💰 Económico</h4>
+              <p style={{ margin: '4px 0' }}><strong>Operación:</strong> {form.operacion}</p>
+              <p style={{ margin: '4px 0' }}><strong>Presupuesto:</strong> ${form.presupuesto_min.toLocaleString('es-CO')} - ${form.presupuesto_max.toLocaleString('es-CO')} COP</p>
+              <p style={{ margin: '4px 0' }}><strong>Incluye admin:</strong> {form.admin_incluido ? 'Sí' : 'No'}</p>
+            </div>
+
+            <div style={{ background: '#f8f9fa', padding: '24px', borderRadius: '12px', marginBottom: '24px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#E74C3C' }}>📅 Decisión</h4>
+              <p style={{ margin: '4px 0' }}><strong>Tiempo:</strong> {form.tiempo_decision}</p>
+              {form.fecha_ocupacion && <p style={{ margin: '4px 0' }}><strong>Fecha ocupación:</strong> {form.fecha_ocupacion}</p>}
+              {form.observaciones && <p style={{ margin: '4px 0' }}><strong>Observaciones:</strong> {form.observaciones}</p>}
+            </div>
+
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', padding: '16px', background: '#FFF5F5', borderRadius: '8px', border: '1px solid #E74C3C' }}>
+              <input type="checkbox" checked={aceptoTerminos} onChange={e => setAceptoTerminos(e.target.checked)} style={{ marginTop: '3px', transform: 'scale(1.2)' }} />
+              <span style={{ fontSize: '0.9rem', color: '#1a202c' }}>
+                Acepto los <a href={DOC_TERMINOS} target="_blank" rel="noopener noreferrer" style={{ color: '#E74C3C', textDecoration: 'underline', fontWeight: 600 }}>Términos y Condiciones</a> y autorizo a TerraMatch a usar esta información para realizar el matching con propiedades disponibles. *
+              </span>
+            </label>
+          </div>
+        )}
+
+        {/* NAVEGACIÓN DE PASOS */}
+        <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
+          {step > 1 && (
+            <button onClick={prevStep} style={{ flex: 1, padding: '14px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+              ← Atrás
+            </button>
+          )}
+          {step < 6 ? (
+            <button onClick={nextStep} style={{ flex: 2, padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '1.05rem' }}>
+              Siguiente →
+            </button>
+          ) : (
+            <button onClick={handleSubmit} disabled={loading} style={{ flex: 2, padding: '14px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '1.05rem', boxShadow: '0 4px 12px rgba(39, 174, 96, 0.3)' }}>
+              {loading ? 'Generando IUB...' : '✓ Generar mi IUB y Buscar Matches'}
+            </button>
+          )}
+        </div>
+
+        <button onClick={() => onNavigate('landing')} style={{ marginTop: '16px', background: 'none', border: 'none', color: '#7F8C8D', cursor: 'pointer', textDecoration: 'underline', width: '100%' }}>
+          ← Cancelar y volver al inicio
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// OFERTA VIEW (Tengo Locales)
 // ==========================================
 function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
   const [step, setStep] = useState(1);
@@ -167,35 +622,17 @@ function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
     setLoading(true);
     try {
       const { error } = await supabase.from('propiedades').insert([{
-        user_id: user.id,
-        segmento: 'locales',
-        tipo_inmueble: form.tipo_inmueble,
-        operacion: form.operacion,
-        ciudad: form.ciudad,
-        zona: form.zona,
-        direccion: form.direccion,
-        area: form.area,
-        area_util: form.area_util,
-        banos: form.banos,
-        parqueaderos: form.parqueaderos,
-        precio: form.precio,
-        admin_incluido: form.admin_incluido,
-        descripcion: form.descripcion,
-        contacto_nombre: form.contacto_nombre,
-        contacto_celular: form.contacto_celular,
-        caracteristicas: JSON.stringify(form.caracteristicas),
-        disponible: true,
+        user_id: user.id, segmento: 'locales', tipo_inmueble: form.tipo_inmueble, operacion: form.operacion,
+        ciudad: form.ciudad, zona: form.zona, direccion: form.direccion, area: form.area, area_util: form.area_util,
+        banos: form.banos, parqueaderos: form.parqueaderos, precio: form.precio, admin_incluido: form.admin_incluido,
+        descripcion: form.descripcion, contacto_nombre: form.contacto_nombre, contacto_celular: form.contacto_celular,
+        caracteristicas: JSON.stringify(form.caracteristicas), disponible: true,
         titulo: `${form.tipo_inmueble} en ${form.zona}, ${form.ciudad}`
       }]);
-
       if (error) throw error;
       showToast('¡Inmueble publicado exitosamente!');
       onNavigate('dashboard');
-    } catch (error) {
-      showToast(error.message || 'Error al publicar', 'error');
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { showToast(error.message || 'Error al publicar', 'error'); } finally { setLoading(false); }
   }
 
   const inputStyle = { width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box', marginBottom: '16px', fontSize: '1rem' };
@@ -230,85 +667,29 @@ function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
           <h2 style={{ margin: 0 }}>Publicar Inmueble</h2>
           <span style={{ background: '#E74C3C', color: 'white', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600 }}>{rol}</span>
         </div>
-        
         <form onSubmit={handleSubmit}>
           <h4 style={{ marginBottom: '16px', color: '#E74C3C', borderBottom: '1px solid #ECF0F1', paddingBottom: '8px' }}>1. Información Básica</h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>Tipo de inmueble</label>
-              <select style={inputStyle} value={form.tipo_inmueble} onChange={e => setForm({...form, tipo_inmueble: e.target.value})}>
-                <option value="local">Local Comercial</option>
-                <option value="oficina">Oficina</option>
-                <option value="bodega">Bodega</option>
-                <option value="consultorio">Consultorio</option>
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Operación</label>
-              <select style={inputStyle} value={form.operacion} onChange={e => setForm({...form, operacion: e.target.value})}>
-                <option value="arrendar">Arrendar</option>
-                <option value="vender">Vender</option>
-              </select>
-            </div>
+            <div><label style={labelStyle}>Tipo de inmueble</label><select style={inputStyle} value={form.tipo_inmueble} onChange={e => setForm({...form, tipo_inmueble: e.target.value})}><option value="local">Local Comercial</option><option value="oficina">Oficina</option><option value="bodega">Bodega</option><option value="consultorio">Consultorio</option></select></div>
+            <div><label style={labelStyle}>Operación</label><select style={inputStyle} value={form.operacion} onChange={e => setForm({...form, operacion: e.target.value})}><option value="arrendar">Arrendar</option><option value="vender">Vender</option></select></div>
           </div>
-
           <h4 style={{ marginBottom: '16px', color: '#E74C3C', borderBottom: '1px solid #ECF0F1', paddingBottom: '8px', marginTop: '24px' }}>2. Ubicación y Medidas</h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>Ciudad</label>
-              <select style={inputStyle} value={form.ciudad} onChange={e => setForm({...form, ciudad: e.target.value})}>
-                <option value="Bogotá">Bogotá</option>
-                <option value="Medellín">Medellín</option>
-                <option value="Cali">Cali</option>
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Zona / Localidad</label>
-              <select style={inputStyle} value={form.zona} onChange={e => setForm({...form, zona: e.target.value})}>
-                <option value="Norte">Norte</option>
-                <option value="Sur">Sur</option>
-                <option value="Centro">Centro</option>
-                <option value="Occidente">Occidente</option>
-              </select>
-            </div>
+            <div><label style={labelStyle}>Ciudad</label><select style={inputStyle} value={form.ciudad} onChange={e => setForm({...form, ciudad: e.target.value})}><option value="Bogotá">Bogotá</option><option value="Medellín">Medellín</option><option value="Cali">Cali</option></select></div>
+            <div><label style={labelStyle}>Zona / Localidad</label><select style={inputStyle} value={form.zona} onChange={e => setForm({...form, zona: e.target.value})}><option value="Norte">Norte</option><option value="Sur">Sur</option><option value="Centro">Centro</option><option value="Occidente">Occidente</option></select></div>
           </div>
-          <div>
-            <label style={labelStyle}>Dirección exacta</label>
-            <input style={inputStyle} placeholder="Ej: Calle 85 # 15-30" value={form.direccion} onChange={e => setForm({...form, direccion: e.target.value})} required />
-          </div>
+          <div><label style={labelStyle}>Dirección exacta</label><input style={inputStyle} placeholder="Ej: Calle 85 # 15-30" value={form.direccion} onChange={e => setForm({...form, direccion: e.target.value})} required /></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>Área Total (m²)</label>
-              <input type="number" style={inputStyle} value={form.area} onChange={e => setForm({...form, area: parseInt(e.target.value) || 0})} required />
-            </div>
-            <div>
-              <label style={labelStyle}>Área Útil (m²)</label>
-              <input type="number" style={inputStyle} value={form.area_util} onChange={e => setForm({...form, area_util: parseInt(e.target.value) || 0})} required />
-            </div>
-            <div>
-              <label style={labelStyle}>Baños</label>
-              <input type="number" style={inputStyle} value={form.banos} onChange={e => setForm({...form, banos: parseInt(e.target.value) || 0})} required />
-            </div>
-            <div>
-              <label style={labelStyle}>Parqueaderos</label>
-              <input type="number" style={inputStyle} value={form.parqueaderos} onChange={e => setForm({...form, parqueaderos: parseInt(e.target.value) || 0})} required />
-            </div>
+            <div><label style={labelStyle}>Área Total (m²)</label><input type="number" style={inputStyle} value={form.area} onChange={e => setForm({...form, area: parseInt(e.target.value) || 0})} required /></div>
+            <div><label style={labelStyle}>Área Útil (m²)</label><input type="number" style={inputStyle} value={form.area_util} onChange={e => setForm({...form, area_util: parseInt(e.target.value) || 0})} required /></div>
+            <div><label style={labelStyle}>Baños</label><input type="number" style={inputStyle} value={form.banos} onChange={e => setForm({...form, banos: parseInt(e.target.value) || 0})} required /></div>
+            <div><label style={labelStyle}>Parqueaderos</label><input type="number" style={inputStyle} value={form.parqueaderos} onChange={e => setForm({...form, parqueaderos: parseInt(e.target.value) || 0})} required /></div>
           </div>
-
           <h4 style={{ marginBottom: '16px', color: '#E74C3C', borderBottom: '1px solid #ECF0F1', paddingBottom: '8px', marginTop: '24px' }}>3. Condiciones Económicas</h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'end' }}>
-            <div>
-              <label style={labelStyle}>Precio (COP)</label>
-              <input type="number" style={inputStyle} value={form.precio} onChange={e => setForm({...form, precio: parseInt(e.target.value) || 0})} required />
-            </div>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 600 }}>
-                <input type="checkbox" checked={form.admin_incluido} onChange={e => setForm({...form, admin_incluido: e.target.checked})} style={{ transform: 'scale(1.2)' }} />
-                Precio incluye administración
-              </label>
-            </div>
+            <div><label style={labelStyle}>Precio (COP)</label><input type="number" style={inputStyle} value={form.precio} onChange={e => setForm({...form, precio: parseInt(e.target.value) || 0})} required /></div>
+            <div style={{ marginBottom: '16px' }}><label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 600 }}><input type="checkbox" checked={form.admin_incluido} onChange={e => setForm({...form, admin_incluido: e.target.checked})} style={{ transform: 'scale(1.2)' }} /> Precio incluye administración</label></div>
           </div>
-
           <h4 style={{ marginBottom: '16px', color: '#E74C3C', borderBottom: '1px solid #ECF0F1', paddingBottom: '8px', marginTop: '24px' }}>4. Características Destacadas</h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '24px' }}>
             {['Esquinero', 'Vía principal', 'Doble altura', 'Seguridad 24h', 'Muelles de carga', 'Aire acondicionado', 'Permiso de suelos'].map(car => (
@@ -318,182 +699,16 @@ function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
               </label>
             ))}
           </div>
-
           <h4 style={{ marginBottom: '16px', color: '#E74C3C', borderBottom: '1px solid #ECF0F1', paddingBottom: '8px', marginTop: '24px' }}>5. Descripción y Contacto</h4>
-          <div>
-            <label style={labelStyle}>Descripción del inmueble</label>
-            <textarea style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }} placeholder="Describe las bondades del inmueble, estado, etc." value={form.descripcion} onChange={e => setForm({...form, descripcion: e.target.value})} />
-          </div>
+          <div><label style={labelStyle}>Descripción del inmueble</label><textarea style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }} placeholder="Describe las bondades del inmueble, estado, etc." value={form.descripcion} onChange={e => setForm({...form, descripcion: e.target.value})} /></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>Nombre de contacto</label>
-              <input style={inputStyle} value={form.contacto_nombre} onChange={e => setForm({...form, contacto_nombre: e.target.value})} required />
-            </div>
-            <div>
-              <label style={labelStyle}>Celular / WhatsApp</label>
-              <input style={inputStyle} value={form.contacto_celular} onChange={e => setForm({...form, contacto_celular: e.target.value})} required />
-            </div>
+            <div><label style={labelStyle}>Nombre de contacto</label><input style={inputStyle} value={form.contacto_nombre} onChange={e => setForm({...form, contacto_nombre: e.target.value})} required /></div>
+            <div><label style={labelStyle}>Celular / WhatsApp</label><input style={inputStyle} value={form.contacto_celular} onChange={e => setForm({...form, contacto_celular: e.target.value})} required /></div>
           </div>
-
           <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
             <button type="button" onClick={() => setStep(1)} style={{ flex: 1, padding: '14px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Atrás</button>
-            <button type="submit" disabled={loading} style={{ flex: 2, padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '1.05rem' }}>
-              {loading ? 'Publicando...' : 'Publicar Inmueble'}
-            </button>
+            <button type="submit" disabled={loading} style={{ flex: 2, padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '1.05rem' }}>{loading ? 'Publicando...' : 'Publicar Inmueble'}</button>
           </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-// ==========================================
-// LOGIN VIEW
-// ==========================================
-function LoginView({ supabase, onSuccess, showToast, onNavigate }) {
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [loading, setLoading] = useState(false);
-  async function handleSubmit(e) {
-    e.preventDefault(); setLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
-      if (error) throw error;
-      onSuccess(data.user, form.email);
-    } catch (error) { showToast(error.message || 'Credenciales incorrectas', 'error'); } finally { setLoading(false); }
-  }
-  return (
-    <div style={{ padding: '50px', maxWidth: '400px', margin: '40px auto', background: 'white', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '32px' }}>Iniciar Sesión</h2>
-      <form onSubmit={handleSubmit}>
-        <input placeholder="Email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required style={{ width: '100%', padding: '12px', marginBottom: '16px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box' }} />
-        <input type="password" placeholder="Contraseña" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required style={{ width: '100%', padding: '12px', marginBottom: '16px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box' }} />
-        <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>{loading ? 'Entrando...' : 'Ingresar'}</button>
-      </form>
-      <p style={{ textAlign: 'center', marginTop: '20px', color: '#7F8C8D', fontSize: '0.9rem' }}>¿No tienes cuenta? <button onClick={() => onNavigate('register')} style={{ background: 'none', border: 'none', color: '#E74C3C', cursor: 'pointer', fontWeight: 600, padding: 0 }}>Regístrate aquí</button></p>
-    </div>
-  );
-}
-
-// ==========================================
-// REGISTER VIEW
-// ==========================================
-function RegisterView({ supabase, onSuccess, showToast }) {
-  const [form, setForm] = useState({ nombre: '', apellido: '', email: '', celular: '', tipo_usuario: 'buscador', segmento_preferido: 'locales', password: '' });
-  const [aceptaTerminos, setAceptaTerminos] = useState(false);
-  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
-  const [autorizaDatos, setAutorizaDatos] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!aceptaTerminos || !aceptaPrivacidad || !autorizaDatos) {
-      showToast('Debes aceptar los Términos, Políticas de Privacidad y autorizar el tratamiento de datos', 'error');
-      return;
-    }
-    setLoading(true);
-    try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({ email: form.email, password: form.password });
-      if (authError) throw authError;
-      const { error: profileError } = await supabase.from('profiles').insert([{
-        id: authData.user.id, nombre: form.nombre, apellido: form.apellido, email: form.email, celular: form.celular,
-        tipo_usuario: form.tipo_usuario, segmento_preferido: form.segmento_preferido,
-        acepto_terminos: true, acepto_privacidad: true, autorizo_datos: true, fecha_aceptacion: new Date().toISOString()
-      }]);
-      if (profileError) throw profileError;
-      onSuccess(authData.user, form.email);
-    } catch (error) { showToast(error.message || 'Error al crear cuenta', 'error'); } finally { setLoading(false); }
-  }
-
-  const inputStyle = { width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box', marginBottom: '16px', fontSize: '1rem' };
-  const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 600, color: '#1a202c' };
-
-  return (
-    <div style={{ padding: '40px 24px', maxWidth: '640px', margin: '0 auto' }}>
-      <div style={{ background: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Crear Cuenta</h2>
-        <p style={{ textAlign: 'center', color: '#7F8C8D', marginBottom: '32px' }}>Únete al matchmaker inmobiliario de LATAM</p>
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div><label style={labelStyle}>Nombres *</label><input style={inputStyle} value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} required /></div>
-            <div><label style={labelStyle}>Apellidos *</label><input style={inputStyle} value={form.apellido} onChange={e => setForm({...form, apellido: e.target.value})} required /></div>
-          </div>
-          <label style={labelStyle}>Email *</label><input type="email" style={inputStyle} value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
-          <label style={labelStyle}>Celular *</label><input style={inputStyle} value={form.celular} onChange={e => setForm({...form, celular: e.target.value})} required />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div><label style={labelStyle}>Tipo de usuario *</label><select style={inputStyle} value={form.tipo_usuario} onChange={e => setForm({...form, tipo_usuario: e.target.value})}><option value="buscador">Buscador</option><option value="propietario">Propietario</option><option value="agencia">Agencia</option></select></div>
-            <div><label style={labelStyle}>Segmento *</label><select style={inputStyle} value={form.segmento_preferido} onChange={e => setForm({...form, segmento_preferido: e.target.value})}><option value="locales">Locales</option><option value="vivienda">Vivienda</option><option value="oficinas">Oficinas</option></select></div>
-          </div>
-          <label style={labelStyle}>Contraseña * (mínimo 6 caracteres)</label><input type="password" style={inputStyle} value={form.password} onChange={e => setForm({...form, password: e.target.value})} required minLength="6" />
-
-          <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', marginBottom: '24px', border: '1px solid #e9ecef' }}>
-            <h4 style={{ margin: '0 0 16px 0', color: '#1a202c', fontSize: '1rem' }}>📄 Documentos Legales *</h4>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
-              <input type="checkbox" checked={aceptaTerminos} onChange={e => setAceptaTerminos(e.target.checked)} style={{ marginTop: '3px', transform: 'scale(1.2)' }} />
-              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>Acepto los <a href={DOC_TERMINOS} target="_blank" rel="noopener noreferrer" style={{ color: '#E74C3C', textDecoration: 'underline', fontWeight: 600 }}>Términos y Condiciones</a> *</span>
-            </label>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
-              <input type="checkbox" checked={aceptaPrivacidad} onChange={e => setAceptaPrivacidad(e.target.checked)} style={{ marginTop: '3px', transform: 'scale(1.2)' }} />
-              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>Acepto la <a href={DOC_PRIVACIDAD} target="_blank" rel="noopener noreferrer" style={{ color: '#E74C3C', textDecoration: 'underline', fontWeight: 600 }}>Política de Privacidad</a> *</span>
-            </label>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
-              <input type="checkbox" checked={autorizaDatos} onChange={e => setAutorizaDatos(e.target.checked)} style={{ marginTop: '3px', transform: 'scale(1.2)' }} />
-              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>Autorizo el tratamiento de mis datos (Ley 1581 de 2012) *</span>
-            </label>
-          </div>
-          <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '1rem' }}>{loading ? 'Creando cuenta...' : 'Crear Cuenta'}</button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-// ==========================================
-// IUB VIEW (Busco Locales)
-// ==========================================
-function IUBView({ user, supabase, showToast, onNavigate }) {
-  const [form, setForm] = useState({ operacion: 'arrendar', ciudad: 'Bogotá', zona: 'Norte', tipo_inmueble: 'local', area: 100, presupuesto: 5000000 });
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e) {
-    e.preventDefault(); setLoading(true);
-    try {
-      const prefix = form.operacion === 'comprar' ? 'V' : 'A';
-      const codigoIub = `TM-${prefix}-LOC-${form.ciudad.substring(0,3).toUpperCase()}-${form.zona.substring(0,3).toUpperCase()}-${Math.floor(form.area/10)}-${Math.floor(form.presupuesto/1000)}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
-      const { data: iub, error: iubError } = await supabase.from('iubs').insert([{
-        user_id: user.id, codigo_iub: codigoIub, segmento: 'locales', operacion: form.operacion, ciudad: form.ciudad, zona: form.zona, area_min: form.area, presupuesto_max: form.presupuesto, tipo_inmueble: form.tipo_inmueble
-      }]).select().single();
-      if (iubError) throw iubError;
-
-      const { data: propiedades } = await supabase.from('propiedades').select('*').eq('segmento', 'locales').eq('operacion', form.operacion).eq('disponible', true).eq('ciudad', form.ciudad);
-      if (propiedades && propiedades.length > 0) {
-        const matches = propiedades.map(prop => ({ iub_id: iub.id, propiedad_id: prop.id, user_id: user.id, score: Math.floor(Math.random() * 30) + 70, estado: 'pendiente' }));
-        await supabase.from('matches').insert(matches);
-        showToast(`¡IUB creado! Se encontraron ${matches.length} matches.`);
-      } else { showToast('IUB creado, pero no hay propiedades disponibles aún.'); }
-      onNavigate('dashboard');
-    } catch (error) { showToast(error.message || 'Error al crear IUB', 'error'); } finally { setLoading(false); }
-  }
-
-  return (
-    <div style={{ padding: '40px 24px', maxWidth: '720px', margin: '0 auto' }}>
-      <div style={{ background: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Configura tu IUB</h2>
-        <p style={{ textAlign: 'center', color: '#7F8C8D', marginBottom: '32px' }}>Indicador Único de Búsqueda</p>
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            <div><label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Operación</label><select value={form.operacion} onChange={e => setForm({...form, operacion: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }}><option value="arrendar">Arrendar</option><option value="comprar">Comprar</option></select></div>
-            <div><label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Ciudad</label><select value={form.ciudad} onChange={e => setForm({...form, ciudad: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }}><option value="Bogotá">Bogotá</option><option value="Medellín">Medellín</option><option value="Cali">Cali</option></select></div>
-          </div>
-          <div style={{ marginBottom: '16px' }}><label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Zona</label><select value={form.zona} onChange={e => setForm({...form, zona: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }}><option value="Norte">Norte</option><option value="Sur">Sur</option><option value="Centro">Centro</option></select></div>
-          <div style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span>Área mínima (m²)</span><span style={{ fontWeight: 'bold' }}>{form.area} m²</span></div>
-            <input type="range" min="20" max="2000" step="10" value={form.area} onChange={e => setForm({...form, area: parseInt(e.target.value)})} style={{ width: '100%' }} />
-          </div>
-          <div style={{ marginBottom: '32px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span>Presupuesto máximo</span><span style={{ fontWeight: 'bold' }}>${form.presupuesto.toLocaleString('es-CO')} COP</span></div>
-            <input type="range" min="500000" max="50000000" step="500000" value={form.presupuesto} onChange={e => setForm({...form, presupuesto: parseInt(e.target.value)})} style={{ width: '100%' }} />
-          </div>
-          <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>{loading ? 'Generando...' : 'Generar IUB y Buscar Matches'}</button>
         </form>
       </div>
     </div>
@@ -549,14 +764,14 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
         <div style={{ background: 'white', padding: '28px', borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3>Tus Búsquedas (IUB)</h3>
+            <h3>Tus IUBs</h3>
             <button onClick={() => onNavigate('iub')} style={{ padding: '8px 16px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>+ Nuevo IUB</button>
           </div>
           {iubs.length === 0 ? <p style={{ color: '#7F8C8D', textAlign: 'center', padding: '20px' }}>Aún no tienes IUBs.</p> : iubs.map(iub => (
             <div key={iub.id} style={{ background: 'linear-gradient(135deg, #E74C3C 0%, #FF6B6B 100%)', color: 'white', padding: '20px', borderRadius: '12px', marginBottom: '12px', textAlign: 'center' }}>
               <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>{iub.segmento} · {iub.operacion}</div>
               <div style={{ fontFamily: 'monospace', fontSize: '1.1rem', fontWeight: 800, margin: '12px 0', background: 'rgba(255,255,255,0.2)', padding: '12px', borderRadius: '8px' }}>{iub.codigo_iub}</div>
-              <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>{iub.ciudad}, {iub.zona} · {iub.area_min}m²</div>
+              <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>{iub.ciudad}, {iub.zona} · {iub.area_min}-{iub.area_max}m²</div>
             </div>
           ))}
         </div>
@@ -640,6 +855,105 @@ function AdminView({ supabase, showToast }) {
       <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
         {tab === 'overview' && <div><h3 style={{ marginBottom: '16px' }}>Actividad Reciente</h3><p style={{ color: '#7F8C8D' }}>Bienvenido al panel de control.</p></div>}
         {tab === 'users' && <div><h3 style={{ marginBottom: '16px' }}>Usuarios Registrados ({users.length})</h3>{users.length === 0 ? <p>No hay usuarios.</p> : (<table style={{ width: '100%', borderCollapse: 'collapse' }}><thead><tr style={{ borderBottom: '2px solid #ECF0F1', textAlign: 'left' }}><th style={{ padding: '12px' }}>Nombre</th><th style={{ padding: '12px' }}>Email</th><th style={{ padding: '12px' }}>Tipo</th></tr></thead><tbody>{users.map(u => (<tr key={u.id} style={{ borderBottom: '1px solid #ECF0F1' }}><td style={{ padding: '12px' }}>{u.nombre} {u.apellido}</td><td style={{ padding: '12px' }}>{u.email}</td><td style={{ padding: '12px' }}><span style={{ background: '#E74C3C', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>{u.tipo_usuario}</span></td></tr>))}</tbody></table>)}</div>}
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// LOGIN VIEW
+// ==========================================
+function LoginView({ supabase, onSuccess, showToast, onNavigate }) {
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  async function handleSubmit(e) {
+    e.preventDefault(); setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
+      if (error) throw error;
+      onSuccess(data.user, form.email);
+    } catch (error) { showToast(error.message || 'Credenciales incorrectas', 'error'); } finally { setLoading(false); }
+  }
+  return (
+    <div style={{ padding: '50px', maxWidth: '400px', margin: '40px auto', background: 'white', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
+      <h2 style={{ textAlign: 'center', marginBottom: '32px' }}>Iniciar Sesión</h2>
+      <form onSubmit={handleSubmit}>
+        <input placeholder="Email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required style={{ width: '100%', padding: '12px', marginBottom: '16px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box' }} />
+        <input type="password" placeholder="Contraseña" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required style={{ width: '100%', padding: '12px', marginBottom: '16px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box' }} />
+        <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>{loading ? 'Entrando...' : 'Ingresar'}</button>
+      </form>
+      <p style={{ textAlign: 'center', marginTop: '20px', color: '#7F8C8D', fontSize: '0.9rem' }}>¿No tienes cuenta? <button onClick={() => onNavigate('register')} style={{ background: 'none', border: 'none', color: '#E74C3C', cursor: 'pointer', fontWeight: 600, padding: 0 }}>Regístrate aquí</button></p>
+    </div>
+  );
+}
+
+// ==========================================
+// REGISTER VIEW
+// ==========================================
+function RegisterView({ supabase, onSuccess, showToast }) {
+  const [form, setForm] = useState({ nombre: '', apellido: '', email: '', celular: '', tipo_usuario: 'buscador', segmento_preferido: 'locales', password: '' });
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
+  const [autorizaDatos, setAutorizaDatos] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!aceptaTerminos || !aceptaPrivacidad || !autorizaDatos) {
+      showToast('Debes aceptar los Términos, Políticas de Privacidad y autorizar el tratamiento de datos', 'error');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({ email: form.email, password: form.password });
+      if (authError) throw authError;
+      const { error: profileError } = await supabase.from('profiles').insert([{
+        id: authData.user.id, nombre: form.nombre, apellido: form.apellido, email: form.email, celular: form.celular,
+        tipo_usuario: form.tipo_usuario, segmento_preferido: form.segmento_preferido,
+        acepto_terminos: true, acepto_privacidad: true, autorizo_datos: true, fecha_aceptacion: new Date().toISOString()
+      }]);
+      if (profileError) throw profileError;
+      onSuccess(authData.user, form.email);
+    } catch (error) { showToast(error.message || 'Error al crear cuenta', 'error'); } finally { setLoading(false); }
+  }
+
+  const inputStyle = { width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box', marginBottom: '16px', fontSize: '1rem' };
+  const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 600, color: '#1a202c' };
+
+  return (
+    <div style={{ padding: '40px 24px', maxWidth: '640px', margin: '0 auto' }}>
+      <div style={{ background: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Crear Cuenta</h2>
+        <p style={{ textAlign: 'center', color: '#7F8C8D', marginBottom: '32px' }}>Únete al matchmaker inmobiliario de LATAM</p>
+        <form onSubmit={handleSubmit}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div><label style={labelStyle}>Nombres *</label><input style={inputStyle} value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} required /></div>
+            <div><label style={labelStyle}>Apellidos *</label><input style={inputStyle} value={form.apellido} onChange={e => setForm({...form, apellido: e.target.value})} required /></div>
+          </div>
+          <label style={labelStyle}>Email *</label><input type="email" style={inputStyle} value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+          <label style={labelStyle}>Celular *</label><input style={inputStyle} value={form.celular} onChange={e => setForm({...form, celular: e.target.value})} required />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div><label style={labelStyle}>Tipo de usuario *</label><select style={inputStyle} value={form.tipo_usuario} onChange={e => setForm({...form, tipo_usuario: e.target.value})}><option value="buscador">Buscador</option><option value="propietario">Propietario</option><option value="agencia">Agencia</option></select></div>
+            <div><label style={labelStyle}>Segmento *</label><select style={inputStyle} value={form.segmento_preferido} onChange={e => setForm({...form, segmento_preferido: e.target.value})}><option value="locales">Locales</option><option value="vivienda">Vivienda</option><option value="oficinas">Oficinas</option></select></div>
+          </div>
+          <label style={labelStyle}>Contraseña * (mínimo 6 caracteres)</label><input type="password" style={inputStyle} value={form.password} onChange={e => setForm({...form, password: e.target.value})} required minLength="6" />
+          <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', marginBottom: '24px', border: '1px solid #e9ecef' }}>
+            <h4 style={{ margin: '0 0 16px 0', color: '#1a202c', fontSize: '1rem' }}>📄 Documentos Legales *</h4>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={aceptaTerminos} onChange={e => setAceptaTerminos(e.target.checked)} style={{ marginTop: '3px', transform: 'scale(1.2)' }} />
+              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>Acepto los <a href={DOC_TERMINOS} target="_blank" rel="noopener noreferrer" style={{ color: '#E74C3C', textDecoration: 'underline', fontWeight: 600 }}>Términos y Condiciones</a> *</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={aceptaPrivacidad} onChange={e => setAceptaPrivacidad(e.target.checked)} style={{ marginTop: '3px', transform: 'scale(1.2)' }} />
+              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>Acepto la <a href={DOC_PRIVACIDAD} target="_blank" rel="noopener noreferrer" style={{ color: '#E74C3C', textDecoration: 'underline', fontWeight: 600 }}>Política de Privacidad</a> *</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={autorizaDatos} onChange={e => setAutorizaDatos(e.target.checked)} style={{ marginTop: '3px', transform: 'scale(1.2)' }} />
+              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>Autorizo el tratamiento de mis datos (Ley 1581 de 2012) *</span>
+            </label>
+          </div>
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '1rem' }}>{loading ? 'Creando cuenta...' : 'Crear Cuenta'}</button>
+        </form>
       </div>
     </div>
   );
