@@ -8,6 +8,10 @@ const SUPABASE_URL = 'https://wqzwwzmeetykcvhekerl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indxend3em1lZXR5a2N2aGVrZXJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNDg3OTcsImV4cCI6MjEwNTkyNDc5N30.6NJ0fA475cC5EKWGW4EYJyuSHOI9XPor41PTnWNHsRY';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// URLs de documentos legales
+const DOC_TERMINOS = 'https://github.com/jcnietomarketing-svg/match-terramatch/raw/main/T%26C_TerraMatch%20act%202024.pdf';
+const DOC_PRIVACIDAD = 'https://github.com/jcnietomarketing-svg/match-terramatch/raw/main/Politica%20de%20privacidad%20y%20proteccion%20de%20datos_TerraMatch_act2023.pdf';
+
 // ==========================================
 // COMPONENTE PRINCIPAL
 // ==========================================
@@ -68,14 +72,19 @@ function App() {
   const isAdmin = profile?.email === 'jcnieto.marketing@gmail.com';
 
   return (
-    <div className="app">
+    <div className="app" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navbar nombre={safeName} isLoggedIn={!!user} isAdmin={isAdmin} onNavigate={setView} onLogout={handleLogout} />
       
-      {view === 'landing' && <LandingView onNavigate={setView} />}
-      {view === 'login' && <LoginView supabase={supabase} onSuccess={(u, email) => { setUser(u); loadProfile(email); setView('dashboard'); showToast('¡Bienvenido de vuelta!'); }} showToast={showToast} />}
-      {view === 'iub' && user && <IUBView user={user} supabase={supabase} showToast={showToast} onNavigate={setView} />}
-      {view === 'dashboard' && user && <DashboardView user={user} profile={profile} supabase={supabase} showToast={showToast} onNavigate={setView} />}
-      {view === 'admin' && user && isAdmin && <AdminView supabase={supabase} showToast={showToast} />}
+      <main style={{ flex: 1 }}>
+        {view === 'landing' && <LandingView onNavigate={setView} />}
+        {view === 'login' && <LoginView supabase={supabase} onSuccess={(u, email) => { setUser(u); loadProfile(email); setView('dashboard'); showToast('¡Bienvenido de vuelta!'); }} showToast={showToast} onNavigate={setView} />}
+        {view === 'register' && <RegisterView supabase={supabase} onSuccess={(u, email) => { setUser(u); loadProfile(email); setView('dashboard'); showToast('¡Cuenta creada exitosamente!'); }} showToast={showToast} />}
+        {view === 'iub' && user && <IUBView user={user} supabase={supabase} showToast={showToast} onNavigate={setView} />}
+        {view === 'dashboard' && user && <DashboardView user={user} profile={profile} supabase={supabase} showToast={showToast} onNavigate={setView} />}
+        {view === 'admin' && user && isAdmin && <AdminView supabase={supabase} showToast={showToast} />}
+      </main>
+
+      <Footer onNavigate={setView} />
       
       {toast && <div style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.type === 'error' ? '#e74c3c' : '#27ae60', color: 'white', padding: '12px 24px', borderRadius: '8px', zIndex: 1000, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>{toast.message}</div>}
     </div>
@@ -104,11 +113,57 @@ function Navbar({ nombre, isLoggedIn, isAdmin, onNavigate, onLogout }) {
           ) : (
             <>
               <button onClick={() => onNavigate('login')} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #E74C3C', color: '#E74C3C', borderRadius: '6px', cursor: 'pointer' }}>Ingresar</button>
+              <button onClick={() => onNavigate('register')} style={{ padding: '8px 16px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Regístrate</button>
             </>
           )}
         </div>
       </div>
     </nav>
+  );
+}
+
+// ==========================================
+// FOOTER CON ENLACES LEGALES
+// ==========================================
+function Footer({ onNavigate }) {
+  return (
+    <footer style={{ background: '#1a202c', color: '#CBD5E0', padding: '40px 24px 20px', marginTop: '60px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '32px', marginBottom: '32px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+              <div style={{ width: '36px', height: '36px', background: '#E74C3C', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800 }}>TM</div>
+              <span style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.2rem', fontWeight: 700, color: 'white' }}>terramatch</span>
+            </div>
+            <p style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>El matchmaker inmobiliario inteligente de LATAM. Conectamos inmuebles con el negocio perfecto.</p>
+          </div>
+          <div>
+            <h4 style={{ color: 'white', marginBottom: '16px', fontSize: '1rem' }}>Plataforma</h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '8px' }}><button onClick={() => onNavigate('landing')} style={{ background: 'none', border: 'none', color: '#CBD5E0', cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Inicio</button></li>
+              <li style={{ marginBottom: '8px' }}><button onClick={() => onNavigate('login')} style={{ background: 'none', border: 'none', color: '#CBD5E0', cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Ingresar</button></li>
+              <li style={{ marginBottom: '8px' }}><button onClick={() => onNavigate('register')} style={{ background: 'none', border: 'none', color: '#CBD5E0', cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Crear cuenta</button></li>
+            </ul>
+          </div>
+          <div>
+            <h4 style={{ color: 'white', marginBottom: '16px', fontSize: '1rem' }}>Legal</h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '8px' }}><a href={DOC_TERMINOS} target="_blank" rel="noopener noreferrer" style={{ color: '#CBD5E0', textDecoration: 'none', fontSize: '0.9rem' }}>Términos y Condiciones</a></li>
+              <li style={{ marginBottom: '8px' }}><a href={DOC_PRIVACIDAD} target="_blank" rel="noopener noreferrer" style={{ color: '#CBD5E0', textDecoration: 'none', fontSize: '0.9rem' }}>Política de Privacidad</a></li>
+              <li style={{ marginBottom: '8px' }}><span style={{ color: '#CBD5E0', fontSize: '0.9rem' }}>Ley 1581 de 2012</span></li>
+            </ul>
+          </div>
+          <div>
+            <h4 style={{ color: 'white', marginBottom: '16px', fontSize: '1rem' }}>Contacto</h4>
+            <p style={{ fontSize: '0.9rem', marginBottom: '8px' }}>📧 jcnieto.marketing@gmail.com</p>
+            <p style={{ fontSize: '0.9rem' }}>🇨🇴 Bogotá, Colombia</p>
+          </div>
+        </div>
+        <div style={{ borderTop: '1px solid #2D3748', paddingTop: '20px', textAlign: 'center', fontSize: '0.85rem' }}>
+          <p style={{ margin: 0 }}>© 2026 TerraMatch. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -120,7 +175,10 @@ function LandingView({ onNavigate }) {
     <div style={{ padding: '100px 24px', textAlign: 'center', background: 'linear-gradient(135deg, #D4E6F1 0%, white 100%)', minHeight: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
       <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', marginBottom: '20px', color: '#1a202c' }}>Hagamos Match entre tu <span style={{ color: '#E74C3C' }}>Inmueble</span> y el <span style={{ color: '#E74C3C' }}>Negocio Perfecto</span></h1>
       <p style={{ fontSize: '1.2rem', color: '#4A5568', marginBottom: '32px', maxWidth: '600px' }}>Locales · Vivienda · Oficinas · Industrial · Lujo.</p>
-      <button onClick={() => onNavigate('login')} style={{ padding: '14px 32px', fontSize: '1rem', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Comenzar Ahora →</button>
+      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <button onClick={() => onNavigate('login')} style={{ padding: '14px 32px', fontSize: '1rem', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Ingresar</button>
+        <button onClick={() => onNavigate('register')} style={{ padding: '14px 32px', fontSize: '1rem', background: 'white', color: '#E74C3C', border: '2px solid #E74C3C', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Crear cuenta</button>
+      </div>
     </div>
   );
 }
@@ -128,7 +186,7 @@ function LandingView({ onNavigate }) {
 // ==========================================
 // LOGIN VIEW
 // ==========================================
-function LoginView({ supabase, onSuccess, showToast }) {
+function LoginView({ supabase, onSuccess, showToast, onNavigate }) {
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
 
@@ -154,6 +212,144 @@ function LoginView({ supabase, onSuccess, showToast }) {
         <input type="password" placeholder="Contraseña" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required style={{ width: '100%', padding: '12px', marginBottom: '16px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box' }} />
         <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>{loading ? 'Entrando...' : 'Ingresar'}</button>
       </form>
+      <p style={{ textAlign: 'center', marginTop: '20px', color: '#7F8C8D', fontSize: '0.9rem' }}>
+        ¿No tienes cuenta? <button onClick={() => onNavigate('register')} style={{ background: 'none', border: 'none', color: '#E74C3C', cursor: 'pointer', fontWeight: 600, padding: 0 }}>Regístrate aquí</button>
+      </p>
+    </div>
+  );
+}
+
+// ==========================================
+// REGISTER VIEW (Con documentos legales)
+// ==========================================
+function RegisterView({ supabase, onSuccess, showToast }) {
+  const [form, setForm] = useState({ 
+    nombre: '', apellido: '', email: '', celular: '', 
+    tipo_usuario: 'buscador', segmento_preferido: 'locales', password: '' 
+  });
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
+  const [autorizaDatos, setAutorizaDatos] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    
+    if (!aceptaTerminos || !aceptaPrivacidad || !autorizaDatos) {
+      showToast('Debes aceptar los Términos, Políticas de Privacidad y autorizar el tratamiento de datos', 'error');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password
+      });
+      if (authError) throw authError;
+
+      const { data: profileData, error: profileError } = await supabase.from('profiles').insert([{
+        id: authData.user.id,
+        nombre: form.nombre,
+        apellido: form.apellido,
+        email: form.email,
+        celular: form.celular,
+        tipo_usuario: form.tipo_usuario,
+        segmento_preferido: form.segmento_preferido,
+        acepto_terminos: true,
+        acepto_privacidad: true,
+        autorizo_datos: true,
+        fecha_aceptacion: new Date().toISOString()
+      }]).select().single();
+      
+      if (profileError) throw profileError;
+
+      onSuccess(authData.user, form.email);
+    } catch (error) {
+      console.error('Error en registro:', error);
+      showToast(error.message || 'Error al crear cuenta', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const inputStyle = { width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box', marginBottom: '16px', fontSize: '1rem' };
+  const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 600, color: '#1a202c' };
+
+  return (
+    <div style={{ padding: '40px 24px', maxWidth: '640px', margin: '0 auto' }}>
+      <div style={{ background: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Crear Cuenta</h2>
+        <p style={{ textAlign: 'center', color: '#7F8C8D', marginBottom: '32px' }}>Únete al matchmaker inmobiliario de LATAM</p>
+        <form onSubmit={handleSubmit}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>Nombres *</label>
+              <input style={inputStyle} value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} required />
+            </div>
+            <div>
+              <label style={labelStyle}>Apellidos *</label>
+              <input style={inputStyle} value={form.apellido} onChange={e => setForm({...form, apellido: e.target.value})} required />
+            </div>
+          </div>
+          <label style={labelStyle}>Email *</label>
+          <input type="email" style={inputStyle} value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+          <label style={labelStyle}>Celular *</label>
+          <input style={inputStyle} value={form.celular} onChange={e => setForm({...form, celular: e.target.value})} required />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>Tipo de usuario *</label>
+              <select style={inputStyle} value={form.tipo_usuario} onChange={e => setForm({...form, tipo_usuario: e.target.value})}>
+                <option value="buscador">Buscador de inmuebles</option>
+                <option value="propietario">Propietario / Inmobiliaria</option>
+                <option value="agencia">Agencia inmobiliaria</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Segmento de interés *</label>
+              <select style={inputStyle} value={form.segmento_preferido} onChange={e => setForm({...form, segmento_preferido: e.target.value})}>
+                <option value="locales">Locales Comerciales</option>
+                <option value="vivienda">Vivienda</option>
+                <option value="oficinas">Oficinas</option>
+                <option value="industrial">Industrial</option>
+                <option value="lujo">Private Estates (Lujo)</option>
+              </select>
+            </div>
+          </div>
+          <label style={labelStyle}>Contraseña * (mínimo 6 caracteres)</label>
+          <input type="password" style={inputStyle} value={form.password} onChange={e => setForm({...form, password: e.target.value})} required minLength="6" />
+
+          {/* DOCUMENTOS LEGALES */}
+          <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', marginBottom: '24px', border: '1px solid #e9ecef' }}>
+            <h4 style={{ margin: '0 0 16px 0', color: '#1a202c', fontSize: '1rem' }}> Documentos Legales *</h4>
+            
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={aceptaTerminos} onChange={e => setAceptaTerminos(e.target.checked)} style={{ marginTop: '3px', transform: 'scale(1.2)' }} />
+              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>
+                Acepto los <a href={DOC_TERMINOS} target="_blank" rel="noopener noreferrer" style={{ color: '#E74C3C', textDecoration: 'underline', fontWeight: 600 }}>Términos y Condiciones</a> de TerraMatch *
+              </span>
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={aceptaPrivacidad} onChange={e => setAceptaPrivacidad(e.target.checked)} style={{ marginTop: '3px', transform: 'scale(1.2)' }} />
+              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>
+                Acepto la <a href={DOC_PRIVACIDAD} target="_blank" rel="noopener noreferrer" style={{ color: '#E74C3C', textDecoration: 'underline', fontWeight: 600 }}>Política de Privacidad y Protección de Datos</a> *
+              </span>
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={autorizaDatos} onChange={e => setAutorizaDatos(e.target.checked)} style={{ marginTop: '3px', transform: 'scale(1.2)' }} />
+              <span style={{ fontSize: '0.9rem', color: '#4A5568' }}>
+                Autorizo el tratamiento de mis datos personales conforme a la <strong>Ley 1581 de 2012</strong> (Colombia) *
+              </span>
+            </label>
+          </div>
+
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#E74C3C', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '1rem' }}>
+            {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
@@ -355,11 +551,10 @@ function AdminView({ supabase, showToast }) {
   return (
     <div style={{ padding: '40px 24px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ background: '#1a202c', color: 'white', padding: '30px', borderRadius: '16px', marginBottom: '30px' }}>
-        <h2 style={{ color: 'white', marginBottom: '8px' }}>️ Panel de Administrador</h2>
+        <h2 style={{ color: 'white', marginBottom: '8px' }}>🛡️ Panel de Administrador</h2>
         <p style={{ opacity: 0.8, margin: 0 }}>Gestión global de la plataforma TerraMatch</p>
       </div>
 
-      {/* Stats Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
         <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderLeft: '4px solid #E74C3C' }}>
           <div style={{ color: '#7F8C8D', fontSize: '0.85rem', marginBottom: '8px' }}>USUARIOS TOTALES</div>
@@ -379,15 +574,13 @@ function AdminView({ supabase, showToast }) {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #ECF0F1', paddingBottom: '10px' }}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #ECF0F1', paddingBottom: '10px', flexWrap: 'wrap' }}>
         <button onClick={() => setTab('overview')} style={{ padding: '10px 20px', background: tab === 'overview' ? '#1a202c' : 'white', color: tab === 'overview' ? 'white' : '#1a202c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Resumen</button>
         <button onClick={() => setTab('users')} style={{ padding: '10px 20px', background: tab === 'users' ? '#1a202c' : 'white', color: tab === 'users' ? 'white' : '#1a202c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Usuarios</button>
         <button onClick={() => setTab('iubs')} style={{ padding: '10px 20px', background: tab === 'iubs' ? '#1a202c' : 'white', color: tab === 'iubs' ? 'white' : '#1a202c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>IUBs</button>
         <button onClick={() => setTab('properties')} style={{ padding: '10px 20px', background: tab === 'properties' ? '#1a202c' : 'white', color: tab === 'properties' ? 'white' : '#1a202c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Propiedades</button>
       </div>
 
-      {/* Content */}
       <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
         {tab === 'overview' && (
           <div>
