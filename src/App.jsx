@@ -99,8 +99,14 @@ export default function App() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifs, setShowNotifs] = useState(false);
+
+  const isAdmin = profile?.email === 'jcnieto.marketing@gmail.com';
 
   useEffect(() => { checkSession(); }, []);
+  useEffect(() => { if (user) loadNotifications(); }, [user]);
 
   async function checkSession() {
     try {
@@ -120,9 +126,24 @@ export default function App() {
     } catch (error) { setProfile({ nombre: 'Usuario', email: userEmail }); }
   }
 
+  async function loadNotifications() {
+    try {
+      const { data } = await supabase.from('notificaciones').select('*').eq('user_id', user.id).order('creado_en', { ascending: false }).limit(20);
+      setNotifications(data || []);
+      setUnreadCount((data || []).filter(n => !n.leida).length);
+    } catch (error) { console.error('Error loading notifications:', error); }
+  }
+
+  async function markNotificationAsRead(id) {
+    try {
+      await supabase.from('notificaciones').update({ leida: true }).eq('id', id);
+      loadNotifications();
+    } catch (error) { console.error('Error marking as read:', error); }
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut();
-    setUser(null); setProfile(null); setView('home');
+    setUser(null); setProfile(null); setNotifications([]); setUnreadCount(0); setView('home');
   }
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Logo size={120} /></div>;
@@ -136,8 +157,39 @@ export default function App() {
           {user ? (
             <>
               <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Hola, <span style={{ color: THEME.colors.primary }}>{profile?.nombre}</span></span>
+              
+              {/* Campana de Notificaciones */}
+              <div style={{ position: 'relative' }}>
+                <button onClick={() => setShowNotifs(!showNotifs)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', padding: '8px', position: 'relative' }}>
+                  🔔
+                  {unreadCount > 0 && (
+                    <span style={{ position: 'absolute', top: '0', right: '0', background: THEME.colors.primary, color: 'white', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: THEME.radius.full, minWidth: '18px' }}>
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+                {showNotifs && (
+                  <div style={{ position: 'absolute', top: '40px', right: '0', background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, width: '320px', maxHeight: '400px', overflowY: 'auto', zIndex: 200 }}>
+                    <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>Notificaciones</div>
+                    {notifications.length === 0 ? (
+                      <div style={{ padding: '24px', textAlign: 'center', color: THEME.colors.textLight }}>Sin notificaciones</div>
+                    ) : (
+                      notifications.map(n => (
+                        <div key={n.id} style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', background: n.leida ? 'white' : '#fff5f5', cursor: 'pointer' }} onClick={() => markNotificationAsRead(n.id)}>
+                          <div style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '4px' }}>{n.titulo}</div>
+                          <div style={{ fontSize: '0.8rem', color: THEME.colors.textLight }}>{n.mensaje}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+
               <button onClick={() => setView('dashboard')} style={{ padding: '8px 20px', background: 'transparent', border: `1px solid ${THEME.colors.primary}`, color: THEME.colors.primary, borderRadius: THEME.radius.full, fontWeight: 700 }}>Dashboard</button>
-              <button onClick={handleLogout} style={{ padding: '8px 20px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Salir</button>
+              {isAdmin && (
+                <button onClick={() => setView('admin')} style={{ padding: '8px 20px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>🛡️ Admin</button>
+              )}
+              <button onClick={handleLogout} style={{ padding: '8px 20px', background: THEME.colors.textLight, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Salir</button>
             </>
           ) : (
             <>
@@ -155,8 +207,10 @@ export default function App() {
         {view === 'dashboard' && user && <DashboardView user={user} profile={profile} supabase={supabase} onNavigate={setView} setSelectedItem={setSelectedItem} />}
         {view === 'iub-wizard' && user && <IUBWizard user={user} supabase={supabase} onNavigate={setView} />}
         {view === 'oferta-wizard' && user && <OfertaWizard user={user} supabase={supabase} onNavigate={setView} />}
-        {view === 'iub-detail' && user && selectedItem && <IUBDetailView item={selectedItem} supabase={supabase} onNavigate={setView} />}
-        {view === 'local-detail' && user && selectedItem && <LocalDetailView item={selectedItem} supabase={supabase} onNavigate={setView} />}
+        {view === 'iub-detail' && user && selectedItem && <IUBDetailView item={selectedItem} supabase={supabase} onNavigate={setView} isAdmin={isAdmin} />}
+        {view === 'local-detail' && user && selectedItem && <LocalDetailView item={selectedItem} supabase={supabase} onNavigate={setView} isAdmin={isAdmin} />}
+        {view === 'admin' && user && isAdmin && <AdminPanel supabase={supabase} onNavigate={setView} setSelectedItem={setSelectedItem} />}
+        {view === 'admin-detail' && user && isAdmin && selectedItem && <AdminDetailView item={selectedItem} type={selectedItem.tipo || 'iub'} supabase={supabase} onNavigate={setView} />}
       </main>
 
       <footer style={{ background: THEME.colors.dark, color: 'white', padding: '60px 32px 30px' }}>
@@ -188,7 +242,7 @@ export default function App() {
             <div>
               <h4 style={{ fontSize: '1rem', marginBottom: '16px', color: THEME.colors.secondary }}>Contacto</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                <li style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7 }}>📧 contacto@terramatch.net</li>
+                <li style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7 }}> contacto@terramatch.net</li>
                 <li style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7 }}>📱 +57 300 000 0000</li>
                 <li style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7 }}>📍 Bogotá, Colombia</li>
               </ul>
@@ -198,7 +252,7 @@ export default function App() {
             <p style={{ fontSize: '0.85rem', opacity: 0.6, margin: 0 }}>© 2026 TerraMatch · NIT 901.612.770-8 · Todos los derechos reservados</p>
             <div style={{ display: 'flex', gap: '16px' }}>
               <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>📘</a>
-              <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}></a>
+              <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>📸</a>
               <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>💼</a>
             </div>
           </div>
@@ -293,7 +347,7 @@ function HomeView({ onNavigate }) {
 }
 
 // ==========================================
-// REGISTRO REAL
+// REGISTRO Y LOGIN
 // ==========================================
 function RegisterView({ supabase, onSuccess, onNavigate }) {
   const [form, setForm] = useState({ nombre: '', apellido: '', cedula: '', email: '', celular: '', nit: '', razonSocial: '', mensaje: '' });
@@ -351,9 +405,6 @@ function RegisterView({ supabase, onSuccess, onNavigate }) {
   );
 }
 
-// ==========================================
-// LOGIN REAL
-// ==========================================
 function LoginView({ supabase, onSuccess, onNavigate }) {
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -792,7 +843,7 @@ function OfertaWizard({ user, supabase, onNavigate }) {
 
         <label style={labelStyle}>Fotos/Planos</label>
         <div style={{ border: '2px dashed #e2e8f0', borderRadius: THEME.radius.md, padding: '32px', textAlign: 'center', marginBottom: '24px', cursor: 'pointer', background: '#f8f9fa' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📁</div>
+          <div style={{ fontSize: '2rem', marginBottom: '8px' }}></div>
           <p style={{ margin: '0 0 8px 0', fontWeight: 600 }}>Arrastra fotos o planos aquí</p>
           <p style={{ margin: 0, fontSize: '0.85rem', color: THEME.colors.textLight }}>o haz clic para seleccionar archivos</p>
         </div>
@@ -809,9 +860,11 @@ function OfertaWizard({ user, supabase, onNavigate }) {
 // ==========================================
 // IUB DETAIL VIEW REAL
 // ==========================================
-function IUBDetailView({ item, supabase, onNavigate }) {
+function IUBDetailView({ item, supabase, onNavigate, isAdmin }) {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState(null);
 
   useEffect(() => { loadMatches(); }, [item]);
 
@@ -828,6 +881,11 @@ function IUBDetailView({ item, supabase, onNavigate }) {
       await supabase.from('matches').update({ estado }).eq('id', matchId);
       loadMatches();
     } catch (error) { alert('Error: ' + error.message); }
+  };
+
+  const handleSchedule = (match) => {
+    setSelectedMatch(match);
+    setShowScheduleModal(true);
   };
 
   return (
@@ -861,7 +919,7 @@ function IUBDetailView({ item, supabase, onNavigate }) {
         <div style={{ textAlign: 'center', padding: '40px', color: THEME.colors.textLight }}>Cargando matches...</div>
       ) : matches.length === 0 ? (
         <div style={{ background: THEME.colors.white, padding: '60px', borderRadius: THEME.radius.lg, textAlign: 'center', boxShadow: THEME.shadow }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }}></div>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div>
           <h3 style={{ color: THEME.colors.text }}>Aún no hay matches</h3>
           <p style={{ color: THEME.colors.textLight }}>El sistema buscará propiedades compatibles con tu IUB</p>
         </div>
@@ -872,9 +930,9 @@ function IUBDetailView({ item, supabase, onNavigate }) {
               <div style={{ flex: 1, minWidth: '250px' }}>
                 <h4 style={{ margin: '0 0 8px 0', color: THEME.colors.text, fontSize: '1.1rem' }}>{match.propiedades?.titulo || 'Inmueble en ' + match.propiedades?.zona}</h4>
                 <div style={{ display: 'flex', gap: '16px', color: THEME.colors.textLight, fontSize: '0.9rem', marginBottom: '12px', flexWrap: 'wrap' }}>
-                  <span>📍 {match.propiedades?.ciudad} - {match.propiedades?.zona}</span>
-                  <span> {match.propiedades?.area_total} m²</span>
-                  <span>💰 ${match.propiedades?.precio?.toLocaleString()}/mes</span>
+                  <span> {match.propiedades?.ciudad} - {match.propiedades?.zona}</span>
+                  <span>📐 {match.propiedades?.area_total} m²</span>
+                  <span> ${match.propiedades?.precio?.toLocaleString()}/mes</span>
                 </div>
                 {match.propiedades?.caracteristicas && (
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -886,11 +944,36 @@ function IUBDetailView({ item, supabase, onNavigate }) {
               </div>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <Badge color={match.estado === 'favorito' ? 'success' : match.estado === 'descartado' ? 'gray' : 'warning'}>{match.estado || 'nuevo'}</Badge>
-                <button onClick={() => updateEstado(match.id, 'descartado')} style={{ padding: '10px 20px', background: match.estado === 'descartado' ? '#e2e8f0' : 'white', color: THEME.colors.textLight, border: `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 700 }}>Descartar</button>
-                <button onClick={() => updateEstado(match.id, 'favorito')} style={{ padding: '10px 20px', background: match.estado === 'favorito' ? THEME.colors.success : 'white', color: match.estado === 'favorito' ? 'white' : THEME.colors.success, border: `1px solid ${match.estado === 'favorito' ? 'transparent' : THEME.colors.success}`, borderRadius: THEME.radius.full, fontWeight: 700 }}>Favorito</button>
+                {match.estado === 'favorito' && (
+                  <button onClick={() => handleSchedule(match)} style={{ padding: '10px 20px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>📅 Agendar</button>
+                )}
+                {match.estado !== 'favorito' && (
+                  <button onClick={() => updateEstado(match.id, 'favorito')} style={{ padding: '10px 20px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Favorito</button>
+                )}
+                {match.estado !== 'descartado' && (
+                  <button onClick={() => updateEstado(match.id, 'descartado')} style={{ padding: '10px 20px', background: 'white', color: THEME.colors.textLight, border: `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 700 }}>Descartar</button>
+                )}
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal de Agendamiento */}
+      {showScheduleModal && selectedMatch && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <div style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, maxWidth: '500px', width: '90%' }}>
+            <h3 style={{ marginBottom: '16px' }}>📅 Agendar Visita</h3>
+            <p style={{ color: THEME.colors.textLight, marginBottom: '24px' }}>Inmueble: {selectedMatch.propiedades?.titulo}</p>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Fecha propuesta</label>
+            <input type="date" style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '16px', boxSizing: 'border-box' }} />
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Hora</label>
+            <input type="time" style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '24px', boxSizing: 'border-box' }} />
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setShowScheduleModal(false)} style={{ flex: 1, padding: '12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={() => { alert('Cita agendada. TerraMatch contactará a ambas partes.'); setShowScheduleModal(false); }} style={{ flex: 1, padding: '12px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer' }}>Confirmar Cita</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -900,7 +983,7 @@ function IUBDetailView({ item, supabase, onNavigate }) {
 // ==========================================
 // LOCAL DETAIL VIEW REAL
 // ==========================================
-function LocalDetailView({ item, supabase, onNavigate }) {
+function LocalDetailView({ item, supabase, onNavigate, isAdmin }) {
   const [iubsInteresados, setIubsInteresados] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -938,7 +1021,7 @@ function LocalDetailView({ item, supabase, onNavigate }) {
           <div style={{ background: '#fff5f5', padding: '24px', borderRadius: THEME.radius.md, border: `1px solid ${THEME.colors.primary}30` }}>
             <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px' }}>🔒 Contacto Propietario</h4>
             <p style={{ margin: '8px 0', fontWeight: 700, color: THEME.colors.text }}>{profile?.nombre}</p>
-            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}> {profile?.celular}</p>
+            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>📞 {profile?.celular}</p>
             <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>✉️ {profile?.email}</p>
             {item.matricula_inmobiliaria && <p style={{ margin: '8px 0', color: THEME.colors.textLight, fontSize: '0.85rem' }}>Matrícula: {item.matricula_inmobiliaria}</p>}
           </div>
@@ -951,7 +1034,7 @@ function LocalDetailView({ item, supabase, onNavigate }) {
         <div style={{ textAlign: 'center', padding: '40px', color: THEME.colors.textLight }}>Cargando...</div>
       ) : iubsInteresados.length === 0 ? (
         <div style={{ background: THEME.colors.white, padding: '60px', borderRadius: THEME.radius.lg, textAlign: 'center', boxShadow: THEME.shadow }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }}></div>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📊</div>
           <h3 style={{ color: THEME.colors.text }}>Aún no hay IUBs interesados</h3>
           <p style={{ color: THEME.colors.textLight }}>Cuando un buscador cree un IUB compatible, aparecerá aquí</p>
         </div>
@@ -975,6 +1058,260 @@ function LocalDetailView({ item, supabase, onNavigate }) {
                   <td style={{ padding: '16px' }}>{match.iubs?.ciudad}</td>
                   <td style={{ padding: '16px' }}>{match.iubs?.area_min}-{match.iubs?.area_max} m²</td>
                   <td style={{ padding: '16px' }}><Badge color={match.estado === 'favorito' ? 'success' : match.estado === 'descartado' ? 'gray' : 'warning'}>{match.estado || 'nuevo'}</Badge></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==========================================
+// ADMIN PANEL (TORRE DE CONTROL)
+// ==========================================
+function AdminPanel({ supabase, onNavigate, setSelectedItem }) {
+  const [tab, setTab] = useState('iubs');
+  const [iubs, setIubs] = useState([]);
+  const [locales, setLocales] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { loadData(); }, []);
+
+  async function loadData() {
+    try {
+      setLoading(true);
+      const { data: iubsData } = await supabase.from('iubs').select('*').order('creado_en', { ascending: false });
+      setIubs(iubsData || []);
+      const { data: propsData } = await supabase.from('propiedades').select('*').order('creado_en', { ascending: false });
+      setLocales(propsData || []);
+    } catch (error) { console.error('Error loading admin data:', error); } finally { setLoading(false); }
+  }
+
+  return (
+    <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ background: THEME.colors.dark, color: 'white', padding: '32px', borderRadius: THEME.radius.lg, marginBottom: '32px' }}>
+        <h2 style={{ margin: '0 0 8px 0' }}>️ Torre de Control (Admin)</h2>
+        <p style={{ margin: 0, opacity: 0.8 }}>Gestión global de IUBs, Locales y Matches</p>
+      </div>
+
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+        <button onClick={() => setTab('iubs')} style={{ padding: '12px 24px', background: tab === 'iubs' ? THEME.colors.primary : THEME.colors.white, color: tab === 'iubs' ? 'white' : THEME.colors.text, border: tab === 'iubs' ? 'none' : `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>Gestión de IUBs ({iubs.length})</button>
+        <button onClick={() => setTab('locales')} style={{ padding: '12px 24px', background: tab === 'locales' ? THEME.colors.primary : THEME.colors.white, color: tab === 'locales' ? 'white' : THEME.colors.text, border: tab === 'locales' ? 'none' : `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>Gestión de Locales ({locales.length})</button>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '60px', color: THEME.colors.textLight }}>Cargando...</div>
+      ) : tab === 'iubs' ? (
+        <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>IUB</th>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA (M²)</th>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>MATCHES</th>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>FECHA</th>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TIPO</th>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ESTADO</th>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th>
+              </tr>
+            </thead>
+            <tbody>
+              {iubs.map((iub, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem({...iub, tipo: 'iub'}); onNavigate('admin-detail'); }}>
+                  <td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{iub.codigo_iub}</td>
+                  <td style={{ padding: '16px' }}>{iub.area_min}-{iub.area_max} m²</td>
+                  <td style={{ padding: '16px' }}><Badge color="primary">16</Badge></td>
+                  <td style={{ padding: '16px', fontSize: '0.9rem', color: THEME.colors.textLight }}>{new Date(iub.creado_en).toLocaleDateString('es-CO')}</td>
+                  <td style={{ padding: '16px' }}>{iub.ciudad}</td>
+                  <td style={{ padding: '16px' }}>{iub.tipo_negocio}</td>
+                  <td style={{ padding: '16px' }}><Badge color={iub.estado === 'activo' ? 'success' : 'gray'}>{iub.estado}</Badge></td>
+                  <td style={{ padding: '16px' }}><button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer' }}>Ver detalles →</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TÍTULO</th>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CÓDIGO POSTAL</th>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA (M²)</th>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>MATCHES</th>
+                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th>
+              </tr>
+            </thead>
+            <tbody>
+              {locales.map((local, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem({...local, tipo: 'local'}); onNavigate('admin-detail'); }}>
+                  <td style={{ padding: '16px', fontWeight: 600 }}>{local.titulo || 'Sin título'}</td>
+                  <td style={{ padding: '16px' }}>{local.ciudad}</td>
+                  <td style={{ padding: '16px', fontFamily: 'monospace', fontSize: '0.9rem' }}>{local.barrio || '110141'}</td>
+                  <td style={{ padding: '16px' }}>{local.area_total} m²</td>
+                  <td style={{ padding: '16px' }}><Badge color="primary">16</Badge></td>
+                  <td style={{ padding: '16px' }}><button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer' }}>Ver detalles →</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==========================================
+// ADMIN DETAIL VIEW (CONFIDENCIAL)
+// ==========================================
+function AdminDetailView({ item, type, supabase, onNavigate }) {
+  const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { loadMatches(); }, [item]);
+
+  async function loadMatches() {
+    try {
+      setLoading(true);
+      let query;
+      if (type === 'iub') {
+        query = supabase.from('matches').select('*, propiedades(*)').eq('iub_id', item.id);
+      } else {
+        query = supabase.from('matches').select('*, iubs(*)').eq('propiedad_id', item.id);
+      }
+      const { data } = await query.order('score', { ascending: false });
+      setMatches(data || []);
+    } catch (error) { console.error('Error loading matches:', error); } finally { setLoading(false); }
+  }
+
+  const updateEstado = async (matchId, estado) => {
+    try {
+      await supabase.from('matches').update({ estado }).eq('id', matchId);
+      loadMatches();
+    } catch (error) { alert('Error: ' + error.message); }
+  };
+
+  return (
+    <div style={{ padding: '40px 32px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ fontSize: '0.9rem', color: THEME.colors.textLight, marginBottom: '24px' }}>
+        <button onClick={() => onNavigate('admin')} style={{ background: 'none', border: 'none', color: THEME.colors.primary, cursor: 'pointer', padding: 0 }}>Admin</button>
+        <span style={{ margin: '0 8px' }}>&gt;</span>
+        <span style={{ color: THEME.colors.text, fontWeight: 600 }}>{type === 'iub' ? item.codigo_iub : item.titulo}</span>
+      </div>
+
+      {/* Header con Info Confidencial */}
+      <div style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, marginBottom: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <Badge color="warning">{type === 'iub' ? item.tipo_negocio : item.operacion}</Badge>
+              <span style={{ fontFamily: 'monospace', fontSize: '1.2rem', color: THEME.colors.primary, fontWeight: 700 }}>{type === 'iub' ? item.codigo_iub : item.matricula_inmobiliaria}</span>
+            </div>
+            <p style={{ margin: '0 0 8px 0', color: THEME.colors.textLight, fontSize: '0.9rem' }}>{new Date(item.creado_en).toLocaleString('es-CO')}</p>
+            <h2 style={{ margin: '0 0 16px 0', color: THEME.colors.text, fontSize: '1.5rem' }}>
+              {type === 'iub' 
+                ? `${item.cantidad_locales || 10} Locales en ${item.ciudad} zona ${item.zona}`
+                : item.titulo}
+            </h2>
+            <p style={{ margin: '0 0 16px 0', color: THEME.colors.text, fontSize: '1.1rem' }}>
+              {type === 'iub'
+                ? `${item.area_min}-${item.area_max} m² por $120.000/m² aprox $${(item.canon_arriendo || 120000000).toLocaleString()}/mes`
+                : `$${item.precio?.toLocaleString()} /mes`}
+            </p>
+            {item.caracteristicas && (
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {JSON.parse(item.caracteristicas).map((c, i) => (
+                  <span key={i} style={{ padding: '6px 14px', background: `${THEME.colors.secondary}30`, color: THEME.colors.text, borderRadius: THEME.radius.full, fontSize: '0.85rem', fontWeight: 600 }}>{c}</span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Caja Confidencial Solo para Admin */}
+          <div style={{ background: '#fff5f5', padding: '24px', borderRadius: THEME.radius.md, border: `1px solid ${THEME.colors.primary}30` }}>
+            <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px' }}>🔒 Contacto Confidencial</h4>
+            <p style={{ margin: '8px 0', fontWeight: 700, color: THEME.colors.text }}>
+              {type === 'iub' ? 'Colliers Agregador' : profile?.nombre}
+            </p>
+            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>📞 {type === 'iub' ? '322 695 9898' : profile?.celular}</p>
+            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>✉️ {type === 'iub' ? 'ventas@colliers.com' : profile?.email}</p>
+            {type === 'local' && item.matricula_inmobiliaria && (
+              <p style={{ margin: '8px 0', color: THEME.colors.textLight, fontSize: '0.85rem' }}>Matrícula: {item.matricula_inmobiliaria}</p>
+            )}
+            <button style={{ marginTop: '16px', width: '100%', padding: '12px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>📅 Agendar Presentación</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabla de Matches */}
+      <h3 style={{ color: THEME.colors.text, marginBottom: '24px' }}>
+        {type === 'iub' ? `Esta búsqueda tiene ${matches.length} Matches` : `Este local tiene ${matches.length} Matches (IUBs interesados)`}
+      </h3>
+      
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: THEME.colors.textLight }}>Cargando...</div>
+      ) : matches.length === 0 ? (
+        <div style={{ background: THEME.colors.white, padding: '60px', borderRadius: THEME.radius.lg, textAlign: 'center', boxShadow: THEME.shadow }}>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📊</div>
+          <h3 style={{ color: THEME.colors.text }}>Aún no hay matches</h3>
+        </div>
+      ) : (
+        <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}>
+                {type === 'iub' ? (
+                  <>
+                    <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TÍTULO</th>
+                    <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA (M²)</th>
+                    <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>PRECIO/m²</th>
+                    <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ESTADO</th>
+                  </>
+                ) : (
+                  <>
+                    <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>IUB</th>
+                    <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CONTACTO</th>
+                    <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th>
+                    <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA</th>
+                    <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ESTADO</th>
+                  </>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {matches.map((match, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                  {type === 'iub' ? (
+                    <>
+                      <td style={{ padding: '16px', fontWeight: 600 }}>{match.propiedades?.titulo || 'Inmueble'}</td>
+                      <td style={{ padding: '16px' }}>{match.propiedades?.area_total} m²</td>
+                      <td style={{ padding: '16px' }}>${match.propiedades?.precio?.toLocaleString()}</td>
+                      <td style={{ padding: '16px' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <Badge color={match.estado === 'favorito' ? 'success' : match.estado === 'descartado' ? 'gray' : 'warning'}>{match.estado || 'nuevo'}</Badge>
+                          {match.estado !== 'favorito' && (
+                            <button onClick={() => updateEstado(match.id, 'favorito')} style={{ background: 'none', border: 'none', color: THEME.colors.success, fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' }}>Favorito</button>
+                          )}
+                          {match.estado !== 'descartado' && (
+                            <button onClick={() => updateEstado(match.id, 'descartado')} style={{ background: 'none', border: 'none', color: THEME.colors.textLight, fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}>Descartar</button>
+                          )}
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{match.iubs?.codigo_iub}</td>
+                      <td style={{ padding: '16px', fontWeight: 600 }}>{match.iubs?.nombre_completo || 'Usuario'}</td>
+                      <td style={{ padding: '16px' }}>{match.iubs?.ciudad}</td>
+                      <td style={{ padding: '16px' }}>{match.iubs?.area_min}-{match.iubs?.area_max} m²</td>
+                      <td style={{ padding: '16px' }}><Badge color={match.estado === 'favorito' ? 'success' : match.estado === 'descartado' ? 'gray' : 'warning'}>{match.estado || 'nuevo'}</Badge></td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>
