@@ -1,52 +1,24 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// ==========================================
-// CONFIGURACIÓN SUPABASE
-// ==========================================
 const SUPABASE_URL = 'https://wqzwwzmeetykcvhekerl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indxend3em1lZXR5a2N2aGVrZXJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNDg3OTcsImV4cCI6MjEwNTkyNDc5N30.6NJ0fA475cC5EKWGW4EYJyuSHOI9XPor41PTnWNHsRY';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const DOC_TERMINOS = 'https://github.com/jcnietomarketing-svg/match-terramatch/raw/main/T%26C_TerraMatch%20act%202024.docx';
-const DOC_PRIVACIDAD = 'https://github.com/jcnietomarketing-svg/match-terramatch/raw/main/Politica%20de%20privacidad%20y%20proteccion%20de%20datos_TerraMatch_act2023.docx';
 
-// ==========================================
-// TEMA VISUAL TERRAMATCH (Manual de Marca)
-// ==========================================
 const THEME = {
-  colors: {
-    primary: '#ee5340',      // Rojo TerraMatch
-    secondary: '#b9d3dc',    // Azul Claro
-    text: '#2d3748',
-    textLight: '#718096',
-    bg: '#f7fafc',
-    white: '#ffffff',
-    success: '#48bb78',
-  },
-  radius: {
-    sm: '8px',
-    md: '16px',
-    lg: '24px',
-    full: '9999px',
-  },
+  colors: { primary: '#ee5340', secondary: '#b9d3dc', text: '#2d3748', textLight: '#718096', bg: '#f7fafc', white: '#ffffff', success: '#48bb78' },
+  radius: { sm: '8px', md: '16px', lg: '24px', full: '9999px' },
   shadow: '0 10px 30px -5px rgba(185, 211, 220, 0.4)',
-  shadowHover: '0 20px 40px -5px rgba(238, 83, 64, 0.2)',
 };
 
-// ==========================================
-// ISOTIPO RADAR (Concepto del Manual de Marca)
-// ==========================================
-function LogoIcon({ size = 42 }) {
+function LogoIcon({ size = 38 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
       <circle cx="21" cy="21" r="19" stroke={THEME.colors.secondary} strokeWidth="2.5" />
       <circle cx="21" cy="21" r="11" stroke={THEME.colors.primary} strokeWidth="2.5" />
       <circle cx="21" cy="21" r="4" fill={THEME.colors.primary} />
-      <path d="M21 2 L21 10" stroke={THEME.colors.secondary} strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M21 32 L21 40" stroke={THEME.colors.secondary} strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M2 21 L10 21" stroke={THEME.colors.secondary} strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M32 21 L40 21" stroke={THEME.colors.secondary} strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -57,22 +29,14 @@ function useComfortaaFont() {
     link.href = 'https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;600;700&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
-    
     const style = document.createElement('style');
-    style.innerHTML = `
-      body { font-family: 'Comfortaa', cursive !important; background-color: ${THEME.colors.bg}; color: ${THEME.colors.text}; margin: 0; }
-      h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.5px; }
-      input, select, textarea { font-family: 'Comfortaa', cursive !important; transition: all 0.2s; }
-      input:focus, select:focus, textarea:focus { outline: none; border-color: ${THEME.colors.primary} !important; box-shadow: 0 0 0 3px rgba(238, 83, 64, 0.1); }
-      button { font-family: 'Comfortaa', cursive !important; transition: all 0.3s ease; }
-    `;
+    style.innerHTML = `body { font-family: 'Comfortaa', cursive !important; background-color: ${THEME.colors.bg}; color: ${THEME.colors.text}; margin: 0; } input, select, textarea, button { font-family: 'Comfortaa', cursive !important; }`;
     document.head.appendChild(style);
   }, []);
 }
 
 function App() {
   useComfortaaFont();
-
   const [view, setView] = useState('landing');
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -80,128 +44,116 @@ function App() {
   const [toast, setToast] = useState(null);
 
   useEffect(() => { checkSession(); }, []);
-
   async function checkSession() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUser(session.user);
-        await loadProfile(session.user.email);
-        setView('dashboard');
-      } else { setView('landing'); }
+      if (session) { setUser(session.user); await loadProfile(session.user.email); setView('dashboard'); } 
+      else { setView('landing'); }
     } catch (error) { setView('landing'); } finally { setLoading(false); }
   }
-
   async function loadProfile(userEmail) {
-    try {
-      const { data } = await supabase.from('profiles').select('*').eq('email', userEmail).single();
-      setProfile(data || { nombre: 'Usuario', apellido: '', email: userEmail });
-    } catch (error) { setProfile({ nombre: 'Usuario', apellido: '', email: userEmail }); }
+    try { const { data } = await supabase.from('profiles').select('*').eq('email', userEmail).single(); setProfile(data || { nombre: 'Usuario', email: userEmail }); } 
+    catch (error) { setProfile({ nombre: 'Usuario', email: userEmail }); }
   }
+  function showToast(message, type = 'success') { setToast({ message, type }); setTimeout(() => setToast(null), 4000); }
+  async function handleLogout() { await supabase.auth.signOut(); setUser(null); setProfile(null); setView('landing'); }
 
-  function showToast(message, type = 'success') {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  }
-
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    setUser(null); setProfile(null); setView('landing');
-    showToast('Sesión cerrada');
-  }
-
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'Comfortaa' }}><p>Cargando TerraMatch...</p></div>;
-
-  const safeName = profile?.nombre || 'Usuario';
-  const isAdmin = profile?.email === 'jcnieto.marketing@gmail.com';
+  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Cargando TerraMatch...</div>;
 
   return (
     <div className="app" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navbar nombre={safeName} isLoggedIn={!!user} isAdmin={isAdmin} onNavigate={setView} onLogout={handleLogout} />
+      <nav style={{ background: THEME.colors.white, padding: '16px 24px', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => setView('landing')}>
+            <LogoIcon size={38} />
+            <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>terra<span style={{ color: THEME.colors.primary }}>match</span></span>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            {user ? (
+              <>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Hola, <span style={{ color: THEME.colors.primary }}>{profile?.nombre}</span></span>
+                <button onClick={() => setView('dashboard')} style={{ padding: '8px 16px', background: 'transparent', border: `1px solid ${THEME.colors.primary}`, color: THEME.colors.primary, borderRadius: THEME.radius.full, cursor: 'pointer', fontWeight: 600 }}>Dashboard</button>
+                <button onClick={handleLogout} style={{ padding: '8px 16px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, cursor: 'pointer', fontWeight: 600 }}>Salir</button>
+              </>
+            ) : (
+              <button onClick={() => setView('login')} style={{ padding: '8px 20px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, cursor: 'pointer', fontWeight: 600 }}>Ingresar</button>
+            )}
+          </div>
+        </div>
+      </nav>
+      
       <main style={{ flex: 1 }}>
         {view === 'landing' && <LandingView onNavigate={setView} />}
-        {view === 'login' && <LoginView supabase={supabase} onSuccess={(u, email) => { setUser(u); loadProfile(email); setView('dashboard'); showToast('¡Bienvenido!'); }} showToast={showToast} onNavigate={setView} />}
-        {view === 'register' && <RegisterView supabase={supabase} onSuccess={(u, email) => { setUser(u); loadProfile(email); setView('dashboard'); showToast('¡Cuenta creada!'); }} showToast={showToast} />}
-        {view === 'iub' && user && <IUBView user={user} profile={profile} supabase={supabase} showToast={showToast} onNavigate={setView} />}
-        {view === 'oferta' && user && <OfertaView user={user} profile={profile} supabase={supabase} showToast={showToast} onNavigate={setView} />}
-        {view === 'dashboard' && user && <DashboardView user={user} profile={profile} supabase={supabase} showToast={showToast} onNavigate={setView} />}
-        {view === 'admin' && user && isAdmin && <AdminView supabase={supabase} showToast={showToast} />}
+        {view === 'login' && <LoginView supabase={supabase} onSuccess={(u) => { setUser(u); loadProfile(u.email); setView('dashboard'); }} />}
+        {view === 'iub' && user && <IUBView user={user} supabase={supabase} showToast={showToast} onNavigate={setView} />}
+        {view === 'oferta' && user && <OfertaView user={user} supabase={supabase} showToast={showToast} onNavigate={setView} />}
+        {view === 'dashboard' && user && <DashboardView user={user} profile={profile} onNavigate={setView} />}
       </main>
-      <Footer onNavigate={setView} />
-      {toast && <div style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.type === 'error' ? THEME.colors.primary : THEME.colors.success, color: 'white', padding: '12px 24px', borderRadius: THEME.radius.full, zIndex: 1000, boxShadow: THEME.shadow, fontWeight: 600 }}>{toast.message}</div>}
+
+      <footer style={{ background: THEME.colors.text, color: 'white', padding: '30px 24px', marginTop: '60px', borderRadius: '32px 32px 0 0', textAlign: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}><LogoIcon size={28} /><span style={{ fontSize: '1.2rem', fontWeight: 700 }}>terramatch</span></div>
+        <p style={{ fontSize: '0.8rem', opacity: 0.7, margin: 0 }}>© 2026 TerraMatch · NIT 901.612.770-8 · Bogotá, Colombia</p>
+      </footer>
+
+      {toast && <div style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.type === 'error' ? THEME.colors.primary : THEME.colors.success, color: 'white', padding: '12px 24px', borderRadius: THEME.radius.full, zIndex: 1000, fontWeight: 600 }}>{toast.message}</div>}
     </div>
   );
 }
 
-// ==========================================
-// NAVBAR CON LOGO RADAR
-// ==========================================
-function Navbar({ nombre, isLoggedIn, isAdmin, onNavigate, onLogout }) {
-  return (
-    <nav style={{ background: THEME.colors.white, padding: '16px 24px', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => onNavigate('landing')}>
-          <LogoIcon size={38} />
-          <span style={{ fontSize: '1.5rem', fontWeight: 700, color: THEME.colors.text }}>terra<span style={{ color: THEME.colors.primary }}>match</span></span>
-        </div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {isLoggedIn ? (
-            <>
-              <span style={{ fontWeight: 600, color: THEME.colors.textLight, fontSize: '0.9rem' }}>Hola, <span style={{ color: THEME.colors.primary }}>{nombre}</span></span>
-              {isAdmin && <button onClick={() => onNavigate('admin')} style={{ padding: '8px 16px', background: THEME.colors.text, color: 'white', border: 'none', borderRadius: THEME.radius.full, cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>🛡️ Admin</button>}
-              <button onClick={() => onNavigate('dashboard')} style={{ padding: '8px 16px', background: 'transparent', border: `1px solid ${THEME.colors.primary}`, color: THEME.colors.primary, borderRadius: THEME.radius.full, cursor: 'pointer', fontWeight: 600 }}>Dashboard</button>
-              <button onClick={onLogout} style={{ padding: '8px 16px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, cursor: 'pointer', fontWeight: 600 }}>Salir</button>
-            </>
-          ) : (
-            <>
-              <button onClick={() => onNavigate('login')} style={{ padding: '8px 20px', background: 'transparent', border: `1px solid ${THEME.colors.text}`, color: THEME.colors.text, borderRadius: THEME.radius.full, cursor: 'pointer', fontWeight: 600 }}>Ingresar</button>
-              <button onClick={() => onNavigate('register')} style={{ padding: '8px 20px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, cursor: 'pointer', fontWeight: 600, boxShadow: `0 4px 10px ${THEME.colors.primary}30` }}>Regístrate</button>
-            </>
-          )}
-        </div>
-      </div>
-    </nav>
-  );
-}
-
-// ==========================================
-// LANDING VIEW
-// ==========================================
 function LandingView({ onNavigate }) {
   return (
-    <div style={{ position: 'relative', padding: '80px 24px', textAlign: 'center', overflow: 'hidden', minHeight: '85vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-      <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: '500px', height: '500px', background: THEME.colors.secondary, borderRadius: '50%', opacity: 0.2, filter: 'blur(60px)', zIndex: 0 }}></div>
-      <div style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: '400px', height: '400px', background: THEME.colors.primary, borderRadius: '50%', opacity: 0.1, filter: 'blur(50px)', zIndex: 0 }}></div>
-
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: '900px' }}>
-        <div style={{ display: 'inline-block', background: `${THEME.colors.secondary}40`, color: THEME.colors.primary, padding: '8px 20px', borderRadius: THEME.radius.full, fontSize: '0.9rem', fontWeight: 700, marginBottom: '24px' }}>
-          🚀 El matchmaker inmobiliario inteligente
+    <div style={{ padding: '80px 24px', textAlign: 'center', minHeight: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+      <h1 style={{ fontSize: '3rem', marginBottom: '24px' }}>Encuentra el <span style={{ color: THEME.colors.primary }}>Match Perfecto</span></h1>
+      <p style={{ fontSize: '1.2rem', color: THEME.colors.textLight, marginBottom: '48px', maxWidth: '600px' }}>Conectamos empresas en expansión con locales comerciales ideales.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', maxWidth: '800px' }}>
+        <div onClick={() => onNavigate('oferta')} style={{ background: THEME.colors.white, padding: '40px', borderRadius: THEME.radius.lg, cursor: 'pointer', boxShadow: THEME.shadow }}>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}></div>
+          <h3>Tengo Locales</h3>
+          <p style={{ color: THEME.colors.textLight }}>Publica tu inventario o haz carga masiva.</p>
         </div>
-        <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '24px', color: THEME.colors.text, lineHeight: 1.1 }}>
-          Encuentra el <span style={{ color: THEME.colors.primary }}>Match Perfecto</span><br/>para tu negocio
-        </h1>
-        <p style={{ fontSize: '1.2rem', color: THEME.colors.textLight, marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px' }}>
-          Conectamos empresas en expansión con locales comerciales ideales. Sin intermediarios, sin pérdidas de tiempo.
-        </p>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', maxWidth: '800px', margin: '0 auto' }}>
-          <div onClick={() => onNavigate('oferta')} style={{ background: THEME.colors.white, padding: '40px 32px', borderRadius: THEME.radius.lg, cursor: 'pointer', border: `2px solid transparent`, boxShadow: THEME.shadow, transition: 'all 0.3s', textAlign: 'left' }}
-               onMouseEnter={(e) => { e.currentTarget.style.borderColor = THEME.colors.primary; e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.boxShadow = THEME.shadowHover; }}
-               onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = THEME.shadow; }}>
-            <div style={{ width: '60px', height: '60px', background: `${THEME.colors.secondary}40`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', marginBottom: '20px' }}>🏪</div>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '12px', color: THEME.colors.text }}>Tengo Locales</h3>
-            <p style={{ color: THEME.colors.textLight, fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '24px' }}>Soy propietario o inmobiliaria y quiero publicar mi inventario para encontrar al empresario ideal.</p>
-            <span style={{ color: THEME.colors.primary, fontWeight: 700, fontSize: '0.9rem' }}>Publicar Inmueble →</span>
-          </div>
+        <div onClick={() => onNavigate('iub')} style={{ background: THEME.colors.white, padding: '40px', borderRadius: THEME.radius.lg, cursor: 'pointer', boxShadow: THEME.shadow }}>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}></div>
+          <h3>Busco Locales</h3>
+          <p style={{ color: THEME.colors.textLight }}>Crea tu IUB y recibe matches inteligentes.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-          <div onClick={() => onNavigate('iub')} style={{ background: THEME.colors.white, padding: '40px 32px', borderRadius: THEME.radius.lg, cursor: 'pointer', border: `2px solid transparent`, boxShadow: THEME.shadow, transition: 'all 0.3s', textAlign: 'left' }}
-               onMouseEnter={(e) => { e.currentTarget.style.borderColor = THEME.colors.primary; e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.boxShadow = THEME.shadowHover; }}
-               onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = THEME.shadow; }}>
-            <div style={{ width: '60px', height: '60px', background: `${THEME.colors.primary}15`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', marginBottom: '20px' }}>🔍</div>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '12px', color: THEME.colors.text }}>Busco Locales</h3>
-            <p style={{ color: THEME.colors.textLight, fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '24px' }}>Soy empresario y necesito encontrar el local ideal para expandir mi negocio rápidamente.</p>
-            <span style={{ color: THEME.colors.primary, fontWeight: 700, fontSize: '0.9rem' }}>Crear IUB →</span>
-          </div>
+function LoginView({ supabase, onSuccess }) {
+  const [form, setForm] = useState({ email: '', password: '' });
+  const handleLogin = async () => {
+    const { data, error } = await supabase.auth.signInWithPassword(form);
+    if (error) alert(error.message); else onSuccess(data.user);
+  };
+  return (
+    <div style={{ padding: '50px', maxWidth: '400px', margin: '40px auto', background: THEME.colors.white, borderRadius: THEME.radius.lg, boxShadow: THEME.shadow }}>
+      <h2 style={{ textAlign: 'center', marginBottom: '32px', color: THEME.colors.primary }}>Ingresar</h2>
+      <input placeholder="Email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} style={{ width: '100%', padding: '14px', marginBottom: '16px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.md, boxSizing: 'border-box' }} />
+      <input type="password" placeholder="Contraseña" value={form.password} onChange={e => setForm({...form, password: e.target.value})} style={{ width: '100%', padding: '14px', marginBottom: '24px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.md, boxSizing: 'border-box' }} />
+      <button onClick={handleLogin} style={{ width: '100%', padding: '14px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>Entrar</button>
+    </div>
+  );
+}
+
+function DashboardView({ profile, onNavigate }) {
+  return (
+    <div style={{ padding: '40px 24px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ background: `linear-gradient(135deg, ${THEME.colors.primary} 0%, #ff7e6b 100%)`, color: 'white', padding: '40px', borderRadius: THEME.radius.lg, marginBottom: '32px' }}>
+        <h2 style={{ color: 'white', margin: '0 0 8px 0' }}>Hola, {profile?.nombre} 👋</h2>
+        <p style={{ opacity: 0.9, margin: 0 }}>Bienvenido a tu centro de control TerraMatch</p>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+        <div onClick={() => onNavigate('iub')} style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, cursor: 'pointer' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '16px' }}></div>
+          <h3>Busco Locales</h3>
+          <p style={{ color: THEME.colors.textLight }}>Crear nuevo IUB</p>
+        </div>
+        <div onClick={() => onNavigate('oferta')} style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, cursor: 'pointer' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '16px' }}>🏪</div>
+          <h3>Tengo Locales</h3>
+          <p style={{ color: THEME.colors.textLight }}>Publicar inmueble o carga masiva</p>
         </div>
       </div>
     </div>
@@ -209,188 +161,191 @@ function LandingView({ onNavigate }) {
 }
 
 // ==========================================
-// IUB VIEW (6 Pasos - Estilizado)
+// IUB VIEW (BUSCO LOCALES) - BASADO EN EXCEL
 // ==========================================
-function IUBView({ user, profile, supabase, showToast, onNavigate }) {
+function IUBView({ user, supabase, showToast, onNavigate }) {
   const [step, setStep] = useState(1);
-  const [aceptoTerminos, setAceptoTerminos] = useState(false);
-  const [loading, setLoading] = useState(false);
-  
   const [form, setForm] = useState({
-    nombre_completo: profile?.nombre + ' ' + profile?.apellido || '',
-    nit_cedula: '', celular: profile?.celular || '', email_contacto: profile?.email || '', tipo_negocio: '',
-    ciudad: 'Bogotá', zona: 'Norte', barrio: '', direccion_referencia: '',
-    tipo_inmueble: 'local', area_min: 50, area_max: 200, banos: 1, parqueaderos: 0, caracteristicas: [],
-    operacion: 'arrendar', presupuesto_min: 1000000, presupuesto_max: 5000000, admin_incluido: false,
-    tiempo_decision: '1-3 meses', fecha_ocupacion: '', observaciones: ''
+    segmentos: [], actividad: '', nombre: '', id: '', contacto: '', email: '', ciudad: '', cantidad_locales: 1,
+    barrio: '', zonas_ok: '', zonas_no: '', accesos: [],
+    tipo_negocio: 'Arriendo', uso_suelo: 'Comercial', area_total: '', area_construida: '', altura: '', parqueaderos: '',
+    caracteristicas: [], presupuesto_compra: '', canon_arriendo: '', admin: '', financiacion: 'No requiere', plazo: 'Negociación abierta',
+    horizonte: 'Corto (1-3 meses)', fecha_cierre: '', acelera: '', retrasa: '', exclusiva: 'No, gestión exclusiva Terramatch', observaciones: ''
   });
 
-  const steps = [
-    { num: 1, name: 'Identificación', icon: '👤' },
-    { num: 2, name: 'Ubicación', icon: '📍' },
-    { num: 3, name: 'Inmueble', icon: '🏢' },
-    { num: 4, name: 'Económico', icon: '💰' },
-    { num: 5, name: 'Decisión', icon: '📅' },
-    { num: 6, name: 'Resumen', icon: '✅' }
-  ];
-
-  const toggleCaracteristica = (car) => {
-    setForm(prev => ({
-      ...prev,
-      caracteristicas: prev.caracteristicas.includes(car) ? prev.caracteristicas.filter(c => c !== car) : [...prev.caracteristicas, car]
-    }));
+  const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+  const toggleArray = (field, item) => {
+    setForm(prev => ({ ...prev, [field]: prev[field].includes(item) ? prev[field].filter(i => i !== item) : [...prev[field], item] }));
   };
 
-  const updateForm = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+  const Chip = ({ label, active, onClick }) => (
+    <button type="button" onClick={onClick} style={{ padding: '8px 16px', borderRadius: THEME.radius.full, border: `1px solid ${active ? THEME.colors.primary : '#e2e8f0'}`, background: active ? `${THEME.colors.primary}15` : 'white', color: active ? THEME.colors.primary : THEME.colors.textLight, cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', marginRight: '8px', marginBottom: '8px' }}>
+      {label}
+    </button>
+  );
 
-  const validateStep = () => {
-    if (step === 1 && (!form.nombre_completo || !form.celular)) { showToast('Completa nombre y celular', 'error'); return false; }
-    if (step === 6 && !aceptoTerminos) { showToast('Acepta los términos para continuar', 'error'); return false; }
-    return true;
-  };
-
-  const nextStep = () => { if (validateStep()) setStep(prev => Math.min(prev + 1, 6)); };
-  const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
-
-  async function handleSubmit() {
-    if (!validateStep()) return;
-    setLoading(true);
-    try {
-      const prefix = form.operacion === 'comprar' ? 'V' : 'A';
-      const codigoIub = `TM-${prefix}-${form.ciudad.substring(0,3).toUpperCase()}-${Math.floor(Math.random()*10000)}`;
-
-      const { error } = await supabase.from('iubs').insert([{
-        user_id: user.id, codigo_iub: codigoIub, segmento: 'locales', operacion: form.operacion,
-        ciudad: form.ciudad, zona: form.zona, area_min: form.area_min, presupuesto_max: form.presupuesto_max,
-        tipo_inmueble: form.tipo_inmueble, caracteristicas: JSON.stringify(form.caracteristicas),
-        nombre_completo: form.nombre_completo, celular: form.celular, email_contacto: form.email_contacto,
-        tiempo_decision: form.tiempo_decision, acepto_terminos_iub: true
-      }]);
-      if (error) throw error;
-      showToast(`¡IUB ${codigoIub} generado!`);
-      onNavigate('dashboard');
-    } catch (error) { showToast(error.message, 'error'); } finally { setLoading(false); }
-  }
-
-  const inputStyle = { width: '100%', padding: '14px 16px', border: `1px solid #e2e8f0`, borderRadius: THEME.radius.md, boxSizing: 'border-box', fontSize: '1rem', background: '#f8fafc' };
+  const inputStyle = { width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, boxSizing: 'border-box', marginBottom: '16px', fontSize: '0.95rem' };
   const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 600, color: THEME.colors.text, fontSize: '0.9rem' };
 
   return (
     <div style={{ padding: '40px 24px', maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ background: THEME.colors.white, padding: '40px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h2 style={{ color: THEME.colors.text, marginBottom: '8px' }}>Indicador Único de Búsqueda</h2>
-          <p style={{ color: THEME.colors.textLight }}>Paso {step} de 6: {steps[step-1].name}</p>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: '20px', left: '0', right: '0', height: '4px', background: '#e2e8f0', zIndex: 0 }}></div>
-          <div style={{ position: 'absolute', top: '20px', left: '0', height: '4px', background: THEME.colors.primary, zIndex: 1, transition: 'width 0.3s', width: `${((step - 1) / 5) * 100}%` }}></div>
-          {steps.map(s => (
-            <div key={s.num} style={{ zIndex: 2, textAlign: 'center', flex: 1 }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: step >= s.num ? THEME.colors.primary : THEME.colors.white, color: step >= s.num ? 'white' : '#a0aec0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', fontWeight: 700, border: `2px solid ${step >= s.num ? THEME.colors.primary : '#e2e8f0'}`, transition: 'all 0.3s' }}>
-                {step > s.num ? '✓' : s.num}
-              </div>
-            </div>
-          ))}
+          <h2 style={{ color: THEME.colors.text, margin: '0 0 8px 0' }}>Indicador Único de Búsqueda (IUB)</h2>
+          <p style={{ color: THEME.colors.textLight, margin: 0 }}>Paso {step} de 6: {['Identificación', 'Ubicación', 'Características', 'Económico', 'Horizonte', 'Resumen'][step-1]}</p>
         </div>
 
         {step === 1 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>👤 Identificación</h3>
-            <div style={{ display: 'grid', gap: '16px' }}>
-              <div><label style={labelStyle}>Nombre completo / Razón social *</label><input style={inputStyle} value={form.nombre_completo} onChange={e => updateForm('nombre_completo', e.target.value)} /></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div><label style={labelStyle}>NIT / Cédula</label><input style={inputStyle} value={form.nit_cedula} onChange={e => updateForm('nit_cedula', e.target.value)} /></div>
-                <div><label style={labelStyle}>Tipo de negocio</label><input style={inputStyle} value={form.tipo_negocio} onChange={e => updateForm('tipo_negocio', e.target.value)} /></div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div><label style={labelStyle}>Celular *</label><input style={inputStyle} value={form.celular} onChange={e => updateForm('celular', e.target.value)} /></div>
-                <div><label style={labelStyle}>Email *</label><input style={inputStyle} value={form.email_contacto} onChange={e => updateForm('email_contacto', e.target.value)} /></div>
-              </div>
+            <h3 style={{ color: THEME.colors.primary }}>👤 1. Identificación y Segmentos</h3>
+            <label style={labelStyle}>¿Qué segmentos te interesan? *</label>
+            <div style={{ marginBottom: '24px' }}>
+              {['Locales Comerciales', 'Bodegas', 'Oficinas'].map(seg => (
+                <Chip key={seg} label={seg} active={form.segmentos.includes(seg)} onClick={() => toggleArray('segmentos', seg)} />
+              ))}
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Nombre / Empresa *</label><input style={inputStyle} value={form.nombre} onChange={e => update('nombre', e.target.value)} /></div>
+              <div><label style={labelStyle}>ID (CC / NIT)</label><input style={inputStyle} value={form.id} onChange={e => update('id', e.target.value)} /></div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Contacto / Teléfono</label><input style={inputStyle} value={form.contacto} onChange={e => update('contacto', e.target.value)} /></div>
+              <div><label style={labelStyle}>Email *</label><input style={inputStyle} value={form.email} onChange={e => update('email', e.target.value)} /></div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Ciudad Principal</label><input style={inputStyle} value={form.ciudad} onChange={e => update('ciudad', e.target.value)} /></div>
+              <div><label style={labelStyle}>Cantidad de Locales Requeridos</label><input type="number" style={inputStyle} value={form.cantidad_locales} onChange={e => update('cantidad_locales', e.target.value)} /></div>
+            </div>
+            <label style={labelStyle}>Actividad / Uso del Negocio</label>
+            <input style={inputStyle} placeholder="Ej: Restaurante, Boutique, Oficina..." value={form.actividad} onChange={e => update('actividad', e.target.value)} />
           </div>
         )}
 
         {step === 2 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>📍 Ubicación</h3>
+            <h3 style={{ color: THEME.colors.primary }}>📍 2. Especificaciones de Ubicación</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div><label style={labelStyle}>Ciudad</label><select style={inputStyle} value={form.ciudad} onChange={e => updateForm('ciudad', e.target.value)}><option>Bogotá</option><option>Medellín</option><option>Cali</option></select></div>
-              <div><label style={labelStyle}>Zona</label><select style={inputStyle} value={form.zona} onChange={e => updateForm('zona', e.target.value)}><option>Norte</option><option>Sur</option><option>Centro</option></select></div>
+              <div><label style={labelStyle}>Ciudad / Municipio</label><input style={inputStyle} value={form.ciudad} onChange={e => update('ciudad', e.target.value)} /></div>
+              <div><label style={labelStyle}>Barrio / Zona preferida</label><input style={inputStyle} value={form.barrio} onChange={e => update('barrio', e.target.value)} /></div>
             </div>
-            <div style={{ marginTop: '16px' }}><label style={labelStyle}>Barrio / Referencia</label><input style={inputStyle} value={form.barrio} onChange={e => updateForm('barrio', e.target.value)} /></div>
+            <label style={labelStyle}>Zonas / Sectores aceptables</label>
+            <input style={inputStyle} value={form.zonas_ok} onChange={e => update('zonas_ok', e.target.value)} />
+            <label style={labelStyle}>Sectores NO aceptados</label>
+            <input style={inputStyle} value={form.zonas_no} onChange={e => update('zonas_no', e.target.value)} />
+            <label style={labelStyle}>Accesos requeridos</label>
+            <div style={{ marginBottom: '16px' }}>
+              {['Vía principal', 'Doble calzada', 'Centro Comercial', 'Isla', 'Plazoleta de comidas'].map(acc => (
+                <Chip key={acc} label={acc} active={form.accesos.includes(acc)} onClick={() => toggleArray('accesos', acc)} />
+              ))}
+            </div>
           </div>
         )}
 
         {step === 3 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>🏢 Inmueble</h3>
+            <h3 style={{ color: THEME.colors.primary }}> 3. Características del Inmueble</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div><label style={labelStyle}>Tipo</label><select style={inputStyle} value={form.tipo_inmueble} onChange={e => updateForm('tipo_inmueble', e.target.value)}><option value="local">Local</option><option value="oficina">Oficina</option><option value="bodega">Bodega</option></select></div>
-              <div><label style={labelStyle}>Operación</label><select style={inputStyle} value={form.operacion} onChange={e => updateForm('operacion', e.target.value)}><option value="arrendar">Arrendar</option><option value="comprar">Comprar</option></select></div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
-              <div><label style={labelStyle}>Área Mín (m²)</label><input type="number" style={inputStyle} value={form.area_min} onChange={e => updateForm('area_min', parseInt(e.target.value))} /></div>
-              <div><label style={labelStyle}>Área Máx (m²)</label><input type="number" style={inputStyle} value={form.area_max} onChange={e => updateForm('area_max', parseInt(e.target.value))} /></div>
-            </div>
-            <div style={{ marginTop: '24px' }}>
-              <label style={labelStyle}>Características deseables</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                {['Esquinero', 'Vía principal', 'Doble altura', 'Seguridad 24h', 'Aire acondicionado'].map(car => (
-                  <button key={car} type="button" onClick={() => toggleCaracteristica(car)} style={{ padding: '8px 16px', borderRadius: THEME.radius.full, border: `1px solid ${form.caracteristicas.includes(car) ? THEME.colors.primary : '#e2e8f0'}`, background: form.caracteristicas.includes(car) ? `${THEME.colors.primary}10` : 'white', color: form.caracteristicas.includes(car) ? THEME.colors.primary : THEME.colors.textLight, cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>
-                    {car}
-                  </button>
-                ))}
+              <div>
+                <label style={labelStyle}>Tipo de Negocio</label>
+                <select style={inputStyle} value={form.tipo_negocio} onChange={e => update('tipo_negocio', e.target.value)}>
+                  <option>Arriendo</option><option>Venta</option><option>Leasing comercial</option>
+                </select>
               </div>
+              <div>
+                <label style={labelStyle}>Uso del Suelo</label>
+                <select style={inputStyle} value={form.uso_suelo} onChange={e => update('uso_suelo', e.target.value)}>
+                  <option>Mixto</option><option>Comercial</option><option>Industrial</option><option>Residencial</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Área Total (m²)</label><input type="number" style={inputStyle} value={form.area_total} onChange={e => update('area_total', e.target.value)} /></div>
+              <div><label style={labelStyle}>Área Construida (m²)</label><input type="number" style={inputStyle} value={form.area_construida} onChange={e => update('area_construida', e.target.value)} /></div>
+              <div><label style={labelStyle}>Altura Libre Mín (m)</label><input type="number" style={inputStyle} value={form.altura} onChange={e => update('altura', e.target.value)} /></div>
+            </div>
+            <div><label style={labelStyle}>Parqueaderos mínimos</label><input type="number" style={inputStyle} value={form.parqueaderos} onChange={e => update('parqueaderos', e.target.value)} /></div>
+            
+            <label style={labelStyle}>Características Especiales</label>
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ fontSize: '0.8rem', color: THEME.colors.textLight, marginTop: 0 }}>Acceso / Visibilidad:</p>
+              {['Esquinero', 'Vía Principal', 'Vía Secundaria', 'Doble Frente'].map(c => <Chip key={c} label={c} active={form.caracteristicas.includes(c)} onClick={() => toggleArray('caracteristicas', c)} />)}
+              <p style={{ fontSize: '0.8rem', color: THEME.colors.textLight }}>Configuración:</p>
+              {['Doble Altura', 'Mezzanine', 'Sótano', 'Terraza / Patio'].map(c => <Chip key={c} label={c} active={form.caracteristicas.includes(c)} onClick={() => toggleArray('caracteristicas', c)} />)}
+              <p style={{ fontSize: '0.8rem', color: THEME.colors.textLight }}>Instalaciones:</p>
+              {['Extracción', 'Cocina industrial', 'Refrigeración', 'Carga eléctrica reforzada'].map(c => <Chip key={c} label={c} active={form.caracteristicas.includes(c)} onClick={() => toggleArray('caracteristicas', c)} />)}
             </div>
           </div>
         )}
 
         {step === 4 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>💰 Económico</h3>
-            <div style={{ marginBottom: '24px' }}>
-              <label style={labelStyle}>Presupuesto Mín: ${form.presupuesto_min.toLocaleString()}</label>
-              <input type="range" min="500000" max="20000000" step="100000" value={form.presupuesto_min} onChange={e => updateForm('presupuesto_min', parseInt(e.target.value))} style={{ width: '100%', accentColor: THEME.colors.primary }} />
+            <h3 style={{ color: THEME.colors.primary }}>💰 4. Condiciones Económicas</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Presupuesto máx. Compra ($)</label><input type="number" style={inputStyle} value={form.presupuesto_compra} onChange={e => update('presupuesto_compra', e.target.value)} /></div>
+              <div><label style={labelStyle}>Canon máx. Arriendo ($)</label><input type="number" style={inputStyle} value={form.canon_arriendo} onChange={e => update('canon_arriendo', e.target.value)} /></div>
             </div>
-            <div>
-              <label style={labelStyle}>Presupuesto Máx: ${form.presupuesto_max.toLocaleString()}</label>
-              <input type="range" min="1000000" max="50000000" step="100000" value={form.presupuesto_max} onChange={e => updateForm('presupuesto_max', parseInt(e.target.value))} style={{ width: '100%', accentColor: THEME.colors.primary }} />
+            <div><label style={labelStyle}>Administración mensual máxima ($)</label><input type="number" style={inputStyle} value={form.admin} onChange={e => update('admin', e.target.value)} /></div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Financiación</label>
+                <select style={inputStyle} value={form.financiacion} onChange={e => update('financiacion', e.target.value)}>
+                  <option>Ya aprobada</option><option>En trámite</option><option>No requiere</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Plazo del Contrato</label>
+                <select style={inputStyle} value={form.plazo} onChange={e => update('plazo', e.target.value)}>
+                  <option>3 años</option><option>5 años</option><option>10 años</option><option>Más de 10</option><option>Negociación abierta</option>
+                </select>
+              </div>
             </div>
           </div>
         )}
 
         {step === 5 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>📅 Decisión</h3>
-            <div><label style={labelStyle}>Tiempo de decisión</label><select style={inputStyle} value={form.tiempo_decision} onChange={e => updateForm('tiempo_decision', e.target.value)}><option>Inmediato</option><option>1-3 meses</option><option>3-6 meses</option><option>+6 meses</option></select></div>
-            <div style={{ marginTop: '16px' }}><label style={labelStyle}>Observaciones</label><textarea style={{ ...inputStyle, minHeight: '100px' }} value={form.observaciones} onChange={e => updateForm('observaciones', e.target.value)} /></div>
+            <h3 style={{ color: THEME.colors.primary }}>⚑ 5. Horizonte de Decisión</h3>
+            <label style={labelStyle}>Plazo para tomar la decisión</label>
+            <select style={inputStyle} value={form.horizonte} onChange={e => update('horizonte', e.target.value)}>
+              <option>Inmediato (0-1 mes)</option><option>Corto (1-3 meses)</option><option>Mediano (3-6 meses)</option><option>Largo (+6 meses)</option>
+            </select>
+            <label style={labelStyle}>Fecha estimada de cierre</label>
+            <input type="date" style={inputStyle} value={form.fecha_cierre} onChange={e => update('fecha_cierre', e.target.value)} />
+            <label style={labelStyle}>¿Qué condición aceleraría la decisión?</label>
+            <input style={inputStyle} value={form.acelera} onChange={e => update('acelera', e.target.value)} />
+            <label style={labelStyle}>¿Qué podría retrasar o cancelar la búsqueda?</label>
+            <input style={inputStyle} value={form.retrasa} onChange={e => update('retrasa', e.target.value)} />
+            <label style={labelStyle}>¿Revisa otras opciones en paralelo?</label>
+            <select style={inputStyle} value={form.exclusiva} onChange={e => update('exclusiva', e.target.value)}>
+              <option>No, gestión exclusiva Terramatch</option><option>Sí, con otros gestores</option><option>Sí, directamente con propietarios</option>
+            </select>
           </div>
         )}
 
         {step === 6 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>✅ Resumen</h3>
+            <h3 style={{ color: THEME.colors.primary }}>✍ 6. Resumen y Aceptación</h3>
             <div style={{ background: '#f8fafc', padding: '24px', borderRadius: THEME.radius.md, marginBottom: '24px' }}>
-              <p><strong>Buscador:</strong> {form.nombre_completo}</p>
-              <p><strong>Ubicación:</strong> {form.ciudad} - {form.zona}</p>
-              <p><strong>Inmueble:</strong> {form.tipo_inmueble} de {form.area_min}-{form.area_max} m²</p>
-              <p><strong>Presupuesto:</strong> ${form.presupuesto_min.toLocaleString()} - ${form.presupuesto_max.toLocaleString()}</p>
+              <p><strong>Segmentos:</strong> {form.segmentos.join(', ') || 'No seleccionados'}</p>
+              <p><strong>Ubicación:</strong> {form.ciudad} - {form.barrio}</p>
+              <p><strong>Inmueble:</strong> {form.tipo_negocio} | Uso: {form.uso_suelo} | Área: {form.area_total} m²</p>
+              <p><strong>Presupuesto Arriendo:</strong> ${form.canon_arriendo} | <strong>Horizonte:</strong> {form.horizonte}</p>
             </div>
             <label style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', cursor: 'pointer' }}>
-              <input type="checkbox" checked={aceptoTerminos} onChange={e => setAceptoTerminos(e.target.checked)} style={{ marginTop: '4px', transform: 'scale(1.2)' }} />
-              <span style={{ fontSize: '0.9rem', color: THEME.colors.textLight }}>Acepto los <a href={DOC_TERMINOS} target="_blank" style={{ color: THEME.colors.primary }}>Términos y Condiciones</a> y el Mandato de Pago de TerraMatch.</span>
+              <input type="checkbox" defaultChecked style={{ marginTop: '4px', transform: 'scale(1.2)' }} />
+              <span style={{ fontSize: '0.9rem', color: THEME.colors.textLight }}>Acepto los <a href={DOC_TERMINOS} target="_blank" style={{ color: THEME.colors.primary }}>Términos y Condiciones</a> y el Mandato de Pago de TerraMatch (30% comisión en cierre).</span>
             </label>
+            <label style={labelStyle}>Observaciones adicionales</label>
+            <textarea style={{ ...inputStyle, minHeight: '80px' }} value={form.observaciones} onChange={e => update('observaciones', e.target.value)} />
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '16px', marginTop: '40px' }}>
-          {step > 1 && <button onClick={prevStep} style={{ flex: 1, padding: '14px', background: 'white', border: `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer', color: THEME.colors.textLight }}>Atrás</button>}
+        <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
+          {step > 1 && <button onClick={() => setStep(step - 1)} style={{ flex: 1, padding: '14px', background: 'white', border: '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer' }}>Atrás</button>}
           {step < 6 ? (
-            <button onClick={nextStep} style={{ flex: 2, padding: '14px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer', boxShadow: `0 4px 15px ${THEME.colors.primary}40` }}>Siguiente →</button>
+            <button onClick={() => setStep(step + 1)} style={{ flex: 2, padding: '14px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>Siguiente →</button>
           ) : (
-            <button onClick={handleSubmit} disabled={loading} style={{ flex: 2, padding: '14px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>{loading ? 'Generando...' : '✓ Generar IUB'}</button>
+            <button onClick={() => { showToast('¡IUB Generado! Buscando matches...'); onNavigate('dashboard'); }} style={{ flex: 2, padding: '14px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>✓ Generar IUB</button>
           )}
         </div>
       </div>
@@ -399,104 +354,176 @@ function IUBView({ user, profile, supabase, showToast, onNavigate }) {
 }
 
 // ==========================================
-// OFERTA VIEW
+// OFERTA VIEW (TENGO LOCALES) - BASADO EN EXCEL
 // ==========================================
-function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
+function OfertaView({ user, supabase, showToast, onNavigate }) {
   const [step, setStep] = useState(1);
-  const [rol, setRol] = useState('');
-  
-  if (step === 1) {
-    return (
-      <div style={{ padding: '40px 24px', maxWidth: '600px', margin: '0 auto' }}>
-        <div style={{ background: THEME.colors.white, padding: '40px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, textAlign: 'center' }}>
-          <h2 style={{ marginBottom: '32px' }}>¿Cuál es tu rol?</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {['Propietario directo', 'Agencia Inmobiliaria'].map((r) => (
-              <button key={r} onClick={() => { setRol(r); setStep(2); }} style={{ padding: '20px', background: 'white', border: `2px solid #e2e8f0`, borderRadius: THEME.radius.md, cursor: 'pointer', fontSize: '1.1rem', fontWeight: 600, color: THEME.colors.text }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = THEME.colors.primary; e.currentTarget.style.background = `${THEME.colors.primary}05`; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = 'white'; }}>
-                {r}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const [form, setForm] = useState({
+    segmentos: [], rol: '', nombre: '', id: '', contacto: '', email: '', ciudad: '',
+    barrio: '', direccion: '', permiso: 'No cuenta',
+    tipo_negocio: 'Arriendo', uso_suelo: 'Comercial', area_total: '', area_construida: '', altura: '', parqueaderos: '',
+    caracteristicas: [], precio_venta: '', canon: '', admin: '', plazo: 'Negociación abierta',
+    horizonte: 'Corto (1-3 meses)', fecha_cierre: '', acelera: '', retrasa: '', observaciones: ''
+  });
+
+  const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+  const toggleArray = (field, item) => {
+    setForm(prev => ({ ...prev, [field]: prev[field].includes(item) ? prev[field].filter(i => i !== item) : [...prev[field], item] }));
+  };
+
+  const Chip = ({ label, active, onClick }) => (
+    <button type="button" onClick={onClick} style={{ padding: '8px 16px', borderRadius: THEME.radius.full, border: `1px solid ${active ? THEME.colors.primary : '#e2e8f0'}`, background: active ? `${THEME.colors.primary}15` : 'white', color: active ? THEME.colors.primary : THEME.colors.textLight, cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', marginRight: '8px', marginBottom: '8px' }}>
+      {label}
+    </button>
+  );
+
+  const inputStyle = { width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, boxSizing: 'border-box', marginBottom: '16px', fontSize: '0.95rem' };
+  const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 600, color: THEME.colors.text, fontSize: '0.9rem' };
+
+  const Dropzone = ({ title, subtitle }) => (
+    <div style={{ border: '2px dashed #e2e8f0', borderRadius: THEME.radius.md, padding: '32px', textAlign: 'center', background: '#f8fafc', marginBottom: '16px', cursor: 'pointer' }}>
+      <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📁</div>
+      <h4 style={{ margin: '0 0 4px 0', color: THEME.colors.text }}>{title}</h4>
+      <p style={{ margin: 0, color: THEME.colors.textLight, fontSize: '0.85rem' }}>{subtitle}</p>
+    </div>
+  );
 
   return (
     <div style={{ padding: '40px 24px', maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ background: THEME.colors.white, padding: '40px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow }}>
-        <h2 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>Publicar como {rol}</h2>
-        <p style={{ color: THEME.colors.textLight }}>Formulario de carga de inmueble (Misma estructura visual que IUB)</p>
-        <button onClick={() => onNavigate('dashboard')} style={{ marginTop: '24px', padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, cursor: 'pointer' }}>Volver al Dashboard</button>
-      </div>
-    </div>
-  );
-}
-
-// ==========================================
-// DASHBOARD VIEW
-// ==========================================
-function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
-  const safeName = profile?.nombre || 'Usuario';
-
-  return (
-    <div style={{ padding: '40px 24px', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ background: `linear-gradient(135deg, ${THEME.colors.primary} 0%, #ff7e6b 100%)`, color: 'white', padding: '40px', borderRadius: THEME.radius.lg, marginBottom: '32px', boxShadow: `0 10px 30px ${THEME.colors.primary}40` }}>
-        <h2 style={{ color: 'white', marginBottom: '8px' }}>Hola, {safeName} 👋</h2>
-        <p style={{ opacity: 0.9 }}>Bienvenido a tu centro de control TerraMatch</p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-        <div onClick={() => onNavigate('iub')} style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, cursor: 'pointer', transition: 'all 0.3s', border: '2px solid transparent' }}
-             onMouseEnter={(e) => { e.currentTarget.style.borderColor = THEME.colors.primary; e.currentTarget.style.transform = 'translateY(-5px)'; }}
-             onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-          <div style={{ fontSize: '2rem', marginBottom: '16px' }}>🔍</div>
-          <h3 style={{ marginBottom: '8px' }}>Busco Locales</h3>
-          <p style={{ color: THEME.colors.textLight, fontSize: '0.9rem' }}>Crea un nuevo IUB para encontrar tu match ideal.</p>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h2 style={{ color: THEME.colors.text, margin: '0 0 8px 0' }}>Indicador Único de Propiedad (IUP)</h2>
+          <p style={{ color: THEME.colors.textLight, margin: 0 }}>Paso {step} de 6: {['Identificación', 'Ubicación', 'Características', 'Económico y Documentos', 'Horizonte', 'Resumen'][step-1]}</p>
         </div>
 
-        <div onClick={() => onNavigate('oferta')} style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, cursor: 'pointer', transition: 'all 0.3s', border: '2px solid transparent' }}
-             onMouseEnter={(e) => { e.currentTarget.style.borderColor = THEME.colors.primary; e.currentTarget.style.transform = 'translateY(-5px)'; }}
-             onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-          <div style={{ fontSize: '2rem', marginBottom: '16px' }}>🏪</div>
-          <h3 style={{ marginBottom: '8px' }}>Tengo Locales</h3>
-          <p style={{ color: THEME.colors.textLight, fontSize: '0.9rem' }}>Publica tu inventario y recibe matches de buscadores.</p>
+        {step === 1 && (
+          <div>
+            <h3 style={{ color: THEME.colors.primary }}>👤 1. Identificación y Segmentos</h3>
+            <Dropzone title="Carga Masiva de Inventario (Excel/CSV)" subtitle="Arrastra tu archivo aquí o haz clic para subir (Ideal para Inmobiliarias)" />
+            <p style={{ textAlign: 'center', color: THEME.colors.textLight, margin: '24px 0' }}>- o completa el formulario manual -</p>
+            
+            <label style={labelStyle}>¿Qué segmentos manejas?</label>
+            <div style={{ marginBottom: '24px' }}>
+              {['Locales Comerciales', 'Bodegas', 'Oficinas'].map(seg => (
+                <Chip key={seg} label={seg} active={form.segmentos.includes(seg)} onClick={() => toggleArray('segmentos', seg)} />
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Rol</label><select style={inputStyle} value={form.rol} onChange={e => update('rol', e.target.value)}><option>Propietario</option><option>Inmobiliaria</option><option>Agente Independiente</option></select></div>
+              <div><label style={labelStyle}>Nombre / Empresa</label><input style={inputStyle} value={form.nombre} onChange={e => update('nombre', e.target.value)} /></div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>ID (CC / NIT)</label><input style={inputStyle} value={form.id} onChange={e => update('id', e.target.value)} /></div>
+              <div><label style={labelStyle}>Matrícula Inmobiliaria</label><input style={inputStyle} /></div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Contacto / Teléfono</label><input style={inputStyle} value={form.contacto} onChange={e => update('contacto', e.target.value)} /></div>
+              <div><label style={labelStyle}>Email</label><input style={inputStyle} value={form.email} onChange={e => update('email', e.target.value)} /></div>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div>
+            <h3 style={{ color: THEME.colors.primary }}>📍 2. Ubicación del Inmueble</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Ciudad / Municipio</label><input style={inputStyle} value={form.ciudad} onChange={e => update('ciudad', e.target.value)} /></div>
+              <div><label style={labelStyle}>Barrio / Zona</label><input style={inputStyle} value={form.barrio} onChange={e => update('barrio', e.target.value)} /></div>
+            </div>
+            <label style={labelStyle}>Dirección del Inmueble</label>
+            <input style={inputStyle} value={form.direccion} onChange={e => update('direccion', e.target.value)} />
+            <label style={labelStyle}>Permiso de Construcción / Uso de Suelos</label>
+            <select style={inputStyle} value={form.permiso} onChange={e => update('permiso', e.target.value)}>
+              <option>Sí cuenta</option><option>No cuenta</option><option>En trámite</option>
+            </select>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div>
+            <h3 style={{ color: THEME.colors.primary }}>🏢 3. Características del Inmueble</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Tipo de Negocio</label><select style={inputStyle} value={form.tipo_negocio} onChange={e => update('tipo_negocio', e.target.value)}><option>Arriendo</option><option>Venta</option><option>Leasing comercial</option></select></div>
+              <div><label style={labelStyle}>Uso del Suelo</label><select style={inputStyle} value={form.uso_suelo} onChange={e => update('uso_suelo', e.target.value)}><option>Mixto</option><option>Comercial</option><option>Industrial</option><option>Residencial</option></select></div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Área Total (m²)</label><input type="number" style={inputStyle} value={form.area_total} onChange={e => update('area_total', e.target.value)} /></div>
+              <div><label style={labelStyle}>Área Construida (m²)</label><input type="number" style={inputStyle} value={form.area_construida} onChange={e => update('area_construida', e.target.value)} /></div>
+              <div><label style={labelStyle}>Altura Libre (m)</label><input type="number" style={inputStyle} value={form.altura} onChange={e => update('altura', e.target.value)} /></div>
+            </div>
+            <div><label style={labelStyle}>Parqueaderos</label><input type="number" style={inputStyle} value={form.parqueaderos} onChange={e => update('parqueaderos', e.target.value)} /></div>
+            
+            <label style={labelStyle}>Características Especiales</label>
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ fontSize: '0.8rem', color: THEME.colors.textLight, marginTop: 0 }}>Acceso / Visibilidad:</p>
+              {['Esquinero', 'Vía Principal', 'Vía Secundaria', 'Doble Frente'].map(c => <Chip key={c} label={c} active={form.caracteristicas.includes(c)} onClick={() => toggleArray('caracteristicas', c)} />)}
+              <p style={{ fontSize: '0.8rem', color: THEME.colors.textLight }}>Configuración:</p>
+              {['Doble Altura', 'Mezzanine', 'Sótano', 'Terraza / Patio'].map(c => <Chip key={c} label={c} active={form.caracteristicas.includes(c)} onClick={() => toggleArray('caracteristicas', c)} />)}
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div>
+            <h3 style={{ color: THEME.colors.primary }}>💰 4. Económico y Documentos</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Precio de Venta ($) o Precio/m²</label><input type="number" style={inputStyle} value={form.precio_venta} onChange={e => update('precio_venta', e.target.value)} /></div>
+              <div><label style={labelStyle}>Canon de Arriendo mensual ($)</label><input type="number" style={inputStyle} value={form.canon} onChange={e => update('canon', e.target.value)} /></div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Administración mensual ($)</label><input type="number" style={inputStyle} value={form.admin} onChange={e => update('admin', e.target.value)} /></div>
+              <div><label style={labelStyle}>Plazo del Contrato</label><select style={inputStyle} value={form.plazo} onChange={e => update('plazo', e.target.value)}><option>3 años</option><option>5 años</option><option>10 años</option><option>Más de 10</option><option>Negociación abierta</option></select></div>
+            </div>
+            
+            <h4 style={{ color: THEME.colors.text, marginTop: '24px' }}>📄 Documentos Disponibles</h4>
+            <Dropzone title="Subir Planos del Local" subtitle="Formatos: Foto, PDF, JPG, DWG / CAD" />
+          </div>
+        )}
+
+        {step === 5 && (
+          <div>
+            <h3 style={{ color: THEME.colors.primary }}>⚑ 5. Horizonte de Decisión</h3>
+            <label style={labelStyle}>Plazo para tomar la decisión</label>
+            <select style={inputStyle} value={form.horizonte} onChange={e => update('horizonte', e.target.value)}>
+              <option>Inmediato (0-1 mes)</option><option>Corto (1-3 meses)</option><option>Mediano (3-6 meses)</option><option>Largo (+6 meses)</option>
+            </select>
+            <label style={labelStyle}>Fecha estimada de cierre</label>
+            <input type="date" style={inputStyle} value={form.fecha_cierre} onChange={e => update('fecha_cierre', e.target.value)} />
+            <label style={labelStyle}>¿Qué condición aceleraría la decisión?</label>
+            <input style={inputStyle} value={form.acelera} onChange={e => update('acelera', e.target.value)} />
+            <label style={labelStyle}>¿Qué podría retrasar o cancelar?</label>
+            <input style={inputStyle} value={form.retrasa} onChange={e => update('retrasa', e.target.value)} />
+          </div>
+        )}
+
+        {step === 6 && (
+          <div>
+            <h3 style={{ color: THEME.colors.primary }}>✍ 6. Resumen y Aceptación</h3>
+            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: THEME.radius.md, marginBottom: '24px' }}>
+              <p><strong>Segmentos:</strong> {form.segmentos.join(', ') || 'No seleccionados'}</p>
+              <p><strong>Ubicación:</strong> {form.ciudad} - {form.barrio} ({form.direccion})</p>
+              <p><strong>Inmueble:</strong> {form.tipo_negocio} | Uso: {form.uso_suelo} | Área: {form.area_total} m²</p>
+              <p><strong>Canon Arriendo:</strong> ${form.canon} | <strong>Horizonte:</strong> {form.horizonte}</p>
+            </div>
+            <label style={labelStyle}>Observaciones adicionales</label>
+            <textarea style={{ ...inputStyle, minHeight: '80px' }} value={form.observaciones} onChange={e => update('observaciones', e.target.value)} />
+            <label style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', cursor: 'pointer', marginTop: '16px' }}>
+              <input type="checkbox" defaultChecked style={{ marginTop: '4px', transform: 'scale(1.2)' }} />
+              <span style={{ fontSize: '0.9rem', color: THEME.colors.textLight }}>Acepto los Términos y Condiciones y autorizo a TerraMatch a gestionar mi inmueble.</span>
+            </label>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
+          {step > 1 && <button onClick={() => setStep(step - 1)} style={{ flex: 1, padding: '14px', background: 'white', border: '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer' }}>Atrás</button>}
+          {step < 6 ? (
+            <button onClick={() => setStep(step + 1)} style={{ flex: 2, padding: '14px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>Siguiente →</button>
+          ) : (
+            <button onClick={() => { showToast('¡Inmueble Publicado!'); onNavigate('dashboard'); }} style={{ flex: 2, padding: '14px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>✓ Publicar Inmueble</button>
+          )}
         </div>
       </div>
     </div>
-  );
-}
-
-// ==========================================
-// ADMIN, LOGIN, REGISTER, FOOTER
-// ==========================================
-function AdminView({ showToast }) { return <div style={{padding: '40px', textAlign: 'center'}}>Panel Admin (En construcción visual)</div>; }
-function LoginView({ supabase, onSuccess, showToast, onNavigate }) {
-  const [form, setForm] = useState({ email: '', password: '' });
-  return (
-    <div style={{ padding: '50px', maxWidth: '400px', margin: '40px auto', background: THEME.colors.white, borderRadius: THEME.radius.lg, boxShadow: THEME.shadow }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '32px', color: THEME.colors.primary }}>Ingresar</h2>
-      <input placeholder="Email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} style={{ width: '100%', padding: '14px', marginBottom: '16px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.md, boxSizing: 'border-box' }} />
-      <input type="password" placeholder="Contraseña" value={form.password} onChange={e => setForm({...form, password: e.target.value})} style={{ width: '100%', padding: '14px', marginBottom: '24px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.md, boxSizing: 'border-box' }} />
-      <button onClick={async () => { const { data, error } = await supabase.auth.signInWithPassword(form); if(error) showToast(error.message, 'error'); else onSuccess(data.user, form.email); }} style={{ width: '100%', padding: '14px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>Entrar</button>
-    </div>
-  );
-}
-function RegisterView({ onSuccess }) { return <div style={{padding: '40px', textAlign: 'center'}}>Registro (Mantener versión anterior con T&C)</div>; }
-
-function Footer({ onNavigate }) {
-  return (
-    <footer style={{ background: THEME.colors.text, color: 'white', padding: '40px 24px', marginTop: '60px', borderRadius: '32px 32px 0 0' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-          <LogoIcon size={32} />
-          <span style={{ fontSize: '1.2rem', fontWeight: 700 }}>terramatch</span>
-        </div>
-        <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>© 2026 TerraMatch. Bogotá, Colombia.</p>
-      </div>
-    </footer>
   );
 }
 
