@@ -58,6 +58,8 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
 
+  const isAdmin = profile?.email === 'jcnieto.marketing@gmail.com';
+
   useEffect(() => { checkSession(); }, []);
 
   async function checkSession() {
@@ -87,6 +89,7 @@ export default function App() {
             <>
               <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Hola, <span style={{ color: THEME.colors.primary }}>{profile?.nombre}</span></span>
               <button onClick={() => setView('dashboard')} style={{ padding: '8px 20px', background: 'transparent', border: `1px solid ${THEME.colors.primary}`, color: THEME.colors.primary, borderRadius: THEME.radius.full, fontWeight: 700 }}>Dashboard</button>
+              {isAdmin && <button onClick={() => setView('admin')} style={{ padding: '8px 20px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>🛡️ Admin</button>}
               <button onClick={handleLogout} style={{ padding: '8px 20px', background: THEME.colors.textLight, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Salir</button>
             </>
           ) : (
@@ -107,6 +110,7 @@ export default function App() {
         {view === 'oferta-wizard' && user && <OfertaWizard user={user} profile={profile} supabase={supabase} onNavigate={setView} />}
         {view === 'iub-detail' && user && selectedItem && <IUBDetailView item={selectedItem} supabase={supabase} onNavigate={setView} />}
         {view === 'local-detail' && user && selectedItem && <LocalDetailView item={selectedItem} supabase={supabase} profile={profile} onNavigate={setView} />}
+        {view === 'admin' && user && isAdmin && <AdminPanel supabase={supabase} onNavigate={setView} setSelectedItem={setSelectedItem} />}
       </main>
 
       <footer style={{ background: THEME.colors.dark, color: 'white', padding: '40px 32px', marginTop: '60px' }}>
@@ -119,16 +123,13 @@ export default function App() {
   );
 }
 
-// ==========================================
-// HOME VIEW
-// ==========================================
 function HomeView({ onNavigate }) {
   return (
     <div>
       <div style={{ background: THEME.colors.dark, color: 'white', padding: '10px 0', overflow: 'hidden', fontSize: '0.85rem' }}>
         <div style={{ display: 'flex', gap: '40px' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '32px' }}><span style={{ color: THEME.colors.success }}>●</span> 🔥 3 nuevos matches en Bogotá hace 5 min</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: THEME.colors.success }}>●</span>  Local en Chapinero arrendado en 48h</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: THEME.colors.success }}>●</span> 🏪 Local en Chapinero arrendado en 48h</span>
         </div>
       </div>
       <div style={{ position: 'relative', minHeight: '80vh', display: 'flex', alignItems: 'center', background: `linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80') center/cover`, overflow: 'hidden' }}>
@@ -165,9 +166,6 @@ function HomeView({ onNavigate }) {
   );
 }
 
-// ==========================================
-// AUTH VIEWS
-// ==========================================
 function RegisterView({ supabase, onSuccess, onNavigate }) {
   const [form, setForm] = useState({ nombre: '', apellido: '', cedula: '', email: '', celular: '' });
   const [acepta, setAcepta] = useState(false);
@@ -242,9 +240,6 @@ function LoginView({ supabase, onSuccess, onNavigate }) {
   );
 }
 
-// ==========================================
-// DASHBOARD
-// ==========================================
 function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem }) {
   const [tab, setTab] = useState('iubs');
   const [iubs, setIubs] = useState([]);
@@ -286,7 +281,7 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem })
         </div>
       ) : (
         <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
-          {locales.length === 0 ? <div style={{ padding: '60px', textAlign: 'center', color: THEME.colors.textLight }}><div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏪</div><h3>Aún no has publicado locales</h3><button onClick={() => onNavigate('oferta-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Publicar mi primer local</button></div> : (
+          {locales.length === 0 ? <div style={{ padding: '60px', textAlign: 'center', color: THEME.colors.textLight }}><div style={{ fontSize: '3rem', marginBottom: '16px' }}></div><h3>Aún no has publicado locales</h3><button onClick={() => onNavigate('oferta-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Publicar mi primer local</button></div> : (
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead><tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TÍTULO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA (M²)</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>PRECIO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ESTADO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th></tr></thead>
               <tbody>{locales.map((local, idx) => (<tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem(local); onNavigate('local-detail'); }}><td style={{ padding: '16px', fontWeight: 600 }}>{local.titulo || 'Sin título'}</td><td style={{ padding: '16px' }}>{local.ciudad}</td><td style={{ padding: '16px' }}>{local.area_total} m²</td><td style={{ padding: '16px' }}>${local.precio?.toLocaleString()}</td><td style={{ padding: '16px' }}><Badge color={local.disponible ? 'success' : 'gray'}>{local.disponible ? 'Disponible' : 'No disponible'}</Badge></td><td style={{ padding: '16px' }}><button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer' }}>Ver IUBs →</button></td></tr>))}</tbody>
@@ -298,20 +293,15 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem })
   );
 }
 
-// ==========================================
-// WIZARD IUB (BUSCO LOCALES)
-// ==========================================
 function IUBWizard({ user, profile, supabase, onNavigate }) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     nombre: profile?.nombre || '', cedula: '', matricula: '', email: profile?.email || '', celular: profile?.celular || '',
-    ciudad_principal: 'Bogotá', cantidad: 1, actividad: '',
-    ciudad: 'Bogotá', zona: 'Norte', barrio: '', zonas_ok: '', zonas_no: '',
-    tipo_negocio: 'Arriendo', uso_suelo: 'Comercial', area_total: '', area_construida: '', altura: '', parqueaderos: '',
+    ciudad: 'Bogotá', zona: 'Norte', barrio: '',
+    tipo_negocio: 'Arriendo', uso_suelo: 'Comercial', area_total: '', area_construida: '',
     caracteristicas: [],
-    presupuesto_compra: '', canon_arriendo: '', admin: '', financiacion: 'No requiere', plazo: 'Negociación abierta',
-    horizonte: 'Corto (1-3 meses)', fecha_cierre: '', acelera: '', retrasa: '', otras_opciones: 'No, gestión exclusiva Terramatch', observaciones: ''
+    canon_arriendo: '', presupuesto_compra: '', horizonte: 'Corto (1-3 meses)', actividad: ''
   });
 
   const toggleCar = (c) => setForm(prev => ({ ...prev, caracteristicas: prev.caracteristicas.includes(c) ? prev.caracteristicas.filter(x => x !== c) : [...prev.caracteristicas, c] }));
@@ -322,22 +312,35 @@ function IUBWizard({ user, profile, supabase, onNavigate }) {
     try {
       const codigoIub = `IUB${Math.floor(Math.random() * 900000) + 100000}`;
       const { error } = await supabase.from('iubs').insert([{
-        user_id: user.id, codigo_iub: codigoIub, segmentos: 'Locales Comerciales',
-        nombre_completo: form.nombre, nit_cedula: form.cedula, matricula_inmobiliaria: form.matricula || null,
-        email_contacto: form.email, celular: form.celular, ciudad: form.ciudad, zona: form.zona, barrio: form.barrio,
-        tipo_negocio: form.tipo_negocio, uso_suelo: form.uso_suelo,
+        user_id: user.id,
+        codigo_iub: codigoIub,
+        nombre_completo: form.nombre,
+        nit_cedula: form.cedula,
+        matricula_inmobiliaria: form.matricula || null,
+        email_contacto: form.email,
+        celular: form.celular,
+        ciudad: form.ciudad,
+        zona: form.zona,
+        barrio: form.barrio,
+        tipo_negocio: form.tipo_negocio,
+        uso_suelo: form.uso_suelo,
         area_min: form.area_total ? parseFloat(form.area_total) : null,
         area_max: form.area_construida ? parseFloat(form.area_construida) : null,
         canon_arriendo: form.canon_arriendo ? parseFloat(form.canon_arriendo) : null,
         presupuesto_compra: form.presupuesto_compra ? parseFloat(form.presupuesto_compra) : null,
-        caracteristicas: JSON.stringify(form.caracteristicas), horizonte: form.horizonte, estado: 'activo',
-        cantidad_locales: parseInt(form.cantidad) || 1, actividad: form.actividad, zonas_no: form.zonas_no,
-        financiacion: form.financiacion, acelera: form.acelera, retrasa: form.retrasa, otras_opciones: form.otras_opciones
+        caracteristicas: JSON.stringify(form.caracteristicas),
+        horizonte: form.horizonte,
+        estado: 'activo',
+        cantidad_locales: 1,
+        actividad: form.actividad
       }]);
       if (error) throw error;
       alert(`¡IUB ${codigoIub} creado exitosamente!`);
       onNavigate('dashboard');
-    } catch (err) { alert('Error: ' + err.message); } finally { setLoading(false); }
+    } catch (err) { 
+      alert('Error: ' + err.message); 
+      console.error('Error detallado:', err);
+    } finally { setLoading(false); }
   };
 
   const inputStyle = { width: '100%', padding: '14px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, boxSizing: 'border-box', fontSize: '1rem', fontFamily: 'Comfortaa', marginBottom: '16px' };
@@ -346,45 +349,47 @@ function IUBWizard({ user, profile, supabase, onNavigate }) {
   return (
     <div style={{ padding: '40px 32px', maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ background: THEME.colors.white, padding: '48px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow }}>
-        <div style={{ fontSize: '0.9rem', color: THEME.colors.textLight, marginBottom: '24px' }}><button onClick={() => onNavigate('dashboard')} style={{ background: 'none', border: 'none', color: THEME.colors.primary, cursor: 'pointer', padding: 0 }}>Dashboard</button><span style={{ margin: '0 8px' }}>&gt;</span><span>Crear IUB (Paso {step} de 4)</span></div>
+        <div style={{ fontSize: '0.9rem', color: THEME.colors.textLight, marginBottom: '24px' }}><button onClick={() => onNavigate('dashboard')} style={{ background: 'none', border: 'none', color: THEME.colors.primary, cursor: 'pointer', padding: 0 }}>Dashboard</button><span style={{ margin: '0 8px' }}>&gt;</span><span>Crear IUB (Paso {step} de 3)</span></div>
         <h2 style={{ textAlign: 'center', marginBottom: '32px' }}>Indicador Único de Búsqueda</h2>
 
         {step === 1 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>👤 1. Identificación de las Partes</h3>
+            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>👤 1. Identificación</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={labelStyle}>Nombre / Empresa *</label><input value={form.nombre} onChange={e => update('nombre', e.target.value)} style={inputStyle} /></div>
               <div><label style={labelStyle}>Identificación (C.C. / NIT) *</label><input value={form.cedula} onChange={e => update('cedula', e.target.value)} style={inputStyle} /></div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={labelStyle}>Matrícula Inmobiliaria</label><input type="text" placeholder="Ej: 50S-91817" value={form.matricula} onChange={e => update('matricula', e.target.value)} style={inputStyle} /></div>
-              <div><label style={labelStyle}>Ciudad Principal</label><select value={form.ciudad_principal} onChange={e => update('ciudad_principal', e.target.value)} style={inputStyle}><option>Bogotá</option><option>Medellín</option><option>Cali</option></select></div>
+              <div><label style={labelStyle}>Ciudad Principal</label><select value={form.ciudad} onChange={e => update('ciudad', e.target.value)} style={inputStyle}><option>Bogotá</option><option>Medellín</option><option>Cali</option></select></div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={labelStyle}>Email *</label><input type="email" value={form.email} onChange={e => update('email', e.target.value)} style={inputStyle} /></div>
               <div><label style={labelStyle}>Teléfono / WhatsApp *</label><input value={form.celular} onChange={e => update('celular', e.target.value)} style={inputStyle} /></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div><label style={labelStyle}>Cantidad de Locales Requeridos</label><input type="number" value={form.cantidad} onChange={e => update('cantidad', e.target.value)} style={inputStyle} /></div>
-              <div><label style={labelStyle}>Actividad / Uso del Negocio</label><input placeholder="Ej: restaurante, boutique..." value={form.actividad} onChange={e => update('actividad', e.target.value)} style={inputStyle} /></div>
-            </div>
+            <label style={labelStyle}>Actividad / Uso del Negocio</label>
+            <input placeholder="Ej: restaurante, boutique..." value={form.actividad} onChange={e => update('actividad', e.target.value)} style={inputStyle} />
           </div>
         )}
 
         {step === 2 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>📍 2. Especificaciones de Ubicación</h3>
+            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}> 2. Ubicación y Características</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div><label style={labelStyle}>Ciudad / Municipio</label><select value={form.ciudad} onChange={e => update('ciudad', e.target.value)} style={inputStyle}><option>Bogotá</option><option>Medellín</option><option>Cali</option></select></div>
               <div><label style={labelStyle}>Barrio / Zona preferida</label><input value={form.barrio} onChange={e => update('barrio', e.target.value)} style={inputStyle} /></div>
+              <div><label style={labelStyle}>Zona</label><select value={form.zona} onChange={e => update('zona', e.target.value)} style={inputStyle}><option>Norte</option><option>Sur</option><option>Centro</option></select></div>
             </div>
-            <label style={labelStyle}>Zonas / Sectores aceptables</label>
-            <input value={form.zonas_ok} onChange={e => update('zonas_ok', e.target.value)} style={inputStyle} />
-            <label style={labelStyle}>Sectores NO aceptados</label>
-            <input value={form.zonas_no} onChange={e => update('zonas_no', e.target.value)} style={inputStyle} />
-            <label style={labelStyle}>Accesos requeridos</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Tipo de Negocio</label><select value={form.tipo_negocio} onChange={e => update('tipo_negocio', e.target.value)} style={inputStyle}><option>Arriendo</option><option>Venta</option><option>Leasing comercial</option></select></div>
+              <div><label style={labelStyle}>Uso del Suelo</label><select value={form.uso_suelo} onChange={e => update('uso_suelo', e.target.value)} style={inputStyle}><option>Mixto</option><option>Comercial</option><option>Industrial</option><option>Residencial</option></select></div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Área Total (m²)</label><input type="number" value={form.area_total} onChange={e => update('area_total', e.target.value)} style={inputStyle} /></div>
+              <div><label style={labelStyle}>Área Construida (m²)</label><input type="number" value={form.area_construida} onChange={e => update('area_construida', e.target.value)} style={inputStyle} /></div>
+            </div>
+            <label style={labelStyle}>Características Especiales</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
-              {['Vía principal', 'Doble calzada', 'Centro Comercial', 'Isla', 'Plazoleta de comidas'].map(c => (
+              {['Esquinero', 'Vía Principal', 'Doble Altura', 'Mezzanine', 'Extracción', 'Cocina industrial'].map(c => (
                 <button key={c} onClick={() => toggleCar(c)} style={{ padding: '8px 16px', borderRadius: THEME.radius.full, border: `1px solid ${form.caracteristicas.includes(c) ? THEME.colors.primary : '#e2e8f0'}`, background: form.caracteristicas.includes(c) ? `${THEME.colors.primary}15` : 'white', color: form.caracteristicas.includes(c) ? THEME.colors.primary : THEME.colors.text, fontWeight: 600, cursor: 'pointer' }}>{c}</button>
               ))}
             </div>
@@ -393,42 +398,18 @@ function IUBWizard({ user, profile, supabase, onNavigate }) {
 
         {step === 3 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>🏢 3. Características del Inmueble</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div><label style={labelStyle}>Tipo de Negocio</label><select value={form.tipo_negocio} onChange={e => update('tipo_negocio', e.target.value)} style={inputStyle}><option>Arriendo</option><option>Venta</option><option>Leasing comercial</option></select></div>
-              <div><label style={labelStyle}>Uso del Suelo</label><select value={form.uso_suelo} onChange={e => update('uso_suelo', e.target.value)} style={inputStyle}><option>Mixto</option><option>Comercial</option><option>Industrial</option><option>Residencial</option></select></div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-              <div><label style={labelStyle}>Área Total (m²)</label><input type="number" value={form.area_total} onChange={e => update('area_total', e.target.value)} style={inputStyle} /></div>
-              <div><label style={labelStyle}>Área Construida (m²)</label><input type="number" value={form.area_construida} onChange={e => update('area_construida', e.target.value)} style={inputStyle} /></div>
-              <div><label style={labelStyle}>Altura Libre Mínima (m)</label><input type="number" value={form.altura} onChange={e => update('altura', e.target.value)} style={inputStyle} /></div>
-            </div>
-            <label style={labelStyle}>Características Especiales</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '16px' }}>
-              {['Esquinero', 'Vía Principal', 'Doble Altura', 'Mezzanine', 'Extracción', 'Cocina industrial'].map(c => (
-                <label key={c} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', border: `1px solid ${form.caracteristicas.includes(c) ? THEME.colors.primary : '#e2e8f0'}`, borderRadius: THEME.radius.sm, cursor: 'pointer', background: form.caracteristicas.includes(c) ? `${THEME.colors.primary}15` : 'white' }}>
-                  <input type="checkbox" checked={form.caracteristicas.includes(c)} onChange={() => toggleCar(c)} /> <span style={{ fontSize: '0.9rem' }}>{c}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {step === 4 && (
-          <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>💰 4. Económico y Horizonte de Decisión</h3>
+            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>💰 3. Económico y Horizonte</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={labelStyle}>Canon mensual máximo de Arriendo ($)</label><input type="number" value={form.canon_arriendo} onChange={e => update('canon_arriendo', e.target.value)} style={inputStyle} /></div>
               <div><label style={labelStyle}>Presupuesto máximo de Compra ($)</label><input type="number" value={form.presupuesto_compra} onChange={e => update('presupuesto_compra', e.target.value)} style={inputStyle} /></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div><label style={labelStyle}>Financiación</label><select value={form.financiacion} onChange={e => update('financiacion', e.target.value)} style={inputStyle}><option>Ya aprobada</option><option>En trámite</option><option>No requiere</option></select></div>
-              <div><label style={labelStyle}>Plazo para tomar la decisión</label><select value={form.horizonte} onChange={e => update('horizonte', e.target.value)} style={inputStyle}><option>Inmediato (0-1 mes)</option><option>Corto (1-3 meses)</option><option>Mediano (3-6 meses)</option><option>Largo (+6 meses)</option></select></div>
-            </div>
-            <label style={labelStyle}>¿Qué condición aceleraría la decisión?</label>
-            <input value={form.acelera} onChange={e => update('acelera', e.target.value)} style={inputStyle} />
-            <label style={labelStyle}>Observaciones adicionales</label>
-            <textarea rows="3" value={form.observaciones} onChange={e => update('observaciones', e.target.value)} style={{ ...inputStyle, resize: 'vertical' }} />
+            <label style={labelStyle}>Plazo para tomar la decisión</label>
+            <select value={form.horizonte} onChange={e => update('horizonte', e.target.value)} style={inputStyle}>
+              <option>Inmediato (0-1 mes)</option>
+              <option>Corto (1-3 meses)</option>
+              <option>Mediano (3-6 meses)</option>
+              <option>Largo (+6 meses)</option>
+            </select>
             <label style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginTop: '16px', cursor: 'pointer' }}>
               <input type="checkbox" defaultChecked style={{ marginTop: '4px', transform: 'scale(1.2)' }} />
               <span style={{ fontSize: '0.9rem', color: THEME.colors.textLight }}>Acepto los términos y condiciones de TerraMatch</span>
@@ -438,7 +419,7 @@ function IUBWizard({ user, profile, supabase, onNavigate }) {
 
         <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
           {step > 1 && <button onClick={() => setStep(step - 1)} style={{ flex: 1, padding: '14px', background: 'white', border: `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 600, color: THEME.colors.text }}>ATRÁS</button>}
-          {step < 4 ? (
+          {step < 3 ? (
             <button onClick={() => setStep(step + 1)} style={{ flex: 2, padding: '14px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>SIGUIENTE →</button>
           ) : (
             <button onClick={handleSubmit} disabled={loading} style={{ flex: 2, padding: '14px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>{loading ? 'Creando...' : '✓ CREAR IUB'}</button>
@@ -449,19 +430,16 @@ function IUBWizard({ user, profile, supabase, onNavigate }) {
   );
 }
 
-// ==========================================
-// WIZARD OFERTA (TENGO LOCALES)
-// ==========================================
 function OfertaWizard({ user, profile, supabase, onNavigate }) {
   const [form, setForm] = useState({
-    titulo: '', ciudad: 'Bogotá', direccion: '', barrio: '', zona: '', codigoPostal: '',
-    matricula: '', tipo: ['Arriendo'], valorCanon: '', valorVenta: '', tiempoContrato: 5,
+    titulo: '', ciudad: 'Bogotá', direccion: '', barrio: '', zona: '',
+    matricula: '', tipo: ['Arriendo'], valorCanon: '', valorVenta: '',
     area: '', caracteristicas: [], usoSuelo: 'Comercial'
   });
   const [loading, setLoading] = useState(false);
 
   const handleDireccionChange = (direccion) => {
-    setForm({...form, direccion, barrio: 'Chapinero', zona: 'Norte', codigoPostal: '110221'});
+    setForm({...form, direccion, barrio: 'Chapinero', zona: 'Norte'});
   };
 
   const toggleTipo = (t) => setForm(prev => ({ ...prev, tipo: prev.tipo.includes(t) ? prev.tipo.filter(x => x !== t) : [...prev.tipo, t] }));
@@ -471,18 +449,29 @@ function OfertaWizard({ user, profile, supabase, onNavigate }) {
     setLoading(true);
     try {
       const { error } = await supabase.from('propiedades').insert([{
-        user_id: user.id, titulo: form.titulo, ciudad: form.ciudad, zona: form.zona, direccion: form.direccion, barrio: form.barrio,
-        segmento: 'locales', tipo_inmueble: 'local', operacion: form.tipo.includes('Arriendo') ? 'arrendar' : 'vender',
+        user_id: user.id,
+        titulo: form.titulo,
+        ciudad: form.ciudad,
+        zona: form.zona,
+        direccion: form.direccion,
+        barrio: form.barrio,
+        segmento: 'locales',
+        tipo_inmueble: 'local',
+        operacion: form.tipo.includes('Arriendo') ? 'arrendar' : 'vender',
         area_total: form.area ? parseFloat(form.area) : 0,
         precio: form.tipo.includes('Arriendo') ? (parseFloat(form.valorCanon) || 0) : (parseFloat(form.valorVenta) || 0),
         caracteristicas: JSON.stringify(form.caracteristicas),
         matricula_inmobiliaria: form.matricula || null,
-        disponible: true, estado: 'activo'
+        disponible: true,
+        estado: 'activo'
       }]);
       if (error) throw error;
       alert('¡Local publicado exitosamente!');
       onNavigate('dashboard');
-    } catch (err) { alert('Error: ' + err.message); } finally { setLoading(false); }
+    } catch (err) { 
+      alert('Error: ' + err.message);
+      console.error('Error detallado:', err);
+    } finally { setLoading(false); }
   };
 
   const inputStyle = { width: '100%', padding: '14px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, boxSizing: 'border-box', fontSize: '1rem', fontFamily: 'Comfortaa', marginBottom: '16px' };
@@ -505,7 +494,7 @@ function OfertaWizard({ user, profile, supabase, onNavigate }) {
         {form.barrio && (
           <div style={{ background: `${THEME.colors.secondary}20`, padding: '16px', borderRadius: THEME.radius.sm, marginBottom: '16px', fontSize: '0.9rem', color: THEME.colors.text }}>
             <strong>De acuerdo con la dirección ingresada, se han calculado:</strong><br/>
-            Barrio: {form.barrio} · Zona: {form.zona} · Código Postal: {form.codigoPostal}
+            Barrio: {form.barrio} · Zona: {form.zona}
           </div>
         )}
 
@@ -533,11 +522,9 @@ function OfertaWizard({ user, profile, supabase, onNavigate }) {
         </div>
 
         <label style={labelStyle}>Características especiales</label>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '24px' }}>
           {['Esquinero', 'Vía Principal', 'Centro comercial', 'Doble altura', 'Permiso de construcción'].map(c => (
-            <label key={c} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', border: `1px solid ${form.caracteristicas.includes(c) ? THEME.colors.primary : '#e2e8f0'}`, borderRadius: THEME.radius.sm, cursor: 'pointer', background: form.caracteristicas.includes(c) ? `${THEME.colors.primary}15` : 'white' }}>
-              <input type="checkbox" checked={form.caracteristicas.includes(c)} onChange={() => toggleCar(c)} /> <span style={{ fontSize: '0.9rem' }}>{c}</span>
-            </label>
+            <button key={c} onClick={() => toggleCar(c)} style={{ padding: '8px 16px', borderRadius: THEME.radius.full, border: `1px solid ${form.caracteristicas.includes(c) ? THEME.colors.primary : '#e2e8f0'}`, background: form.caracteristicas.includes(c) ? `${THEME.colors.primary}15` : 'white', color: form.caracteristicas.includes(c) ? THEME.colors.primary : THEME.colors.text, fontWeight: 600, cursor: 'pointer' }}>{c}</button>
           ))}
         </div>
 
@@ -550,9 +537,6 @@ function OfertaWizard({ user, profile, supabase, onNavigate }) {
   );
 }
 
-// ==========================================
-// DETAIL VIEWS
-// ==========================================
 function IUBDetailView({ item, supabase, onNavigate }) {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -649,12 +633,12 @@ function LocalDetailView({ item, supabase, profile, onNavigate }) {
               <Badge color="success">{item.operacion}</Badge>
             </div>
             <p style={{ margin: '0 0 8px 0', color: THEME.colors.text, fontSize: '1.1rem' }}><strong>${item.precio?.toLocaleString()}</strong> /mes</p>
-            <p style={{ margin: '0', color: THEME.colors.textLight }}>{item.direccion} · Código Postal: {item.barrio}</p>
+            <p style={{ margin: '0', color: THEME.colors.textLight }}>{item.direccion}</p>
           </div>
           <div style={{ background: '#fff5f5', padding: '24px', borderRadius: THEME.radius.md, border: `1px solid ${THEME.colors.primary}30` }}>
             <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px' }}>🔒 Contacto Propietario</h4>
             <p style={{ margin: '8px 0', fontWeight: 700, color: THEME.colors.text }}>{profile?.nombre}</p>
-            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}> {profile?.celular}</p>
+            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>📞 {profile?.celular}</p>
             <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>✉️ {profile?.email}</p>
             {item.matricula_inmobiliaria && <p style={{ margin: '8px 0', color: THEME.colors.textLight, fontSize: '0.85rem' }}>Matrícula: {item.matricula_inmobiliaria}</p>}
           </div>
@@ -680,6 +664,58 @@ function LocalDetailView({ item, supabase, profile, onNavigate }) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AdminPanel({ supabase, onNavigate, setSelectedItem }) {
+  const [tab, setTab] = useState('iubs');
+  const [iubs, setIubs] = useState([]);
+  const [locales, setLocales] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { loadData(); }, []);
+  async function loadData() {
+    try {
+      setLoading(true);
+      const { data: iubsData } = await supabase.from('iubs').select('*').order('creado_en', { ascending: false });
+      setIubs(iubsData || []);
+      const { data: propsData } = await supabase.from('propiedades').select('*').order('creado_en', { ascending: false });
+      setLocales(propsData || []);
+    } catch (error) { console.error('Error loading admin data:', error); } finally { setLoading(false); }
+  }
+
+  return (
+    <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ background: THEME.colors.dark, color: 'white', padding: '32px', borderRadius: THEME.radius.lg, marginBottom: '32px' }}>
+        <h2 style={{ margin: '0 0 8px 0' }}>️ Torre de Control (Admin)</h2>
+        <p style={{ margin: 0, opacity: 0.8 }}>Gestión global de IUBs, Locales y Matches</p>
+      </div>
+
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+        <button onClick={() => setTab('iubs')} style={{ padding: '12px 24px', background: tab === 'iubs' ? THEME.colors.primary : THEME.colors.white, color: tab === 'iubs' ? 'white' : THEME.colors.text, border: tab === 'iubs' ? 'none' : `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>Gestión de IUBs ({iubs.length})</button>
+        <button onClick={() => setTab('locales')} style={{ padding: '12px 24px', background: tab === 'locales' ? THEME.colors.primary : THEME.colors.white, color: tab === 'locales' ? 'white' : THEME.colors.text, border: tab === 'locales' ? 'none' : `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>Gestión de Locales ({locales.length})</button>
+      </div>
+
+      {loading ? <div style={{ textAlign: 'center', padding: '60px', color: THEME.colors.textLight }}>Cargando...</div> : tab === 'iubs' ? (
+        <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
+          {iubs.length === 0 ? <div style={{ padding: '60px', textAlign: 'center' }}>No hay IUBs registrados</div> : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead><tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>IUB</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TIPO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ESTADO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th></tr></thead>
+              <tbody>{iubs.map((iub, idx) => (<tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem(iub); onNavigate('iub-detail'); }}><td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{iub.codigo_iub}</td><td style={{ padding: '16px' }}>{iub.area_min}-{iub.area_max} m²</td><td style={{ padding: '16px' }}>{iub.ciudad}</td><td style={{ padding: '16px' }}>{iub.tipo_negocio}</td><td style={{ padding: '16px' }}><Badge color={iub.estado === 'activo' ? 'success' : 'gray'}>{iub.estado}</Badge></td><td style={{ padding: '16px' }}><button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer' }}>Ver detalles →</button></td></tr>))}</tbody>
+            </table>
+          )}
+        </div>
+      ) : (
+        <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
+          {locales.length === 0 ? <div style={{ padding: '60px', textAlign: 'center' }}>No hay locales registrados</div> : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead><tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TÍTULO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>PRECIO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ESTADO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th></tr></thead>
+              <tbody>{locales.map((local, idx) => (<tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem(local); onNavigate('local-detail'); }}><td style={{ padding: '16px', fontWeight: 600 }}>{local.titulo || 'Sin título'}</td><td style={{ padding: '16px' }}>{local.ciudad}</td><td style={{ padding: '16px' }}>{local.area_total} m²</td><td style={{ padding: '16px' }}>${local.precio?.toLocaleString()}</td><td style={{ padding: '16px' }}><Badge color={local.disponible ? 'success' : 'gray'}>{local.disponible ? 'Disponible' : 'No disponible'}</Badge></td><td style={{ padding: '16px' }}><button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer' }}>Ver detalles →</button></td></tr>))}</tbody>
+            </table>
+          )}
         </div>
       )}
     </div>
