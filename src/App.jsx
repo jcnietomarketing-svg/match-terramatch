@@ -208,9 +208,10 @@ export default function App() {
         {view === 'iub-wizard' && user && <IUBWizard user={user} supabase={supabase} onNavigate={setView} />}
         {view === 'oferta-wizard' && user && <OfertaWizard user={user} supabase={supabase} onNavigate={setView} />}
         {view === 'iub-detail' && user && selectedItem && <IUBDetailView item={selectedItem} supabase={supabase} onNavigate={setView} isAdmin={isAdmin} />}
-        {view === 'local-detail' && user && selectedItem && <LocalDetailView item={selectedItem} supabase={supabase} onNavigate={setView} isAdmin={isAdmin} />}
+        {view === 'local-detail' && user && selectedItem && <LocalDetailView item={selectedItem} supabase={supabase} profile={profile} onNavigate={setView} isAdmin={isAdmin} />}
         {view === 'admin' && user && isAdmin && <AdminPanel supabase={supabase} onNavigate={setView} setSelectedItem={setSelectedItem} />}
-        {view === 'admin-detail' && user && isAdmin && selectedItem && <AdminDetailView item={selectedItem} type={selectedItem.tipo || 'iub'} supabase={supabase} onNavigate={setView} />}
+        {/* CORRECCIÓN: Pasamos profile a AdminDetailView */}
+        {view === 'admin-detail' && user && isAdmin && selectedItem && <AdminDetailView item={selectedItem} type={selectedItem.tipo || 'iub'} supabase={supabase} profile={profile} onNavigate={setView} />}
       </main>
 
       <footer style={{ background: THEME.colors.dark, color: 'white', padding: '60px 32px 30px' }}>
@@ -252,7 +253,7 @@ export default function App() {
             <p style={{ fontSize: '0.85rem', opacity: 0.6, margin: 0 }}>© 2026 TerraMatch · NIT 901.612.770-8 · Todos los derechos reservados</p>
             <div style={{ display: 'flex', gap: '16px' }}>
               <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>📘</a>
-              <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>📸</a>
+              <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}></a>
               <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>💼</a>
             </div>
           </div>
@@ -327,7 +328,7 @@ function HomeView({ onNavigate }) {
           <div onClick={() => onNavigate('register')} style={{ background: THEME.colors.white, padding: '40px 32px', borderRadius: THEME.radius.lg, cursor: 'pointer', border: `2px solid transparent`, boxShadow: THEME.shadow, transition: 'all 0.3s', textAlign: 'left' }}
                onMouseEnter={(e) => { e.currentTarget.style.borderColor = THEME.colors.primary; e.currentTarget.style.transform = 'translateY(-8px)'; }}
                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-            <div style={{ width: '70px', height: '70px', background: `${THEME.colors.primary}15`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', marginBottom: '20px' }}>🔍</div>
+            <div style={{ width: '70px', height: '70px', background: `${THEME.colors.primary}15`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', marginBottom: '20px' }}></div>
             <h3 style={{ fontSize: '1.5rem', marginBottom: '12px', color: THEME.colors.text }}>Busco locales</h3>
             <p style={{ color: THEME.colors.textLight, fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '24px' }}>Podrás comprar o arrendar locales que se ajusten a tus necesidades. Guarda tus búsquedas (IUB) y recibe avisos de nuevos matches.</p>
             <button style={{ padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '0.9rem' }}>SÍ, QUIERO BUSCAR →</button>
@@ -517,7 +518,7 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem })
         <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
           {locales.length === 0 ? (
             <div style={{ padding: '60px', textAlign: 'center', color: THEME.colors.textLight }}>
-              <div style={{ fontSize: '3rem', marginBottom: '16px' }}></div>
+              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏪</div>
               <h3 style={{ color: THEME.colors.text }}>Aún no has publicado locales</h3>
               <p>Publica tu primer local para recibir matches de buscadores interesados</p>
               <button onClick={() => onNavigate('oferta-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Publicar mi primer local</button>
@@ -843,7 +844,7 @@ function OfertaWizard({ user, supabase, onNavigate }) {
 
         <label style={labelStyle}>Fotos/Planos</label>
         <div style={{ border: '2px dashed #e2e8f0', borderRadius: THEME.radius.md, padding: '32px', textAlign: 'center', marginBottom: '24px', cursor: 'pointer', background: '#f8f9fa' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '8px' }}></div>
+          <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📁</div>
           <p style={{ margin: '0 0 8px 0', fontWeight: 600 }}>Arrastra fotos o planos aquí</p>
           <p style={{ margin: 0, fontSize: '0.85rem', color: THEME.colors.textLight }}>o haz clic para seleccionar archivos</p>
         </div>
@@ -919,7 +920,7 @@ function IUBDetailView({ item, supabase, onNavigate, isAdmin }) {
         <div style={{ textAlign: 'center', padding: '40px', color: THEME.colors.textLight }}>Cargando matches...</div>
       ) : matches.length === 0 ? (
         <div style={{ background: THEME.colors.white, padding: '60px', borderRadius: THEME.radius.lg, textAlign: 'center', boxShadow: THEME.shadow }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}></div>
           <h3 style={{ color: THEME.colors.text }}>Aún no hay matches</h3>
           <p style={{ color: THEME.colors.textLight }}>El sistema buscará propiedades compatibles con tu IUB</p>
         </div>
@@ -930,9 +931,9 @@ function IUBDetailView({ item, supabase, onNavigate, isAdmin }) {
               <div style={{ flex: 1, minWidth: '250px' }}>
                 <h4 style={{ margin: '0 0 8px 0', color: THEME.colors.text, fontSize: '1.1rem' }}>{match.propiedades?.titulo || 'Inmueble en ' + match.propiedades?.zona}</h4>
                 <div style={{ display: 'flex', gap: '16px', color: THEME.colors.textLight, fontSize: '0.9rem', marginBottom: '12px', flexWrap: 'wrap' }}>
-                  <span> {match.propiedades?.ciudad} - {match.propiedades?.zona}</span>
-                  <span>📐 {match.propiedades?.area_total} m²</span>
-                  <span> ${match.propiedades?.precio?.toLocaleString()}/mes</span>
+                  <span>📍 {match.propiedades?.ciudad} - {match.propiedades?.zona}</span>
+                  <span> {match.propiedades?.area_total} m²</span>
+                  <span>💰 ${match.propiedades?.precio?.toLocaleString()}/mes</span>
                 </div>
                 {match.propiedades?.caracteristicas && (
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -983,7 +984,7 @@ function IUBDetailView({ item, supabase, onNavigate, isAdmin }) {
 // ==========================================
 // LOCAL DETAIL VIEW REAL
 // ==========================================
-function LocalDetailView({ item, supabase, onNavigate, isAdmin }) {
+function LocalDetailView({ item, supabase, profile, onNavigate, isAdmin }) {
   const [iubsInteresados, setIubsInteresados] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -1019,7 +1020,7 @@ function LocalDetailView({ item, supabase, onNavigate, isAdmin }) {
             <p style={{ margin: '0', color: THEME.colors.textLight }}>{item.direccion} · Código Postal: {item.barrio}</p>
           </div>
           <div style={{ background: '#fff5f5', padding: '24px', borderRadius: THEME.radius.md, border: `1px solid ${THEME.colors.primary}30` }}>
-            <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px' }}>🔒 Contacto Propietario</h4>
+            <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px' }}> Contacto Propietario</h4>
             <p style={{ margin: '8px 0', fontWeight: 700, color: THEME.colors.text }}>{profile?.nombre}</p>
             <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>📞 {profile?.celular}</p>
             <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>✉️ {profile?.email}</p>
@@ -1034,7 +1035,7 @@ function LocalDetailView({ item, supabase, onNavigate, isAdmin }) {
         <div style={{ textAlign: 'center', padding: '40px', color: THEME.colors.textLight }}>Cargando...</div>
       ) : iubsInteresados.length === 0 ? (
         <div style={{ background: THEME.colors.white, padding: '60px', borderRadius: THEME.radius.lg, textAlign: 'center', boxShadow: THEME.shadow }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📊</div>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}></div>
           <h3 style={{ color: THEME.colors.text }}>Aún no hay IUBs interesados</h3>
           <p style={{ color: THEME.colors.textLight }}>Cuando un buscador cree un IUB compatible, aparecerá aquí</p>
         </div>
@@ -1092,7 +1093,7 @@ function AdminPanel({ supabase, onNavigate, setSelectedItem }) {
   return (
     <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ background: THEME.colors.dark, color: 'white', padding: '32px', borderRadius: THEME.radius.lg, marginBottom: '32px' }}>
-        <h2 style={{ margin: '0 0 8px 0' }}>️ Torre de Control (Admin)</h2>
+        <h2 style={{ margin: '0 0 8px 0' }}>🛡️ Torre de Control (Admin)</h2>
         <p style={{ margin: 0, opacity: 0.8 }}>Gestión global de IUBs, Locales y Matches</p>
       </div>
 
@@ -1167,9 +1168,9 @@ function AdminPanel({ supabase, onNavigate, setSelectedItem }) {
 }
 
 // ==========================================
-// ADMIN DETAIL VIEW (CONFIDENCIAL)
+// ADMIN DETAIL VIEW (CONFIDENCIAL) - CORREGIDO
 // ==========================================
-function AdminDetailView({ item, type, supabase, onNavigate }) {
+function AdminDetailView({ item, type, supabase, profile, onNavigate }) {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
 
