@@ -198,7 +198,7 @@ export default function App() {
             <p style={{ fontSize: '0.85rem', opacity: 0.6, margin: 0 }}>© 2026 TerraMatch · NIT 901.612.770-8 · Todos los derechos reservados</p>
             <div style={{ display: 'flex', gap: '16px' }}>
               <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>📘</a>
-              <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>📸</a>
+              <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}></a>
               <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>💼</a>
             </div>
           </div>
@@ -293,7 +293,7 @@ function HomeView({ onNavigate }) {
 }
 
 // ==========================================
-// REGISTRO Y LOGIN
+// REGISTRO REAL
 // ==========================================
 function RegisterView({ supabase, onSuccess, onNavigate }) {
   const [form, setForm] = useState({ nombre: '', apellido: '', cedula: '', email: '', celular: '', nit: '', razonSocial: '', mensaje: '' });
@@ -351,6 +351,9 @@ function RegisterView({ supabase, onSuccess, onNavigate }) {
   );
 }
 
+// ==========================================
+// LOGIN REAL
+// ==========================================
 function LoginView({ supabase, onSuccess, onNavigate }) {
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -383,7 +386,7 @@ function LoginView({ supabase, onSuccess, onNavigate }) {
 }
 
 // ==========================================
-// DASHBOARD
+// DASHBOARD REAL CON TABS
 // ==========================================
 function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem }) {
   const [tab, setTab] = useState('iubs');
@@ -427,7 +430,7 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem })
         <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
           {iubs.length === 0 ? (
             <div style={{ padding: '60px', textAlign: 'center', color: THEME.colors.textLight }}>
-              <div style={{ fontSize: '3rem', marginBottom: '16px' }}></div>
+              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div>
               <h3 style={{ color: THEME.colors.text }}>Aún no tienes IUBs</h3>
               <p>Crea tu primer Indicador Único de Búsqueda para encontrar el local perfecto</p>
               <button onClick={() => onNavigate('iub-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Crear mi primer IUB</button>
@@ -463,7 +466,7 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem })
         <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
           {locales.length === 0 ? (
             <div style={{ padding: '60px', textAlign: 'center', color: THEME.colors.textLight }}>
-              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏪</div>
+              <div style={{ fontSize: '3rem', marginBottom: '16px' }}></div>
               <h3 style={{ color: THEME.colors.text }}>Aún no has publicado locales</h3>
               <p>Publica tu primer local para recibir matches de buscadores interesados</p>
               <button onClick={() => onNavigate('oferta-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Publicar mi primer local</button>
@@ -501,7 +504,7 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem })
 }
 
 // ==========================================
-// WIZARD IUB
+// WIZARD IUB REAL
 // ==========================================
 function IUBWizard({ user, supabase, onNavigate }) {
   const [step, setStep] = useState(1);
@@ -653,7 +656,7 @@ function IUBWizard({ user, supabase, onNavigate }) {
 }
 
 // ==========================================
-// WIZARD OFERTA
+// WIZARD OFERTA REAL
 // ==========================================
 function OfertaWizard({ user, supabase, onNavigate }) {
   const [form, setForm] = useState({
@@ -804,7 +807,7 @@ function OfertaWizard({ user, supabase, onNavigate }) {
 }
 
 // ==========================================
-// IUB DETAIL VIEW
+// IUB DETAIL VIEW REAL
 // ==========================================
 function IUBDetailView({ item, supabase, onNavigate }) {
   const [matches, setMatches] = useState([]);
@@ -858,7 +861,7 @@ function IUBDetailView({ item, supabase, onNavigate }) {
         <div style={{ textAlign: 'center', padding: '40px', color: THEME.colors.textLight }}>Cargando matches...</div>
       ) : matches.length === 0 ? (
         <div style={{ background: THEME.colors.white, padding: '60px', borderRadius: THEME.radius.lg, textAlign: 'center', boxShadow: THEME.shadow }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}></div>
           <h3 style={{ color: THEME.colors.text }}>Aún no hay matches</h3>
           <p style={{ color: THEME.colors.textLight }}>El sistema buscará propiedades compatibles con tu IUB</p>
         </div>
@@ -870,7 +873,7 @@ function IUBDetailView({ item, supabase, onNavigate }) {
                 <h4 style={{ margin: '0 0 8px 0', color: THEME.colors.text, fontSize: '1.1rem' }}>{match.propiedades?.titulo || 'Inmueble en ' + match.propiedades?.zona}</h4>
                 <div style={{ display: 'flex', gap: '16px', color: THEME.colors.textLight, fontSize: '0.9rem', marginBottom: '12px', flexWrap: 'wrap' }}>
                   <span>📍 {match.propiedades?.ciudad} - {match.propiedades?.zona}</span>
-                  <span>📐 {match.propiedades?.area_total} m²</span>
+                  <span> {match.propiedades?.area_total} m²</span>
                   <span>💰 ${match.propiedades?.precio?.toLocaleString()}/mes</span>
                 </div>
                 {match.propiedades?.caracteristicas && (
@@ -895,7 +898,7 @@ function IUBDetailView({ item, supabase, onNavigate }) {
 }
 
 // ==========================================
-// LOCAL DETAIL VIEW
+// LOCAL DETAIL VIEW REAL
 // ==========================================
 function LocalDetailView({ item, supabase, onNavigate }) {
   const [iubsInteresados, setIubsInteresados] = useState([]);
@@ -935,7 +938,7 @@ function LocalDetailView({ item, supabase, onNavigate }) {
           <div style={{ background: '#fff5f5', padding: '24px', borderRadius: THEME.radius.md, border: `1px solid ${THEME.colors.primary}30` }}>
             <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px' }}>🔒 Contacto Propietario</h4>
             <p style={{ margin: '8px 0', fontWeight: 700, color: THEME.colors.text }}>{profile?.nombre}</p>
-            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>📞 {profile?.celular}</p>
+            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}> {profile?.celular}</p>
             <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>✉️ {profile?.email}</p>
             {item.matricula_inmobiliaria && <p style={{ margin: '8px 0', color: THEME.colors.textLight, fontSize: '0.85rem' }}>Matrícula: {item.matricula_inmobiliaria}</p>}
           </div>
@@ -948,7 +951,7 @@ function LocalDetailView({ item, supabase, onNavigate }) {
         <div style={{ textAlign: 'center', padding: '40px', color: THEME.colors.textLight }}>Cargando...</div>
       ) : iubsInteresados.length === 0 ? (
         <div style={{ background: THEME.colors.white, padding: '60px', borderRadius: THEME.radius.lg, textAlign: 'center', boxShadow: THEME.shadow }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📊</div>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}></div>
           <h3 style={{ color: THEME.colors.text }}>Aún no hay IUBs interesados</h3>
           <p style={{ color: THEME.colors.textLight }}>Cuando un buscador cree un IUB compatible, aparecerá aquí</p>
         </div>
