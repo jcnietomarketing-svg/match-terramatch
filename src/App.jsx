@@ -54,7 +54,7 @@ function useBrandFont() {
     const style = document.createElement('style');
     style.innerHTML = `
       * { box-sizing: border-box; }
-      body { font-family: 'Comfortaa', cursive !important; background-color: ${THEME.colors.bg}; color: ${THEME.colors.text}; margin: 0; }
+      body { font-family: 'Comfortaa', cursive !important; background-color: ${THEME.colors.bg}; color: ${THEME.colors.text}; margin: 0; scroll-behavior: smooth; }
       h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.5px; }
       input, select, textarea, button { font-family: 'Comfortaa', cursive !important; transition: all 0.2s; }
       button { cursor: pointer; }
@@ -97,13 +97,15 @@ export default function App() {
         <div onClick={() => setView('home')} style={{ cursor: 'pointer' }}><Logo size={140} /></div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <button onClick={() => setView('home')} style={{ background: 'none', border: 'none', fontWeight: 600, color: THEME.colors.text, padding: '8px 16px' }}>Inicio</button>
-          <button onClick={() => setView('mis-locales')} style={{ padding: '8px 20px', background: 'transparent', border: `1px solid ${THEME.colors.primary}`, color: THEME.colors.primary, borderRadius: THEME.radius.full, fontWeight: 700 }}>Mis Locales</button>
-          <button onClick={() => setView('admin')} style={{ padding: '8px 20px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Admin</button>
+          <button onClick={() => setView('register')} style={{ padding: '8px 20px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Regístrate</button>
+          <button onClick={() => setView('login')} style={{ padding: '8px 20px', background: 'transparent', border: `1px solid ${THEME.colors.text}`, color: THEME.colors.text, borderRadius: THEME.radius.full, fontWeight: 700 }}>Ingresar</button>
         </div>
       </nav>
 
       <main style={{ flex: 1 }}>
         {view === 'home' && <HomeView onNavigate={setView} />}
+        {view === 'register' && <RegisterView onNavigate={setView} />}
+        {view === 'login' && <LoginView onNavigate={setView} />}
         {view === 'mis-locales' && <MisLocalesView onNavigate={setView} />}
         {view === 'admin' && <AdminView onNavigate={setView} />}
       </main>
@@ -119,7 +121,7 @@ export default function App() {
 }
 
 // ==========================================
-// HOME VIEW REDISEÑADO (Luminoso y Directo)
+// HOME VIEW (Nuevo Flujo: Radar -> Scroll -> Cards -> Auth)
 // ==========================================
 function HomeView({ onNavigate }) {
   const [simCity, setSimCity] = useState('Bogotá');
@@ -139,68 +141,45 @@ function HomeView({ onNavigate }) {
 
   return (
     <div>
-      {/* 1. TICKER DE ACTIVIDAD */}
-      <div style={{ background: THEME.colors.dark, color: 'white', padding: '10px 0', overflow: 'hidden', fontSize: '0.85rem' }}>
-        <div style={{ display: 'flex', gap: '40px', animation: 'slide-up 0.5s ease-out' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '32px' }}>
-            <span style={{ color: THEME.colors.success }}>●</span> 🔥 3 nuevos matches en Bogotá hace 5 min
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: THEME.colors.success }}>●</span>  Local en Chapinero arrendado en 48h
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: THEME.colors.success }}>●</span> 📈 142 empresas buscando locales esta semana
-          </span>
-        </div>
-      </div>
-
-      {/* 2. HERO SECTION LUMINOSO */}
+      {/* 1. HERO SECTION: Título + CTA Registro + Simulador */}
       <div style={{ 
         position: 'relative', 
-        minHeight: '85vh', 
+        minHeight: '90vh', 
         display: 'flex', 
         alignItems: 'center',
-        // Overlay blanco brillante para máxima legibilidad
-        background: `linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.75) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80') center/cover`,
+        background: `linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80') center/cover`,
         overflow: 'hidden'
       }}>
         <div style={{ position: 'absolute', top: '10%', right: '10%', width: '300px', height: '300px', border: `2px solid ${THEME.colors.secondary}`, borderRadius: '50%', opacity: 0.4 }}></div>
         <div style={{ position: 'absolute', top: '15%', right: '15%', width: '200px', height: '200px', border: `2px solid ${THEME.colors.secondary}`, borderRadius: '50%', opacity: 0.6 }}></div>
 
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 32px', display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '60px', alignItems: 'center', position: 'relative', zIndex: 1, width: '100%' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center', position: 'relative', zIndex: 1, width: '100%' }}>
           
-          {/* Lado Izquierdo: Texto y CTA (Ahora arriba y legible) */}
+          {/* Lado Izquierdo: Texto y CTA Principal */}
           <div className="animate-slide-up">
             <div style={{ display: 'inline-block', background: `${THEME.colors.primary}15`, color: THEME.colors.primary, padding: '8px 20px', borderRadius: THEME.radius.full, fontSize: '0.9rem', fontWeight: 700, marginBottom: '24px' }}>
                 La mayor comunidad de búsqueda inteligente
             </div>
-            <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)', marginBottom: '24px', lineHeight: 1.1, margin: '0 0 24px 0', color: THEME.colors.text }}>
+            <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '24px', lineHeight: 1.1, margin: '0 0 24px 0', color: THEME.colors.text }}>
               Hagamos Match entre tu<br/>
               <span style={{ color: THEME.colors.primary }}>Local y el Negocio Perfecto</span>
             </h1>
-            <p style={{ fontSize: '1.2rem', color: THEME.colors.textLight, marginBottom: '40px', maxWidth: '550px', lineHeight: 1.6 }}>
+            <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, marginBottom: '32px', maxWidth: '500px', lineHeight: 1.6 }}>
               Deja de buscar. Empieza a encontrar. Nuestro algoritmo conecta empresas en expansión con locales comerciales ideales en tiempo real.
             </p>
             
-            {/* Botones de acción inmediatos */}
-            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '40px' }}>
-              <button onClick={() => onNavigate('mis-locales')} style={{ padding: '16px 32px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem', boxShadow: '0 10px 30px rgba(233,84,66,0.3)' }}>
-                Busco locales →
-              </button>
-              <button style={{ padding: '16px 32px', background: 'white', color: THEME.colors.text, border: `2px solid ${THEME.colors.text}`, borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem' }}>
-                Tengo locales
-              </button>
-            </div>
-
-            {/* Trust indicators */}
-            <div style={{ display: 'flex', gap: '24px', fontSize: '0.9rem', color: THEME.colors.textLight }}>
+            {/* Botón principal de registro */}
+            <button onClick={() => onNavigate('register')} style={{ padding: '16px 32px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem', boxShadow: '0 10px 30px rgba(233,84,66,0.3)', marginBottom: '20px' }}>
+              Regístrate gratis y empieza →
+            </button>
+            
+            <div style={{ display: 'flex', gap: '24px', fontSize: '0.85rem', color: THEME.colors.textLight }}>
               <span>✅ Sin duplicados</span>
-              <span>✅ Curación de contenido</span>
               <span>✅ Match 100% real</span>
             </div>
           </div>
 
-          {/* Lado Derecho: Simulador Interactivo (Tarjeta blanca sólida para contraste) */}
+          {/* Lado Derecho: Simulador Interactivo */}
           <div className="animate-float" style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, border: '1px solid #e2e8f0', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' }}>
             <h3 style={{ marginTop: 0, marginBottom: '8px', fontSize: '1.3rem', color: THEME.colors.text }}>🎮 Prueba nuestro Radar</h3>
             <p style={{ fontSize: '0.9rem', color: THEME.colors.textLight, marginBottom: '24px' }}>Simula una búsqueda y mira cuántos matches encontramos.</p>
@@ -211,7 +190,6 @@ function HomeView({ onNavigate }) {
                 <option value="Bogotá">Bogotá</option>
                 <option value="Medellín">Medellín</option>
                 <option value="Cali">Cali</option>
-                <option value="Barranquilla">Barranquilla</option>
               </select>
             </div>
             
@@ -220,20 +198,20 @@ function HomeView({ onNavigate }) {
               <input type="number" value={simArea} onChange={(e) => setSimArea(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: THEME.radius.sm, border: '1px solid #e2e8f0', fontSize: '1rem', fontFamily: 'Comfortaa', background: '#f8f9fa' }} />
             </div>
 
-            <button onClick={handleSimulate} disabled={isScanning} style={{ width: '100%', padding: '16px', background: isScanning ? THEME.colors.textLight : THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', boxShadow: isScanning ? 'none' : '0 10px 20px rgba(233,84,66,0.2)' }}>
+            <button onClick={handleSimulate} disabled={isScanning} style={{ width: '100%', padding: '16px', background: isScanning ? THEME.colors.textLight : THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
               {isScanning ? (
                 <>
                   <div style={{ width: '20px', height: '20px', border: '3px solid rgba(255,255,255,0.3)', borderTop: '3px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
                   Escaneando...
                 </>
-              ) : '🔍 ESCANEAR MATCHES'}
+              ) : ' ESCANEAR MATCHES'}
             </button>
 
             {simResult !== null && (
               <div className="animate-slide-up" style={{ marginTop: '24px', padding: '20px', background: `${THEME.colors.success}15`, borderRadius: THEME.radius.md, textAlign: 'center', border: `1px solid ${THEME.colors.success}` }}>
                 <div style={{ fontSize: '2.5rem', fontWeight: 700, color: THEME.colors.success }}>{simResult}</div>
                 <div style={{ fontSize: '0.9rem', color: THEME.colors.text, fontWeight: 600 }}>¡Locales compatibles en {simCity}!</div>
-                <button onClick={() => onNavigate('mis-locales')} style={{ marginTop: '12px', padding: '8px 20px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '0.85rem' }}>
+                <button onClick={() => onNavigate('register')} style={{ marginTop: '12px', padding: '8px 20px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '0.85rem' }}>
                   Ver estos locales →
                 </button>
               </div>
@@ -242,48 +220,81 @@ function HomeView({ onNavigate }) {
         </div>
       </div>
 
-      {/* 3. SECCIÓN "CÓMO FUNCIONA" */}
-      <div style={{ padding: '80px 32px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-          <h2 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text }}>¿Cómo funciona la <span style={{ color: THEME.colors.primary }}>TerraMagia</span>?</h2>
-          <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, maxWidth: '600px', margin: '0 auto' }}>Nuestro motor de matching trabaja 24/7 para cruzar oferta y demanda.</p>
-        </div>
+      {/* 2. SECCIÓN DE SCROLL: Las dos tarjetas principales */}
+      <div style={{ padding: '80px 32px', maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text }}>¿Cómo quieres usar TerraMatch?</h2>
+        <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, marginBottom: '60px' }}>Elige tu camino y deja que nuestro algoritmo haga el resto.</p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
-          {[
-            { icon: '📝', title: '1. Crea tu IUB', desc: 'Define tu búsqueda ideal (ubicación, área, presupuesto) y genera tu Indicador Único de Búsqueda.', img: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80' },
-            { icon: '', title: '2. El Algoritmo Busca', desc: 'Nuestro motor cruza tu IUB con miles de locales en tiempo real, filtrando duplicados y ruido.', img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80' },
-            { icon: '🤝', title: '3. Match y Cierre', desc: 'Recibe notificaciones de matches compatibles. Acepta, agenda visita y cierra el negocio.', img: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=600&q=80' }
-          ].map((step, i) => (
-            <div key={i} style={{ background: THEME.colors.white, borderRadius: THEME.radius.lg, overflow: 'hidden', boxShadow: THEME.shadow, transition: 'transform 0.3s' }}
-                 onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-10px)'}
-                 onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-              <div style={{ height: '200px', background: `url(${step.img}) center/cover`, position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '20px', left: '20px', width: '60px', height: '60px', background: THEME.colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}>
-                  {step.icon}
-                </div>
-              </div>
-              <div style={{ padding: '32px' }}>
-                <h3 style={{ marginTop: 0, marginBottom: '12px', fontSize: '1.3rem', color: THEME.colors.text }}>{step.title}</h3>
-                <p style={{ color: THEME.colors.textLight, lineHeight: 1.6, margin: 0 }}>{step.desc}</p>
-              </div>
-            </div>
-          ))}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '32px' }}>
+          
+          {/* Tarjeta Busco Locales */}
+          <div onClick={() => onNavigate('register')} style={{ background: THEME.colors.white, padding: '40px 32px', borderRadius: THEME.radius.lg, cursor: 'pointer', border: `2px solid transparent`, boxShadow: THEME.shadow, transition: 'all 0.3s', textAlign: 'left' }}
+               onMouseEnter={(e) => { e.currentTarget.style.borderColor = THEME.colors.primary; e.currentTarget.style.transform = 'translateY(-8px)'; }}
+               onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+            <div style={{ width: '70px', height: '70px', background: `${THEME.colors.primary}15`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', marginBottom: '20px' }}></div>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '12px', color: THEME.colors.text }}>Busco locales</h3>
+            <p style={{ color: THEME.colors.textLight, fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '24px' }}>Podrás comprar o arrendar locales que se ajusten a tus necesidades. Guarda tus búsquedas (IUB) y recibe avisos de nuevos matches.</p>
+            <button style={{ padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '0.9rem' }}>SÍ, QUIERO BUSCAR →</button>
+          </div>
+
+          {/* Tarjeta Tengo Locales */}
+          <div onClick={() => onNavigate('register')} style={{ background: THEME.colors.white, padding: '40px 32px', borderRadius: THEME.radius.lg, cursor: 'pointer', border: `2px solid transparent`, boxShadow: THEME.shadow, transition: 'all 0.3s', textAlign: 'left' }}
+               onMouseEnter={(e) => { e.currentTarget.style.borderColor = THEME.colors.primary; e.currentTarget.style.transform = 'translateY(-8px)'; }}
+               onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+            <div style={{ width: '70px', height: '70px', background: `${THEME.colors.secondary}30`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', marginBottom: '20px' }}>🏪</div>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '12px', color: THEME.colors.text }}>Tengo locales</h3>
+            <p style={{ color: THEME.colors.textLight, fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '24px' }}>Podrás ofertar todos tus locales a la vez. Etiqueta tus locales para que aparezcan en las búsquedas de tus clientes potenciales.</p>
+            <button style={{ padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '0.9rem' }}>SÍ, QUIERO OFERTAR →</button>
+          </div>
+
         </div>
       </div>
 
-      {/* 4. CTA FINAL */}
-      <div style={{ background: `linear-gradient(135deg, ${THEME.colors.primary} 0%, #ff7e6b 100%)`, padding: '80px 32px', textAlign: 'center', color: 'white', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '-50px', left: '-50px', width: '200px', height: '200px', border: '3px solid rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
-        <div style={{ position: 'absolute', bottom: '-30px', right: '-30px', width: '150px', height: '150px', border: '3px solid rgba(255,255,255,0.3)', borderRadius: '50%' }}></div>
-        
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '2.5rem', marginBottom: '24px' }}>¿Listo para encontrar tu próximo local?</h2>
-          <p style={{ fontSize: '1.2rem', marginBottom: '40px', opacity: 0.9 }}>Únete a más de 500 empresas que ya están usando TerraMatch.</p>
-          <button onClick={() => onNavigate('mis-locales')} style={{ padding: '18px 40px', background: 'white', color: THEME.colors.primary, border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.2rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
-            Crear mi cuenta gratis →
-          </button>
-        </div>
+      {/* 3. SECCIÓN FINAL: CTA */}
+      <div style={{ background: `linear-gradient(135deg, ${THEME.colors.primary} 0%, #ff7e6b 100%)`, padding: '60px 32px', textAlign: 'center', color: 'white' }}>
+        <h2 style={{ fontSize: '2rem', marginBottom: '16px' }}>¿Listo para encontrar tu próximo local?</h2>
+        <p style={{ fontSize: '1.1rem', marginBottom: '32px', opacity: 0.9 }}>Únete a más de 500 empresas que ya están usando TerraMatch.</p>
+        <button onClick={() => onNavigate('register')} style={{ padding: '16px 32px', background: 'white', color: THEME.colors.primary, border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem' }}>
+          Crear mi cuenta gratis →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// REGISTRO Y LOGIN (Vistas básicas para el flujo)
+// ==========================================
+function RegisterView({ onNavigate }) {
+  return (
+    <div style={{ padding: '60px 32px', maxWidth: '500px', margin: '0 auto' }}>
+      <div style={{ background: THEME.colors.white, padding: '48px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, textAlign: 'center' }}>
+        <Logo size={140} />
+        <h2 style={{ margin: '24px 0' }}>Crear Cuenta</h2>
+        <input placeholder="Nombres" style={{ width: '100%', padding: '14px', marginBottom: '16px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, boxSizing: 'border-box' }} />
+        <input placeholder="Email" style={{ width: '100%', padding: '14px', marginBottom: '16px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, boxSizing: 'border-box' }} />
+        <input type="password" placeholder="Contraseña" style={{ width: '100%', padding: '14px', marginBottom: '24px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, boxSizing: 'border-box' }} />
+        <button onClick={() => onNavigate('mis-locales')} style={{ width: '100%', padding: '16px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1rem' }}>REGISTRARME</button>
+        <p style={{ marginTop: '16px', fontSize: '0.9rem' }}>
+          ¿Ya tienes cuenta? <button onClick={() => onNavigate('login')} style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer' }}>INGRESAR</button>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function LoginView({ onNavigate }) {
+  return (
+    <div style={{ padding: '60px 32px', maxWidth: '450px', margin: '0 auto' }}>
+      <div style={{ background: THEME.colors.white, padding: '48px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, textAlign: 'center' }}>
+        <Logo size={140} />
+        <h2 style={{ margin: '24px 0' }}>Ingresar</h2>
+        <input placeholder="Email" style={{ width: '100%', padding: '14px', marginBottom: '16px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, boxSizing: 'border-box' }} />
+        <input type="password" placeholder="Contraseña" style={{ width: '100%', padding: '14px', marginBottom: '24px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, boxSizing: 'border-box' }} />
+        <button onClick={() => onNavigate('mis-locales')} style={{ width: '100%', padding: '16px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1rem' }}>INGRESAR</button>
+        <p style={{ marginTop: '16px', fontSize: '0.9rem' }}>
+          ¿No tienes cuenta? <button onClick={() => onNavigate('register')} style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer' }}>REGISTRARME</button>
+        </p>
       </div>
     </div>
   );
@@ -296,7 +307,6 @@ function MisLocalesView({ onNavigate }) {
   const MOCK_LOCALES = [
     { id: 1, titulo: 'Local esquinero en Pontevedra', ciudad: 'Cota', codigoPostal: '110141', area: 583, matches: 16, estado: 'Activo' },
     { id: 2, titulo: 'Local comercial en Cajicá', ciudad: 'Cajicá', codigoPostal: '212325', area: 877, matches: 3, estado: 'Activo' },
-    { id: 3, titulo: 'Local en Chía', ciudad: 'Chía', codigoPostal: '110141', area: 130, matches: 5, estado: 'Activo' },
   ];
 
   return (
@@ -355,7 +365,6 @@ function AdminView({ onNavigate }) {
       </div>
       <div style={{ background: THEME.colors.white, padding: '40px', borderRadius: THEME.radius.md, textAlign: 'center', boxShadow: THEME.shadow }}>
         <h3>Vista de Administración</h3>
-        <p style={{ color: THEME.colors.textLight }}>Aquí irían las tablas de gestión de IUBs y Locales (ver Fase 2).</p>
         <button onClick={() => onNavigate('home')} style={{ padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, marginTop: '20px' }}>Volver al Home</button>
       </div>
     </div>
