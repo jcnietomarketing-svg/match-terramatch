@@ -16,7 +16,7 @@ const THEME = {
     dark: '#1a202c'
   },
   radius: { sm: '12px', md: '20px', lg: '32px', full: '9999px' },
-  shadow: '0 10px 40px -10px rgba(233, 84, 66, 0.2)',
+  shadow: '0 10px 40px -10px rgba(233, 84, 66, 0.15)',
 };
 
 // ==========================================
@@ -59,23 +59,10 @@ function useBrandFont() {
       input, select, textarea, button { font-family: 'Comfortaa', cursive !important; transition: all 0.2s; }
       button { cursor: pointer; }
       
-      /* Animaciones para el Home */
-      @keyframes pulse-radar {
-        0% { transform: scale(0.8); opacity: 1; }
-        100% { transform: scale(2.5); opacity: 0; }
-      }
-      @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-      }
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-      @keyframes slide-up {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
+      @keyframes pulse-radar { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+      @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
       .animate-float { animation: float 4s ease-in-out infinite; }
       .animate-slide-up { animation: slide-up 0.6s ease-out forwards; }
     `;
@@ -83,9 +70,6 @@ function useBrandFont() {
   }, []);
 }
 
-// ==========================================
-// COMPONENTES REUTILIZABLES
-// ==========================================
 function Badge({ children, color = 'primary' }) {
   const colors = {
     primary: { bg: `${THEME.colors.primary}15`, text: THEME.colors.primary },
@@ -94,15 +78,7 @@ function Badge({ children, color = 'primary' }) {
     gray: { bg: '#e2e8f0', text: THEME.colors.textLight }
   };
   return (
-    <span style={{
-      background: colors[color].bg,
-      color: colors[color].text,
-      padding: '6px 14px',
-      borderRadius: THEME.radius.full,
-      fontSize: '0.85rem',
-      fontWeight: 700,
-      display: 'inline-block'
-    }}>
+    <span style={{ background: colors[color].bg, color: colors[color].text, padding: '6px 14px', borderRadius: THEME.radius.full, fontSize: '0.85rem', fontWeight: 700, display: 'inline-block' }}>
       {children}
     </span>
   );
@@ -117,7 +93,6 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* NAVBAR */}
       <nav style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 100 }}>
         <div onClick={() => setView('home')} style={{ cursor: 'pointer' }}><Logo size={140} /></div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -144,7 +119,7 @@ export default function App() {
 }
 
 // ==========================================
-// HOME VIEW REDISEÑADO (Llamativo e Interactivo)
+// HOME VIEW REDISEÑADO (Luminoso y Directo)
 // ==========================================
 function HomeView({ onNavigate }) {
   const [simCity, setSimCity] = useState('Bogotá');
@@ -164,7 +139,7 @@ function HomeView({ onNavigate }) {
 
   return (
     <div>
-      {/* 1. TICKER DE ACTIVIDAD EN VIVO */}
+      {/* 1. TICKER DE ACTIVIDAD */}
       <div style={{ background: THEME.colors.dark, color: 'white', padding: '10px 0', overflow: 'hidden', fontSize: '0.85rem' }}>
         <div style={{ display: 'flex', gap: '40px', animation: 'slide-up 0.5s ease-out' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '32px' }}>
@@ -179,52 +154,60 @@ function HomeView({ onNavigate }) {
         </div>
       </div>
 
-      {/* 2. HERO SECTION CON IMAGEN Y SIMULADOR */}
+      {/* 2. HERO SECTION LUMINOSO */}
       <div style={{ 
         position: 'relative', 
         minHeight: '85vh', 
         display: 'flex', 
         alignItems: 'center',
-        background: `linear-gradient(135deg, rgba(26,32,44,0.9) 0%, rgba(233,84,66,0.8) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80') center/cover`,
-        color: 'white',
+        // Overlay blanco brillante para máxima legibilidad
+        background: `linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.75) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80') center/cover`,
         overflow: 'hidden'
       }}>
-        {/* Círculos decorativos de radar */}
-        <div style={{ position: 'absolute', top: '10%', right: '10%', width: '300px', height: '300px', border: '2px solid rgba(255,255,255,0.1)', borderRadius: '50%' }}></div>
-        <div style={{ position: 'absolute', top: '15%', right: '15%', width: '200px', height: '200px', border: '2px solid rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
+        <div style={{ position: 'absolute', top: '10%', right: '10%', width: '300px', height: '300px', border: `2px solid ${THEME.colors.secondary}`, borderRadius: '50%', opacity: 0.4 }}></div>
+        <div style={{ position: 'absolute', top: '15%', right: '15%', width: '200px', height: '200px', border: `2px solid ${THEME.colors.secondary}`, borderRadius: '50%', opacity: 0.6 }}></div>
 
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center', position: 'relative', zIndex: 1, width: '100%' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 32px', display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '60px', alignItems: 'center', position: 'relative', zIndex: 1, width: '100%' }}>
           
-          {/* Lado Izquierdo: Texto y CTA */}
+          {/* Lado Izquierdo: Texto y CTA (Ahora arriba y legible) */}
           <div className="animate-slide-up">
-            <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', padding: '8px 20px', borderRadius: THEME.radius.full, fontSize: '0.9rem', fontWeight: 700, marginBottom: '24px', border: '1px solid rgba(255,255,255,0.3)' }}>
-               La mayor comunidad de búsqueda inteligente
+            <div style={{ display: 'inline-block', background: `${THEME.colors.primary}15`, color: THEME.colors.primary, padding: '8px 20px', borderRadius: THEME.radius.full, fontSize: '0.9rem', fontWeight: 700, marginBottom: '24px' }}>
+                La mayor comunidad de búsqueda inteligente
             </div>
-            <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)', marginBottom: '24px', lineHeight: 1.1, margin: '0 0 24px 0' }}>
+            <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)', marginBottom: '24px', lineHeight: 1.1, margin: '0 0 24px 0', color: THEME.colors.text }}>
               Hagamos Match entre tu<br/>
-              <span style={{ color: THEME.colors.secondary }}>Local y el Negocio Perfecto</span>
+              <span style={{ color: THEME.colors.primary }}>Local y el Negocio Perfecto</span>
             </h1>
-            <p style={{ fontSize: '1.2rem', opacity: 0.9, marginBottom: '40px', maxWidth: '500px', lineHeight: 1.6 }}>
+            <p style={{ fontSize: '1.2rem', color: THEME.colors.textLight, marginBottom: '40px', maxWidth: '550px', lineHeight: 1.6 }}>
               Deja de buscar. Empieza a encontrar. Nuestro algoritmo conecta empresas en expansión con locales comerciales ideales en tiempo real.
             </p>
-            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-              <button onClick={() => onNavigate('mis-locales')} style={{ padding: '16px 32px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem', boxShadow: '0 10px 30px rgba(233,84,66,0.4)' }}>
-                ¡Quiero encontrar mi local! →
+            
+            {/* Botones de acción inmediatos */}
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '40px' }}>
+              <button onClick={() => onNavigate('mis-locales')} style={{ padding: '16px 32px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem', boxShadow: '0 10px 30px rgba(233,84,66,0.3)' }}>
+                Busco locales →
               </button>
-              <button style={{ padding: '16px 32px', background: 'transparent', color: 'white', border: '2px solid white', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem' }}>
-                Soy Propietario
+              <button style={{ padding: '16px 32px', background: 'white', color: THEME.colors.text, border: `2px solid ${THEME.colors.text}`, borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem' }}>
+                Tengo locales
               </button>
+            </div>
+
+            {/* Trust indicators */}
+            <div style={{ display: 'flex', gap: '24px', fontSize: '0.9rem', color: THEME.colors.textLight }}>
+              <span>✅ Sin duplicados</span>
+              <span>✅ Curación de contenido</span>
+              <span>✅ Match 100% real</span>
             </div>
           </div>
 
-          {/* Lado Derecho: Simulador Interactivo (El factor "Jugar") */}
-          <div className="animate-float" style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)', padding: '32px', borderRadius: THEME.radius.lg, border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '24px', fontSize: '1.3rem' }}>🎮 Prueba nuestro Radar</h3>
-            <p style={{ fontSize: '0.9rem', opacity: 0.8, marginBottom: '24px' }}>Simula una búsqueda y mira cuántos matches encontramos.</p>
+          {/* Lado Derecho: Simulador Interactivo (Tarjeta blanca sólida para contraste) */}
+          <div className="animate-float" style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, border: '1px solid #e2e8f0', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '8px', fontSize: '1.3rem', color: THEME.colors.text }}>🎮 Prueba nuestro Radar</h3>
+            <p style={{ fontSize: '0.9rem', color: THEME.colors.textLight, marginBottom: '24px' }}>Simula una búsqueda y mira cuántos matches encontramos.</p>
             
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', fontWeight: 600 }}>Ciudad</label>
-              <select value={simCity} onChange={(e) => setSimCity(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: THEME.radius.sm, border: 'none', fontSize: '1rem', fontFamily: 'Comfortaa' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', fontWeight: 600, color: THEME.colors.text }}>Ciudad</label>
+              <select value={simCity} onChange={(e) => setSimCity(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: THEME.radius.sm, border: '1px solid #e2e8f0', fontSize: '1rem', fontFamily: 'Comfortaa', background: '#f8f9fa' }}>
                 <option value="Bogotá">Bogotá</option>
                 <option value="Medellín">Medellín</option>
                 <option value="Cali">Cali</option>
@@ -233,23 +216,23 @@ function HomeView({ onNavigate }) {
             </div>
             
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', fontWeight: 600 }}>Área mínima (m²)</label>
-              <input type="number" value={simArea} onChange={(e) => setSimArea(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: THEME.radius.sm, border: 'none', fontSize: '1rem', fontFamily: 'Comfortaa' }} />
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', fontWeight: 600, color: THEME.colors.text }}>Área mínima (m²)</label>
+              <input type="number" value={simArea} onChange={(e) => setSimArea(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: THEME.radius.sm, border: '1px solid #e2e8f0', fontSize: '1rem', fontFamily: 'Comfortaa', background: '#f8f9fa' }} />
             </div>
 
-            <button onClick={handleSimulate} disabled={isScanning} style={{ width: '100%', padding: '16px', background: isScanning ? THEME.colors.textLight : THEME.colors.white, color: THEME.colors.primary, border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+            <button onClick={handleSimulate} disabled={isScanning} style={{ width: '100%', padding: '16px', background: isScanning ? THEME.colors.textLight : THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', boxShadow: isScanning ? 'none' : '0 10px 20px rgba(233,84,66,0.2)' }}>
               {isScanning ? (
                 <>
-                  <div style={{ width: '20px', height: '20px', border: '3px solid rgba(233,84,66,0.3)', borderTop: '3px solid #e95442', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                  Escaneando base de datos...
+                  <div style={{ width: '20px', height: '20px', border: '3px solid rgba(255,255,255,0.3)', borderTop: '3px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                  Escaneando...
                 </>
               ) : '🔍 ESCANEAR MATCHES'}
             </button>
 
             {simResult !== null && (
-              <div className="animate-slide-up" style={{ marginTop: '24px', padding: '20px', background: 'rgba(72, 187, 120, 0.2)', borderRadius: THEME.radius.md, textAlign: 'center', border: '1px solid rgba(72, 187, 120, 0.5)' }}>
-                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#90EE90' }}>{simResult}</div>
-                <div style={{ fontSize: '0.9rem', color: 'white' }}>¡Locales compatibles encontrados en {simCity}!</div>
+              <div className="animate-slide-up" style={{ marginTop: '24px', padding: '20px', background: `${THEME.colors.success}15`, borderRadius: THEME.radius.md, textAlign: 'center', border: `1px solid ${THEME.colors.success}` }}>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: THEME.colors.success }}>{simResult}</div>
+                <div style={{ fontSize: '0.9rem', color: THEME.colors.text, fontWeight: 600 }}>¡Locales compatibles en {simCity}!</div>
                 <button onClick={() => onNavigate('mis-locales')} style={{ marginTop: '12px', padding: '8px 20px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '0.85rem' }}>
                   Ver estos locales →
                 </button>
@@ -259,10 +242,10 @@ function HomeView({ onNavigate }) {
         </div>
       </div>
 
-      {/* 3. SECCIÓN "CÓMO FUNCIONA" CON IMÁGENES */}
+      {/* 3. SECCIÓN "CÓMO FUNCIONA" */}
       <div style={{ padding: '80px 32px', maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-          <h2 style={{ fontSize: '2.5rem', marginBottom: '16px' }}>¿Cómo funciona la <span style={{ color: THEME.colors.primary }}>TerraMagia</span>?</h2>
+          <h2 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text }}>¿Cómo funciona la <span style={{ color: THEME.colors.primary }}>TerraMagia</span>?</h2>
           <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, maxWidth: '600px', margin: '0 auto' }}>Nuestro motor de matching trabaja 24/7 para cruzar oferta y demanda.</p>
         </div>
 
@@ -281,7 +264,7 @@ function HomeView({ onNavigate }) {
                 </div>
               </div>
               <div style={{ padding: '32px' }}>
-                <h3 style={{ marginTop: 0, marginBottom: '12px', fontSize: '1.3rem' }}>{step.title}</h3>
+                <h3 style={{ marginTop: 0, marginBottom: '12px', fontSize: '1.3rem', color: THEME.colors.text }}>{step.title}</h3>
                 <p style={{ color: THEME.colors.textLight, lineHeight: 1.6, margin: 0 }}>{step.desc}</p>
               </div>
             </div>
@@ -289,14 +272,14 @@ function HomeView({ onNavigate }) {
         </div>
       </div>
 
-      {/* 4. SECCIÓN DE LLAMADO A LA ACCIÓN FINAL */}
+      {/* 4. CTA FINAL */}
       <div style={{ background: `linear-gradient(135deg, ${THEME.colors.primary} 0%, #ff7e6b 100%)`, padding: '80px 32px', textAlign: 'center', color: 'white', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '-50px', left: '-50px', width: '200px', height: '200px', border: '3px solid rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
         <div style={{ position: 'absolute', bottom: '-30px', right: '-30px', width: '150px', height: '150px', border: '3px solid rgba(255,255,255,0.3)', borderRadius: '50%' }}></div>
         
         <div style={{ position: 'relative', zIndex: 1, maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '2.5rem', marginBottom: '24px' }}>¿Listo para encontrar tu próximo local?</h2>
-          <p style={{ fontSize: '1.2rem', marginBottom: '40px', opacity: 0.9 }}>Únete a más de 500 empresas que ya están usando TerraMatch para expandir sus negocios.</p>
+          <p style={{ fontSize: '1.2rem', marginBottom: '40px', opacity: 0.9 }}>Únete a más de 500 empresas que ya están usando TerraMatch.</p>
           <button onClick={() => onNavigate('mis-locales')} style={{ padding: '18px 40px', background: 'white', color: THEME.colors.primary, border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.2rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
             Crear mi cuenta gratis →
           </button>
@@ -307,7 +290,7 @@ function HomeView({ onNavigate }) {
 }
 
 // ==========================================
-// MIS LOCALES VIEW (Mantenida de la Fase 2)
+// MIS LOCALES VIEW
 // ==========================================
 function MisLocalesView({ onNavigate }) {
   const MOCK_LOCALES = [
@@ -361,7 +344,7 @@ function MisLocalesView({ onNavigate }) {
 }
 
 // ==========================================
-// ADMIN VIEW (Mantenida de la Fase 2)
+// ADMIN VIEW
 // ==========================================
 function AdminView({ onNavigate }) {
   return (
