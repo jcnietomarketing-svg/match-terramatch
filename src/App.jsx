@@ -18,10 +18,9 @@ const THEME = {
   colors: {
     primary: '#ee5340',      // Rojo TerraMatch
     secondary: '#b9d3dc',    // Azul Claro
-    secondaryDark: '#8ab6c4',// Azul un poco más oscuro para hover
-    text: '#2d3748',         // Gris oscuro elegante
-    textLight: '#718096',    // Gris para textos secundarios
-    bg: '#f7fafc',           // Fondo general muy suave
+    text: '#2d3748',
+    textLight: '#718096',
+    bg: '#f7fafc',
     white: '#ffffff',
     success: '#48bb78',
   },
@@ -29,13 +28,29 @@ const THEME = {
     sm: '8px',
     md: '16px',
     lg: '24px',
-    full: '9999px', // Pill shape
+    full: '9999px',
   },
   shadow: '0 10px 30px -5px rgba(185, 211, 220, 0.4)',
   shadowHover: '0 20px 40px -5px rgba(238, 83, 64, 0.2)',
 };
 
-// Inyectar fuente Comfortaa globalmente
+// ==========================================
+// ISOTIPO RADAR (Concepto del Manual de Marca)
+// ==========================================
+function LogoIcon({ size = 42 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
+      <circle cx="21" cy="21" r="19" stroke={THEME.colors.secondary} strokeWidth="2.5" />
+      <circle cx="21" cy="21" r="11" stroke={THEME.colors.primary} strokeWidth="2.5" />
+      <circle cx="21" cy="21" r="4" fill={THEME.colors.primary} />
+      <path d="M21 2 L21 10" stroke={THEME.colors.secondary} strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M21 32 L21 40" stroke={THEME.colors.secondary} strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M2 21 L10 21" stroke={THEME.colors.secondary} strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M32 21 L40 21" stroke={THEME.colors.secondary} strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function useComfortaaFont() {
   useEffect(() => {
     const link = document.createElement('link');
@@ -43,7 +58,6 @@ function useComfortaaFont() {
     link.rel = 'stylesheet';
     document.head.appendChild(link);
     
-    // Estilos base globales
     const style = document.createElement('style');
     style.innerHTML = `
       body { font-family: 'Comfortaa', cursive !important; background-color: ${THEME.colors.bg}; color: ${THEME.colors.text}; margin: 0; }
@@ -57,7 +71,7 @@ function useComfortaaFont() {
 }
 
 function App() {
-  useComfortaaFont(); // Activar fuente
+  useComfortaaFont();
 
   const [view, setView] = useState('landing');
   const [user, setUser] = useState(null);
@@ -120,14 +134,14 @@ function App() {
 }
 
 // ==========================================
-// NAVBAR (Diseño Curvo y Limpio)
+// NAVBAR CON LOGO RADAR
 // ==========================================
 function Navbar({ nombre, isLoggedIn, isAdmin, onNavigate, onLogout }) {
   return (
     <nav style={{ background: THEME.colors.white, padding: '16px 24px', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
       <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }} onClick={() => onNavigate('landing')}>
-          <div style={{ width: '42px', height: '42px', background: THEME.colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.2rem', boxShadow: `0 4px 10px ${THEME.colors.primary}40` }}>TM</div>
+        <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => onNavigate('landing')}>
+          <LogoIcon size={38} />
           <span style={{ fontSize: '1.5rem', fontWeight: 700, color: THEME.colors.text }}>terra<span style={{ color: THEME.colors.primary }}>match</span></span>
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -151,12 +165,11 @@ function Navbar({ nombre, isLoggedIn, isAdmin, onNavigate, onLogout }) {
 }
 
 // ==========================================
-// LANDING VIEW (Concepto Radar / Círculos)
+// LANDING VIEW
 // ==========================================
 function LandingView({ onNavigate }) {
   return (
     <div style={{ position: 'relative', padding: '80px 24px', textAlign: 'center', overflow: 'hidden', minHeight: '85vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-      {/* Elementos decorativos de fondo (Radar) */}
       <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: '500px', height: '500px', background: THEME.colors.secondary, borderRadius: '50%', opacity: 0.2, filter: 'blur(60px)', zIndex: 0 }}></div>
       <div style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: '400px', height: '400px', background: THEME.colors.primary, borderRadius: '50%', opacity: 0.1, filter: 'blur(50px)', zIndex: 0 }}></div>
 
@@ -172,7 +185,6 @@ function LandingView({ onNavigate }) {
         </p>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', maxWidth: '800px', margin: '0 auto' }}>
-          {/* Tarjeta Tengo Locales */}
           <div onClick={() => onNavigate('oferta')} style={{ background: THEME.colors.white, padding: '40px 32px', borderRadius: THEME.radius.lg, cursor: 'pointer', border: `2px solid transparent`, boxShadow: THEME.shadow, transition: 'all 0.3s', textAlign: 'left' }}
                onMouseEnter={(e) => { e.currentTarget.style.borderColor = THEME.colors.primary; e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.boxShadow = THEME.shadowHover; }}
                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = THEME.shadow; }}>
@@ -182,7 +194,6 @@ function LandingView({ onNavigate }) {
             <span style={{ color: THEME.colors.primary, fontWeight: 700, fontSize: '0.9rem' }}>Publicar Inmueble →</span>
           </div>
 
-          {/* Tarjeta Busco Locales */}
           <div onClick={() => onNavigate('iub')} style={{ background: THEME.colors.white, padding: '40px 32px', borderRadius: THEME.radius.lg, cursor: 'pointer', border: `2px solid transparent`, boxShadow: THEME.shadow, transition: 'all 0.3s', textAlign: 'left' }}
                onMouseEnter={(e) => { e.currentTarget.style.borderColor = THEME.colors.primary; e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.boxShadow = THEME.shadowHover; }}
                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = THEME.shadow; }}>
@@ -198,7 +209,7 @@ function LandingView({ onNavigate }) {
 }
 
 // ==========================================
-// IUB VIEW (Formulario de 6 pasos - Estilizado)
+// IUB VIEW (6 Pasos - Estilizado)
 // ==========================================
 function IUBView({ user, profile, supabase, showToast, onNavigate }) {
   const [step, setStep] = useState(1);
@@ -272,7 +283,6 @@ function IUBView({ user, profile, supabase, showToast, onNavigate }) {
           <p style={{ color: THEME.colors.textLight }}>Paso {step} de 6: {steps[step-1].name}</p>
         </div>
 
-        {/* Barra de Progreso Curva */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '20px', left: '0', right: '0', height: '4px', background: '#e2e8f0', zIndex: 0 }}></div>
           <div style={{ position: 'absolute', top: '20px', left: '0', height: '4px', background: THEME.colors.primary, zIndex: 1, transition: 'width 0.3s', width: `${((step - 1) / 5) * 100}%` }}></div>
@@ -287,7 +297,7 @@ function IUBView({ user, profile, supabase, showToast, onNavigate }) {
 
         {step === 1 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}> Identificación</h3>
+            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>👤 Identificación</h3>
             <div style={{ display: 'grid', gap: '16px' }}>
               <div><label style={labelStyle}>Nombre completo / Razón social *</label><input style={inputStyle} value={form.nombre_completo} onChange={e => updateForm('nombre_completo', e.target.value)} /></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -304,7 +314,7 @@ function IUBView({ user, profile, supabase, showToast, onNavigate }) {
 
         {step === 2 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}> Ubicación</h3>
+            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>📍 Ubicación</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={labelStyle}>Ciudad</label><select style={inputStyle} value={form.ciudad} onChange={e => updateForm('ciudad', e.target.value)}><option>Bogotá</option><option>Medellín</option><option>Cali</option></select></div>
               <div><label style={labelStyle}>Zona</label><select style={inputStyle} value={form.zona} onChange={e => updateForm('zona', e.target.value)}><option>Norte</option><option>Sur</option><option>Centro</option></select></div>
@@ -389,7 +399,7 @@ function IUBView({ user, profile, supabase, showToast, onNavigate }) {
 }
 
 // ==========================================
-// OFERTA VIEW (Simplificada para el ejemplo visual)
+// OFERTA VIEW
 // ==========================================
 function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
   const [step, setStep] = useState(1);
@@ -426,7 +436,7 @@ function OfertaView({ user, profile, supabase, showToast, onNavigate }) {
 }
 
 // ==========================================
-// DASHBOARD VIEW (Tarjetas Curvas)
+// DASHBOARD VIEW
 // ==========================================
 function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
   const safeName = profile?.nombre || 'Usuario';
@@ -460,7 +470,7 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
 }
 
 // ==========================================
-// ADMIN, LOGIN, REGISTER, FOOTER (Mantenidos funcionales)
+// ADMIN, LOGIN, REGISTER, FOOTER
 // ==========================================
 function AdminView({ showToast }) { return <div style={{padding: '40px', textAlign: 'center'}}>Panel Admin (En construcción visual)</div>; }
 function LoginView({ supabase, onSuccess, showToast, onNavigate }) {
@@ -475,12 +485,13 @@ function LoginView({ supabase, onSuccess, showToast, onNavigate }) {
   );
 }
 function RegisterView({ onSuccess }) { return <div style={{padding: '40px', textAlign: 'center'}}>Registro (Mantener versión anterior con T&C)</div>; }
+
 function Footer({ onNavigate }) {
   return (
     <footer style={{ background: THEME.colors.text, color: 'white', padding: '40px 24px', marginTop: '60px', borderRadius: '32px 32px 0 0' }}>
       <div style={{ maxWidth: '1280px', margin: '0 auto', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '16px' }}>
-          <div style={{ width: '32px', height: '32px', background: THEME.colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>TM</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+          <LogoIcon size={32} />
           <span style={{ fontSize: '1.2rem', fontWeight: 700 }}>terramatch</span>
         </div>
         <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>© 2026 TerraMatch. Bogotá, Colombia.</p>
