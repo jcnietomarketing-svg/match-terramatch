@@ -67,7 +67,6 @@ function useBrandFont() {
       button { cursor: pointer; }
       input:focus, select:focus, textarea:focus { outline: none; border-color: ${THEME.colors.primary} !important; box-shadow: 0 0 0 3px rgba(233, 84, 66, 0.1); }
       @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
       .animate-float { animation: float 4s ease-in-out infinite; }
       .animate-slide-up { animation: slide-up 0.6s ease-out forwards; }
@@ -160,10 +159,49 @@ export default function App() {
         {view === 'local-detail' && user && selectedItem && <LocalDetailView item={selectedItem} supabase={supabase} onNavigate={setView} />}
       </main>
 
-      <footer style={{ background: THEME.colors.dark, color: 'white', padding: '40px 32px', marginTop: '60px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
-          <Logo size={120} />
-          <p style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: '16px' }}>© 2026 TerraMatch · NIT 901.612.770-8 · Bogotá, Colombia</p>
+      <footer style={{ background: THEME.colors.dark, color: 'white', padding: '60px 32px 30px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '40px', marginBottom: '40px' }}>
+            <div>
+              <Logo size={140} />
+              <p style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: '16px', lineHeight: 1.6 }}>
+                La mayor comunidad de búsqueda inteligente de locales comerciales en LATAM.
+              </p>
+            </div>
+            <div>
+              <h4 style={{ fontSize: '1rem', marginBottom: '16px', color: THEME.colors.secondary }}>Plataforma</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <li style={{ marginBottom: '12px' }}><button onClick={() => setView('home')} style={{ background: 'none', border: 'none', color: 'white', opacity: 0.7, cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Inicio</button></li>
+                <li style={{ marginBottom: '12px' }}><button onClick={() => setView('register')} style={{ background: 'none', border: 'none', color: 'white', opacity: 0.7, cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Busco locales</button></li>
+                <li style={{ marginBottom: '12px' }}><button onClick={() => setView('register')} style={{ background: 'none', border: 'none', color: 'white', opacity: 0.7, cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Tengo locales</button></li>
+                <li style={{ marginBottom: '12px' }}><button style={{ background: 'none', border: 'none', color: 'white', opacity: 0.7, cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Sobre TerraMatch</button></li>
+              </ul>
+            </div>
+            <div>
+              <h4 style={{ fontSize: '1rem', marginBottom: '16px', color: THEME.colors.secondary }}>Legal</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <li style={{ marginBottom: '12px' }}><button style={{ background: 'none', border: 'none', color: 'white', opacity: 0.7, cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Términos y Condiciones</button></li>
+                <li style={{ marginBottom: '12px' }}><button style={{ background: 'none', border: 'none', color: 'white', opacity: 0.7, cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Política de Privacidad</button></li>
+                <li style={{ marginBottom: '12px' }}><button style={{ background: 'none', border: 'none', color: 'white', opacity: 0.7, cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Política de Cookies</button></li>
+              </ul>
+            </div>
+            <div>
+              <h4 style={{ fontSize: '1rem', marginBottom: '16px', color: THEME.colors.secondary }}>Contacto</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <li style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7 }}>📧 contacto@terramatch.net</li>
+                <li style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7 }}>📱 +57 300 000 0000</li>
+                <li style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7 }}>📍 Bogotá, Colombia</li>
+              </ul>
+            </div>
+          </div>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+            <p style={{ fontSize: '0.85rem', opacity: 0.6, margin: 0 }}>© 2026 TerraMatch · NIT 901.612.770-8 · Todos los derechos reservados</p>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>📘</a>
+              <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>📸</a>
+              <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>💼</a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
@@ -171,61 +209,63 @@ export default function App() {
 }
 
 // ==========================================
-// HOME VIEW
+// HOME VIEW CON TICKER
 // ==========================================
 function HomeView({ onNavigate }) {
-  const [simCity, setSimCity] = useState('Bogotá');
-  const [simArea, setSimArea] = useState('100');
-  const [isScanning, setIsScanning] = useState(false);
-  const [simResult, setSimResult] = useState(null);
-
-  const handleSimulate = () => {
-    setIsScanning(true); setSimResult(null);
-    setTimeout(() => { setIsScanning(false); setSimResult(Math.floor(Math.random() * 20) + 5); }, 2000);
-  };
-
   return (
     <div>
-      <div style={{ position: 'relative', minHeight: '90vh', display: 'flex', alignItems: 'center', background: `linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80') center/cover`, overflow: 'hidden' }}>
+      {/* TICKER SUPERIOR */}
+      <div style={{ background: THEME.colors.dark, color: 'white', padding: '10px 0', overflow: 'hidden', fontSize: '0.85rem' }}>
+        <div style={{ display: 'flex', gap: '40px', animation: 'slide-up 0.5s ease-out' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '32px' }}>
+            <span style={{ color: THEME.colors.success }}>●</span> 🔥 3 nuevos matches en Bogotá hace 5 min
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: THEME.colors.success }}>●</span> 🏪 Local en Chapinero arrendado en 48h
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: THEME.colors.success }}>●</span> 📈 142 empresas buscando locales esta semana
+          </span>
+        </div>
+      </div>
+
+      {/* HERO SECTION */}
+      <div style={{ 
+        position: 'relative', 
+        minHeight: '80vh', 
+        display: 'flex', 
+        alignItems: 'center',
+        background: `linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80') center/cover`,
+        overflow: 'hidden'
+      }}>
         <div style={{ position: 'absolute', top: '10%', right: '10%', width: '300px', height: '300px', border: `2px solid ${THEME.colors.secondary}`, borderRadius: '50%', opacity: 0.4 }}></div>
         <div style={{ position: 'absolute', top: '15%', right: '15%', width: '200px', height: '200px', border: `2px solid ${THEME.colors.secondary}`, borderRadius: '50%', opacity: 0.6 }}></div>
 
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center', position: 'relative', zIndex: 1, width: '100%' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 32px', textAlign: 'center', position: 'relative', zIndex: 1, width: '100%' }}>
           <div className="animate-slide-up">
-            <div style={{ display: 'inline-block', background: `${THEME.colors.primary}15`, color: THEME.colors.primary, padding: '8px 20px', borderRadius: THEME.radius.full, fontSize: '0.9rem', fontWeight: 700, marginBottom: '24px' }}>La mayor comunidad de búsqueda inteligente</div>
-            <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '24px', lineHeight: 1.1, margin: '0 0 24px 0', color: THEME.colors.text }}>Hagamos Match entre tu<br/><span style={{ color: THEME.colors.primary }}>Local y el Negocio Perfecto</span></h1>
-            <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, marginBottom: '32px', maxWidth: '500px', lineHeight: 1.6 }}>Deja de buscar. Empieza a encontrar. Nuestro algoritmo conecta empresas en expansión con locales comerciales ideales en tiempo real.</p>
-            <button onClick={() => onNavigate('register')} style={{ padding: '16px 32px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem', boxShadow: '0 10px 30px rgba(233,84,66,0.3)', marginBottom: '20px' }}>Regístrate gratis y empieza →</button>
-            <div style={{ display: 'flex', gap: '24px', fontSize: '0.85rem', color: THEME.colors.textLight }}><span>✅ Sin duplicados</span><span>✅ Match 100% real</span></div>
-          </div>
-
-          <div className="animate-float" style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, border: '1px solid #e2e8f0', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '8px', fontSize: '1.3rem', color: THEME.colors.text }}>🎮 Prueba nuestro Radar</h3>
-            <p style={{ fontSize: '0.9rem', color: THEME.colors.textLight, marginBottom: '24px' }}>Simula una búsqueda y mira cuántos matches encontramos.</p>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', fontWeight: 600, color: THEME.colors.text }}>Ciudad</label>
-              <select value={simCity} onChange={(e) => setSimCity(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: THEME.radius.sm, border: '1px solid #e2e8f0', fontSize: '1rem', fontFamily: 'Comfortaa', background: '#f8f9fa' }}>
-                <option value="Bogotá">Bogotá</option><option value="Medellín">Medellín</option><option value="Cali">Cali</option>
-              </select>
+            <div style={{ display: 'inline-block', background: `${THEME.colors.primary}15`, color: THEME.colors.primary, padding: '8px 20px', borderRadius: THEME.radius.full, fontSize: '0.9rem', fontWeight: 700, marginBottom: '24px' }}>
+              La mayor comunidad de búsqueda inteligente
             </div>
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', fontWeight: 600, color: THEME.colors.text }}>Área mínima (m²)</label>
-              <input type="number" value={simArea} onChange={(e) => setSimArea(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: THEME.radius.sm, border: '1px solid #e2e8f0', fontSize: '1rem', fontFamily: 'Comfortaa', background: '#f8f9fa' }} />
-            </div>
-            <button onClick={handleSimulate} disabled={isScanning} style={{ width: '100%', padding: '16px', background: isScanning ? THEME.colors.textLight : THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
-              {isScanning ? (<><div style={{ width: '20px', height: '20px', border: '3px solid rgba(255,255,255,0.3)', borderTop: '3px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>Escaneando...</>) : ' ESCANEAR MATCHES'}
+            <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '24px', lineHeight: 1.1, margin: '0 0 24px 0', color: THEME.colors.text }}>
+              Hagamos Match entre tu<br/>
+              <span style={{ color: THEME.colors.primary }}>Local y el Negocio Perfecto</span>
+            </h1>
+            <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px', lineHeight: 1.6 }}>
+              Deja de buscar. Empieza a encontrar. Nuestro algoritmo conecta empresas en expansión con locales comerciales ideales en tiempo real.
+            </p>
+            <button onClick={() => onNavigate('register')} style={{ padding: '16px 40px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem', boxShadow: '0 10px 30px rgba(233,84,66,0.3)' }}>
+              Regístrate gratis y empieza →
             </button>
-            {simResult !== null && (
-              <div className="animate-slide-up" style={{ marginTop: '24px', padding: '20px', background: `${THEME.colors.success}15`, borderRadius: THEME.radius.md, textAlign: 'center', border: `1px solid ${THEME.colors.success}` }}>
-                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: THEME.colors.success }}>{simResult}</div>
-                <div style={{ fontSize: '0.9rem', color: THEME.colors.text, fontWeight: 600 }}>¡Locales compatibles en {simCity}!</div>
-                <button onClick={() => onNavigate('register')} style={{ marginTop: '12px', padding: '8px 20px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '0.85rem' }}>Ver estos locales →</button>
-              </div>
-            )}
+            <div style={{ display: 'flex', gap: '24px', fontSize: '0.85rem', color: THEME.colors.textLight, justifyContent: 'center', marginTop: '24px' }}>
+              <span>✅ Sin duplicados</span>
+              <span>✅ Match 100% real</span>
+              <span>✅ Curación de contenido</span>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* TARJETAS BUSCO/TENGO LOCALES */}
       <div style={{ padding: '80px 32px', maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
         <h2 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text }}>¿Cómo quieres usar TerraMatch?</h2>
         <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, marginBottom: '60px' }}>Elige tu camino y deja que nuestro algoritmo haga el resto.</p>
@@ -343,7 +383,7 @@ function LoginView({ supabase, onSuccess, onNavigate }) {
 }
 
 // ==========================================
-// DASHBOARD CON TABS REALES
+// DASHBOARD
 // ==========================================
 function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem }) {
   const [tab, setTab] = useState('iubs');
@@ -387,7 +427,7 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem })
         <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
           {iubs.length === 0 ? (
             <div style={{ padding: '60px', textAlign: 'center', color: THEME.colors.textLight }}>
-              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div>
+              <div style={{ fontSize: '3rem', marginBottom: '16px' }}></div>
               <h3 style={{ color: THEME.colors.text }}>Aún no tienes IUBs</h3>
               <p>Crea tu primer Indicador Único de Búsqueda para encontrar el local perfecto</p>
               <button onClick={() => onNavigate('iub-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Crear mi primer IUB</button>
@@ -461,7 +501,7 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem })
 }
 
 // ==========================================
-// WIZARD IUB (BUSCO LOCALES) - 3 PASOS
+// WIZARD IUB
 // ==========================================
 function IUBWizard({ user, supabase, onNavigate }) {
   const [step, setStep] = useState(1);
@@ -613,7 +653,7 @@ function IUBWizard({ user, supabase, onNavigate }) {
 }
 
 // ==========================================
-// WIZARD OFERTA (TENGO LOCALES)
+// WIZARD OFERTA
 // ==========================================
 function OfertaWizard({ user, supabase, onNavigate }) {
   const [form, setForm] = useState({
@@ -624,7 +664,6 @@ function OfertaWizard({ user, supabase, onNavigate }) {
   const [loading, setLoading] = useState(false);
 
   const handleDireccionChange = (direccion) => {
-    // Simulación de geocodificación
     setForm({...form, direccion, barrio: 'Pontevedra', zona: 'Norte', codigoPostal: '111121'});
   };
 
@@ -831,7 +870,7 @@ function IUBDetailView({ item, supabase, onNavigate }) {
                 <h4 style={{ margin: '0 0 8px 0', color: THEME.colors.text, fontSize: '1.1rem' }}>{match.propiedades?.titulo || 'Inmueble en ' + match.propiedades?.zona}</h4>
                 <div style={{ display: 'flex', gap: '16px', color: THEME.colors.textLight, fontSize: '0.9rem', marginBottom: '12px', flexWrap: 'wrap' }}>
                   <span>📍 {match.propiedades?.ciudad} - {match.propiedades?.zona}</span>
-                  <span> {match.propiedades?.area_total} m²</span>
+                  <span>📐 {match.propiedades?.area_total} m²</span>
                   <span>💰 ${match.propiedades?.precio?.toLocaleString()}/mes</span>
                 </div>
                 {match.propiedades?.caracteristicas && (
@@ -894,7 +933,7 @@ function LocalDetailView({ item, supabase, onNavigate }) {
             <p style={{ margin: '0', color: THEME.colors.textLight }}>{item.direccion} · Código Postal: {item.barrio}</p>
           </div>
           <div style={{ background: '#fff5f5', padding: '24px', borderRadius: THEME.radius.md, border: `1px solid ${THEME.colors.primary}30` }}>
-            <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px' }}> Contacto Propietario</h4>
+            <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px' }}>🔒 Contacto Propietario</h4>
             <p style={{ margin: '8px 0', fontWeight: 700, color: THEME.colors.text }}>{profile?.nombre}</p>
             <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>📞 {profile?.celular}</p>
             <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>✉️ {profile?.email}</p>
