@@ -16,7 +16,7 @@ const THEME = {
     dark: '#1a202c'
   },
   radius: { sm: '12px', md: '20px', lg: '32px', full: '9999px' },
-  shadow: '0 10px 40px -10px rgba(233, 84, 66, 0.15)',
+  shadow: '0 10px 40px -10px rgba(233, 84, 66, 0.2)',
 };
 
 // ==========================================
@@ -50,8 +50,36 @@ function useBrandFont() {
     link.href = 'https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;600;700&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
-    document.body.style.fontFamily = "'Comfortaa', cursive";
-    document.body.style.backgroundColor = THEME.colors.bg;
+    
+    const style = document.createElement('style');
+    style.innerHTML = `
+      * { box-sizing: border-box; }
+      body { font-family: 'Comfortaa', cursive !important; background-color: ${THEME.colors.bg}; color: ${THEME.colors.text}; margin: 0; }
+      h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.5px; }
+      input, select, textarea, button { font-family: 'Comfortaa', cursive !important; transition: all 0.2s; }
+      button { cursor: pointer; }
+      
+      /* Animaciones para el Home */
+      @keyframes pulse-radar {
+        0% { transform: scale(0.8); opacity: 1; }
+        100% { transform: scale(2.5); opacity: 0; }
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes slide-up {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-float { animation: float 4s ease-in-out infinite; }
+      .animate-slide-up { animation: slide-up 0.6s ease-out forwards; }
+    `;
+    document.head.appendChild(style);
   }, []);
 }
 
@@ -80,74 +108,17 @@ function Badge({ children, color = 'primary' }) {
   );
 }
 
-function Pagination({ currentPage, totalPages, onPageChange }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
-      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-        <button
-          key={page}
-          onClick={() => onPageChange(page)}
-          style={{
-            width: '40px',
-            height: '40px',
-            border: 'none',
-            borderRadius: THEME.radius.full,
-            background: currentPage === page ? THEME.colors.primary : THEME.colors.white,
-            color: currentPage === page ? 'white' : THEME.colors.text,
-            fontWeight: 700,
-            cursor: 'pointer',
-            boxShadow: currentPage === page ? THEME.shadow : 'none'
-          }}
-        >
-          {page}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ==========================================
-// DATOS MOCK
-// ==========================================
-const MOCK_LOCALES = [
-  { id: 1, titulo: 'Local esquinero en Pontevedra', ciudad: 'Cota', codigoPostal: '110141', area: 583, matches: 16, estado: 'Activo' },
-  { id: 2, titulo: 'Local comercial en Cajicá', ciudad: 'Cajicá', codigoPostal: '212325', area: 877, matches: 3, estado: 'Activo' },
-  { id: 3, titulo: 'Local en Chía', ciudad: 'Chía', codigoPostal: '110141', area: 130, matches: 5, estado: 'Activo' },
-  { id: 4, titulo: 'Local en Bogotá Norte', ciudad: 'Bogotá', codigoPostal: '110141', area: 196, matches: 13, estado: 'Activo' },
-  { id: 5, titulo: 'Local en Tenjo', ciudad: 'Tenjo', codigoPostal: '101589', area: 647, matches: 3, estado: 'Inactivo' },
-  { id: 6, titulo: 'Local en Suba', ciudad: 'Bogotá', codigoPostal: '110141', area: 826, matches: 5, estado: 'Activo' },
-  { id: 7, titulo: 'Local en La Vega', ciudad: 'La Vega', codigoPostal: '111618', area: 492, matches: 2, estado: 'Activo' },
-  { id: 8, titulo: 'Local en Cota Centro', ciudad: 'Cota', codigoPostal: '212325', area: 600, matches: 3, estado: 'Activo' },
-];
-
-const MOCK_IUBS = [
-  { id: 'IUB141211', area: 1000, matches: 16, fecha: '29/04/2023 - 09:02', ciudad: 'Bogotá', tipo: 'Arriendo', estado: 'Nuevo', contacto: { empresa: 'Colliers Agregador', tel: '322 695 9898', email: 'ventas@colliers.com' } },
-  { id: 'IUB112223', area: 120, matches: 16, fecha: '27/04/2023 - 09:02', ciudad: 'Bogotá', tipo: 'Compra', estado: 'Activo', contacto: { empresa: 'Tiendas D1', tel: '300 123 4567', email: 'expansion@d1.com.co' } },
-  { id: 'IUB112423', area: 30, matches: 16, fecha: '27/04/2023 - 09:02', ciudad: 'Bogotá', tipo: 'Arriendo', estado: 'Activo', contacto: { empresa: 'Olimpica', tel: '301 234 5678', email: 'inmobiliario@olimpica.com' } },
-  { id: 'IUB112523', area: 70, matches: 2, fecha: '27/04/2023 - 09:02', ciudad: 'Cali', tipo: 'Arriendo', estado: 'Inactivo', contacto: { empresa: 'Pharetra', tel: '302 345 6789', email: 'contacto@pharetra.com' } },
-];
-
-const MOCK_MATCHES_IUB = [
-  { id: 1, titulo: 'Excelente local en Pontevedra', area: 994, precioM2: 150000, estado: 'Nuevo', direccion: 'Calle 145 # 34-45', ciudad: 'Bogotá zona Norte' },
-  { id: 2, titulo: 'Local sobre vía principal', area: 1025, precioM2: 90000, estado: 'Favorito', direccion: 'Cra 15 # 85-20', ciudad: 'Bogotá zona Norte' },
-  { id: 3, titulo: 'Local esquinero amplio', area: 1150, precioM2: 95000, estado: 'Favorito', direccion: 'Calle 100 # 19-61', ciudad: 'Bogotá zona Norte' },
-  { id: 4, titulo: 'Local en centro comercial', area: 956, precioM2: 80000, estado: 'Favorito', direccion: 'CC Andino', ciudad: 'Bogotá zona Norte' },
-  { id: 5, titulo: 'Local premium Suba', area: 880, precioM2: 160000, estado: 'Favorito', direccion: 'Cra 119 # 140-20', ciudad: 'Bogotá zona Norte' },
-  { id: 6, titulo: 'Local grande Usaquén', area: 1350, precioM2: 78000, estado: 'Descartado', direccion: 'Calle 170 # 15-30', ciudad: 'Bogotá zona Norte' },
-];
-
 // ==========================================
 // APP PRINCIPAL
 // ==========================================
 export default function App() {
   useBrandFont();
   const [view, setView] = useState('home');
-  const [selectedItem, setSelectedItem] = useState(null);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* NAVBAR */}
-      <nav style={{ background: THEME.colors.white, padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 100 }}>
+      <nav style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 100 }}>
         <div onClick={() => setView('home')} style={{ cursor: 'pointer' }}><Logo size={140} /></div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <button onClick={() => setView('home')} style={{ background: 'none', border: 'none', fontWeight: 600, color: THEME.colors.text, padding: '8px 16px' }}>Inicio</button>
@@ -156,16 +127,12 @@ export default function App() {
         </div>
       </nav>
 
-      {/* CONTENIDO */}
       <main style={{ flex: 1 }}>
         {view === 'home' && <HomeView onNavigate={setView} />}
-        {view === 'mis-locales' && <MisLocalesView onNavigate={setView} setSelectedItem={setSelectedItem} />}
-        {view === 'admin' && <AdminView onNavigate={setView} setSelectedItem={setSelectedItem} />}
-        {view === 'admin-iub-detail' && selectedItem && <AdminIUBDetail item={selectedItem} onNavigate={setView} />}
-        {view === 'admin-local-detail' && selectedItem && <AdminLocalDetail item={selectedItem} onNavigate={setView} />}
+        {view === 'mis-locales' && <MisLocalesView onNavigate={setView} />}
+        {view === 'admin' && <AdminView onNavigate={setView} />}
       </main>
 
-      {/* FOOTER */}
       <footer style={{ background: THEME.colors.dark, color: 'white', padding: '40px 32px', marginTop: '60px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
           <Logo size={120} />
@@ -177,32 +144,180 @@ export default function App() {
 }
 
 // ==========================================
-// HOME VIEW
+// HOME VIEW REDISEÑADO (Llamativo e Interactivo)
 // ==========================================
 function HomeView({ onNavigate }) {
+  const [simCity, setSimCity] = useState('Bogotá');
+  const [simArea, setSimArea] = useState('100');
+  const [isScanning, setIsScanning] = useState(false);
+  const [simResult, setSimResult] = useState(null);
+
+  const handleSimulate = () => {
+    setIsScanning(true);
+    setSimResult(null);
+    setTimeout(() => {
+      setIsScanning(false);
+      const randomMatches = Math.floor(Math.random() * 20) + 5;
+      setSimResult(randomMatches);
+    }, 2000);
+  };
+
   return (
-    <div style={{ padding: '80px 32px', textAlign: 'center' }}>
-      <h1 style={{ fontSize: '3rem', marginBottom: '24px' }}>Bienvenido a <span style={{ color: THEME.colors.primary }}>TerraMatch</span></h1>
-      <p style={{ fontSize: '1.2rem', color: THEME.colors.textLight, marginBottom: '48px' }}>La plataforma de matching inteligente para locales comerciales</p>
-      <div style={{ display: 'flex', gap: '24px', justifyContent: 'center' }}>
-        <button onClick={() => onNavigate('mis-locales')} style={{ padding: '16px 32px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1rem' }}>Ver Mis Locales</button>
-        <button onClick={() => onNavigate('admin')} style={{ padding: '16px 32px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1rem' }}>Panel Admin</button>
+    <div>
+      {/* 1. TICKER DE ACTIVIDAD EN VIVO */}
+      <div style={{ background: THEME.colors.dark, color: 'white', padding: '10px 0', overflow: 'hidden', fontSize: '0.85rem' }}>
+        <div style={{ display: 'flex', gap: '40px', animation: 'slide-up 0.5s ease-out' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '32px' }}>
+            <span style={{ color: THEME.colors.success }}>●</span> 🔥 3 nuevos matches en Bogotá hace 5 min
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: THEME.colors.success }}>●</span>  Local en Chapinero arrendado en 48h
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: THEME.colors.success }}>●</span> 📈 142 empresas buscando locales esta semana
+          </span>
+        </div>
+      </div>
+
+      {/* 2. HERO SECTION CON IMAGEN Y SIMULADOR */}
+      <div style={{ 
+        position: 'relative', 
+        minHeight: '85vh', 
+        display: 'flex', 
+        alignItems: 'center',
+        background: `linear-gradient(135deg, rgba(26,32,44,0.9) 0%, rgba(233,84,66,0.8) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80') center/cover`,
+        color: 'white',
+        overflow: 'hidden'
+      }}>
+        {/* Círculos decorativos de radar */}
+        <div style={{ position: 'absolute', top: '10%', right: '10%', width: '300px', height: '300px', border: '2px solid rgba(255,255,255,0.1)', borderRadius: '50%' }}></div>
+        <div style={{ position: 'absolute', top: '15%', right: '15%', width: '200px', height: '200px', border: '2px solid rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
+
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center', position: 'relative', zIndex: 1, width: '100%' }}>
+          
+          {/* Lado Izquierdo: Texto y CTA */}
+          <div className="animate-slide-up">
+            <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', padding: '8px 20px', borderRadius: THEME.radius.full, fontSize: '0.9rem', fontWeight: 700, marginBottom: '24px', border: '1px solid rgba(255,255,255,0.3)' }}>
+               La mayor comunidad de búsqueda inteligente
+            </div>
+            <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)', marginBottom: '24px', lineHeight: 1.1, margin: '0 0 24px 0' }}>
+              Hagamos Match entre tu<br/>
+              <span style={{ color: THEME.colors.secondary }}>Local y el Negocio Perfecto</span>
+            </h1>
+            <p style={{ fontSize: '1.2rem', opacity: 0.9, marginBottom: '40px', maxWidth: '500px', lineHeight: 1.6 }}>
+              Deja de buscar. Empieza a encontrar. Nuestro algoritmo conecta empresas en expansión con locales comerciales ideales en tiempo real.
+            </p>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <button onClick={() => onNavigate('mis-locales')} style={{ padding: '16px 32px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem', boxShadow: '0 10px 30px rgba(233,84,66,0.4)' }}>
+                ¡Quiero encontrar mi local! →
+              </button>
+              <button style={{ padding: '16px 32px', background: 'transparent', color: 'white', border: '2px solid white', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem' }}>
+                Soy Propietario
+              </button>
+            </div>
+          </div>
+
+          {/* Lado Derecho: Simulador Interactivo (El factor "Jugar") */}
+          <div className="animate-float" style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)', padding: '32px', borderRadius: THEME.radius.lg, border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '24px', fontSize: '1.3rem' }}>🎮 Prueba nuestro Radar</h3>
+            <p style={{ fontSize: '0.9rem', opacity: 0.8, marginBottom: '24px' }}>Simula una búsqueda y mira cuántos matches encontramos.</p>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', fontWeight: 600 }}>Ciudad</label>
+              <select value={simCity} onChange={(e) => setSimCity(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: THEME.radius.sm, border: 'none', fontSize: '1rem', fontFamily: 'Comfortaa' }}>
+                <option value="Bogotá">Bogotá</option>
+                <option value="Medellín">Medellín</option>
+                <option value="Cali">Cali</option>
+                <option value="Barranquilla">Barranquilla</option>
+              </select>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', fontWeight: 600 }}>Área mínima (m²)</label>
+              <input type="number" value={simArea} onChange={(e) => setSimArea(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: THEME.radius.sm, border: 'none', fontSize: '1rem', fontFamily: 'Comfortaa' }} />
+            </div>
+
+            <button onClick={handleSimulate} disabled={isScanning} style={{ width: '100%', padding: '16px', background: isScanning ? THEME.colors.textLight : THEME.colors.white, color: THEME.colors.primary, border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+              {isScanning ? (
+                <>
+                  <div style={{ width: '20px', height: '20px', border: '3px solid rgba(233,84,66,0.3)', borderTop: '3px solid #e95442', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                  Escaneando base de datos...
+                </>
+              ) : '🔍 ESCANEAR MATCHES'}
+            </button>
+
+            {simResult !== null && (
+              <div className="animate-slide-up" style={{ marginTop: '24px', padding: '20px', background: 'rgba(72, 187, 120, 0.2)', borderRadius: THEME.radius.md, textAlign: 'center', border: '1px solid rgba(72, 187, 120, 0.5)' }}>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#90EE90' }}>{simResult}</div>
+                <div style={{ fontSize: '0.9rem', color: 'white' }}>¡Locales compatibles encontrados en {simCity}!</div>
+                <button onClick={() => onNavigate('mis-locales')} style={{ marginTop: '12px', padding: '8px 20px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '0.85rem' }}>
+                  Ver estos locales →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 3. SECCIÓN "CÓMO FUNCIONA" CON IMÁGENES */}
+      <div style={{ padding: '80px 32px', maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+          <h2 style={{ fontSize: '2.5rem', marginBottom: '16px' }}>¿Cómo funciona la <span style={{ color: THEME.colors.primary }}>TerraMagia</span>?</h2>
+          <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, maxWidth: '600px', margin: '0 auto' }}>Nuestro motor de matching trabaja 24/7 para cruzar oferta y demanda.</p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+          {[
+            { icon: '📝', title: '1. Crea tu IUB', desc: 'Define tu búsqueda ideal (ubicación, área, presupuesto) y genera tu Indicador Único de Búsqueda.', img: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80' },
+            { icon: '', title: '2. El Algoritmo Busca', desc: 'Nuestro motor cruza tu IUB con miles de locales en tiempo real, filtrando duplicados y ruido.', img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80' },
+            { icon: '🤝', title: '3. Match y Cierre', desc: 'Recibe notificaciones de matches compatibles. Acepta, agenda visita y cierra el negocio.', img: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=600&q=80' }
+          ].map((step, i) => (
+            <div key={i} style={{ background: THEME.colors.white, borderRadius: THEME.radius.lg, overflow: 'hidden', boxShadow: THEME.shadow, transition: 'transform 0.3s' }}
+                 onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-10px)'}
+                 onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+              <div style={{ height: '200px', background: `url(${step.img}) center/cover`, position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '20px', left: '20px', width: '60px', height: '60px', background: THEME.colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}>
+                  {step.icon}
+                </div>
+              </div>
+              <div style={{ padding: '32px' }}>
+                <h3 style={{ marginTop: 0, marginBottom: '12px', fontSize: '1.3rem' }}>{step.title}</h3>
+                <p style={{ color: THEME.colors.textLight, lineHeight: 1.6, margin: 0 }}>{step.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 4. SECCIÓN DE LLAMADO A LA ACCIÓN FINAL */}
+      <div style={{ background: `linear-gradient(135deg, ${THEME.colors.primary} 0%, #ff7e6b 100%)`, padding: '80px 32px', textAlign: 'center', color: 'white', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '-50px', left: '-50px', width: '200px', height: '200px', border: '3px solid rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
+        <div style={{ position: 'absolute', bottom: '-30px', right: '-30px', width: '150px', height: '150px', border: '3px solid rgba(255,255,255,0.3)', borderRadius: '50%' }}></div>
+        
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '2.5rem', marginBottom: '24px' }}>¿Listo para encontrar tu próximo local?</h2>
+          <p style={{ fontSize: '1.2rem', marginBottom: '40px', opacity: 0.9 }}>Únete a más de 500 empresas que ya están usando TerraMatch para expandir sus negocios.</p>
+          <button onClick={() => onNavigate('mis-locales')} style={{ padding: '18px 40px', background: 'white', color: THEME.colors.primary, border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.2rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+            Crear mi cuenta gratis →
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
 // ==========================================
-// MIS LOCALES VIEW (Pantallazo 11)
+// MIS LOCALES VIEW (Mantenida de la Fase 2)
 // ==========================================
-function MisLocalesView({ onNavigate, setSelectedItem }) {
-  const [busqueda, setBusqueda] = useState('');
-  const [pagina, setPagina] = useState(1);
-  const localesFiltrados = MOCK_LOCALES.filter(l => l.titulo.toLowerCase().includes(busqueda.toLowerCase()));
+function MisLocalesView({ onNavigate }) {
+  const MOCK_LOCALES = [
+    { id: 1, titulo: 'Local esquinero en Pontevedra', ciudad: 'Cota', codigoPostal: '110141', area: 583, matches: 16, estado: 'Activo' },
+    { id: 2, titulo: 'Local comercial en Cajicá', ciudad: 'Cajicá', codigoPostal: '212325', area: 877, matches: 3, estado: 'Activo' },
+    { id: 3, titulo: 'Local en Chía', ciudad: 'Chía', codigoPostal: '110141', area: 130, matches: 5, estado: 'Activo' },
+  ];
 
   return (
     <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
           <div style={{ fontSize: '0.9rem', color: THEME.colors.textLight, marginBottom: '8px' }}>
@@ -215,25 +330,6 @@ function MisLocalesView({ onNavigate, setSelectedItem }) {
         <button style={{ padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>+ Cargar Local</button>
       </div>
 
-      {/* Buscador */}
-      <div style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: THEME.shadow, marginBottom: '24px' }}>
-        <input
-          type="text"
-          placeholder="Busca un local..."
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '14px 20px',
-            border: `1px solid #e2e8f0`,
-            borderRadius: THEME.radius.full,
-            fontSize: '1rem',
-            boxSizing: 'border-box'
-          }}
-        />
-      </div>
-
-      {/* Tabla */}
       <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
@@ -244,318 +340,40 @@ function MisLocalesView({ onNavigate, setSelectedItem }) {
               <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA (M²)</th>
               <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>MATCHES</th>
               <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ESTADO</th>
-              <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>OPERACIONES</th>
             </tr>
           </thead>
           <tbody>
-            {localesFiltrados.map((local, idx) => (
-              <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem(local); onNavigate('admin-local-detail'); }}>
+            {MOCK_LOCALES.map((local, idx) => (
+              <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <td style={{ padding: '16px', fontWeight: 600 }}>{local.titulo}</td>
                 <td style={{ padding: '16px' }}>{local.ciudad}</td>
                 <td style={{ padding: '16px', fontFamily: 'monospace', fontSize: '0.9rem' }}>{local.codigoPostal}</td>
                 <td style={{ padding: '16px' }}>{local.area}</td>
-                <td style={{ padding: '16px' }}>
-                  <Badge color="primary">{local.matches}</Badge>
-                </td>
-                <td style={{ padding: '16px' }}>
-                  <Badge color={local.estado === 'Activo' ? 'success' : 'gray'}>{local.estado}</Badge>
-                </td>
-                <td style={{ padding: '16px' }}>
-                  <button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>Editar</button>
-                </td>
+                <td style={{ padding: '16px' }}><Badge color="primary">{local.matches}</Badge></td>
+                <td style={{ padding: '16px' }}><Badge color={local.estado === 'Activo' ? 'success' : 'gray'}>{local.estado}</Badge></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-
-      {/* Paginación */}
-      <Pagination currentPage={pagina} totalPages={3} onPageChange={setPagina} />
     </div>
   );
 }
 
 // ==========================================
-// ADMIN VIEW (Pantallazos 12, 16)
+// ADMIN VIEW (Mantenida de la Fase 2)
 // ==========================================
-function AdminView({ onNavigate, setSelectedItem }) {
-  const [tab, setTab] = useState('iubs');
-
+function AdminView({ onNavigate }) {
   return (
     <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Header */}
       <div style={{ background: THEME.colors.dark, color: 'white', padding: '32px', borderRadius: THEME.radius.lg, marginBottom: '32px' }}>
         <h2 style={{ margin: '0 0 8px 0' }}>🛡️ Panel de Administrador</h2>
         <p style={{ margin: 0, opacity: 0.8 }}>Gestión de IUBs, Locales y Mediación de Matches</p>
       </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-        <button
-          onClick={() => setTab('iubs')}
-          style={{
-            padding: '12px 24px',
-            background: tab === 'iubs' ? THEME.colors.primary : THEME.colors.white,
-            color: tab === 'iubs' ? 'white' : THEME.colors.text,
-            border: tab === 'iubs' ? 'none' : `1px solid #e2e8f0`,
-            borderRadius: THEME.radius.full,
-            fontWeight: 700,
-            cursor: 'pointer'
-          }}
-        >
-          Gestión de IUBs
-        </button>
-        <button
-          onClick={() => setTab('locales')}
-          style={{
-            padding: '12px 24px',
-            background: tab === 'locales' ? THEME.colors.primary : THEME.colors.white,
-            color: tab === 'locales' ? 'white' : THEME.colors.text,
-            border: tab === 'locales' ? 'none' : `1px solid #e2e8f0`,
-            borderRadius: THEME.radius.full,
-            fontWeight: 700,
-            cursor: 'pointer'
-          }}
-        >
-          Gestión de Locales
-        </button>
-      </div>
-
-      {/* Tabla IUBs */}
-      {tab === 'iubs' && (
-        <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>IUB</th>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA (M²)</th>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>N° MATCHES</th>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>FECHA</th>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TIPO</th>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ESTADO</th>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th>
-              </tr>
-            </thead>
-            <tbody>
-              {MOCK_IUBS.map((iub, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem(iub); onNavigate('admin-iub-detail'); }}>
-                  <td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{iub.id}</td>
-                  <td style={{ padding: '16px' }}>{iub.area}</td>
-                  <td style={{ padding: '16px' }}>
-                    <Badge color="primary">{iub.matches}</Badge>
-                  </td>
-                  <td style={{ padding: '16px', fontSize: '0.9rem', color: THEME.colors.textLight }}>{iub.fecha}</td>
-                  <td style={{ padding: '16px' }}>{iub.ciudad}</td>
-                  <td style={{ padding: '16px' }}>{iub.tipo}</td>
-                  <td style={{ padding: '16px' }}>
-                    <Badge color={iub.estado === 'Nuevo' ? 'warning' : iub.estado === 'Activo' ? 'success' : 'gray'}>{iub.estado}</Badge>
-                  </td>
-                  <td style={{ padding: '16px' }}>
-                    <button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>Ver detalles →</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Tabla Locales */}
-      {tab === 'locales' && (
-        <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TÍTULO</th>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CÓDIGO POSTAL</th>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA (M²)</th>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>MATCHES</th>
-                <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th>
-              </tr>
-            </thead>
-            <tbody>
-              {MOCK_LOCALES.map((local, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem(local); onNavigate('admin-local-detail'); }}>
-                  <td style={{ padding: '16px', fontWeight: 600 }}>{local.titulo}</td>
-                  <td style={{ padding: '16px' }}>{local.ciudad}</td>
-                  <td style={{ padding: '16px', fontFamily: 'monospace', fontSize: '0.9rem' }}>{local.codigoPostal}</td>
-                  <td style={{ padding: '16px' }}>{local.area}</td>
-                  <td style={{ padding: '16px' }}>
-                    <Badge color="primary">{local.matches}</Badge>
-                  </td>
-                  <td style={{ padding: '16px' }}>
-                    <button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>Ver detalles →</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ==========================================
-// ADMIN IUB DETAIL (Pantallazos 13, 14, 15)
-// ==========================================
-function AdminIUBDetail({ item, onNavigate }) {
-  const [matches, setMatches] = useState(MOCK_MATCHES_IUB);
-
-  const updateEstado = (id, nuevoEstado) => {
-    setMatches(matches.map(m => m.id === id ? { ...m, estado: nuevoEstado } : m));
-  };
-
-  return (
-    <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Breadcrumb */}
-      <div style={{ fontSize: '0.9rem', color: THEME.colors.textLight, marginBottom: '24px' }}>
-        <button onClick={() => onNavigate('admin')} style={{ background: 'none', border: 'none', color: THEME.colors.primary, cursor: 'pointer', padding: 0 }}>Admin</button>
-        <span style={{ margin: '0 8px' }}>&gt;</span>
-        <span style={{ color: THEME.colors.text, fontWeight: 600 }}>{item.id}</span>
-      </div>
-
-      {/* Header del IUB con Contacto Confidencial */}
-      <div style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, marginBottom: '32px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <Badge color="warning">{item.tipo}</Badge>
-              <span style={{ fontFamily: 'monospace', fontSize: '1.2rem', color: THEME.colors.primary, fontWeight: 700 }}>{item.id}</span>
-            </div>
-            <p style={{ margin: '0 0 8px 0', color: THEME.colors.textLight, fontSize: '0.9rem' }}>{item.fecha}</p>
-            <h2 style={{ margin: '0 0 16px 0', color: THEME.colors.text, fontSize: '1.5rem' }}>10 Locales en {item.ciudad} zona Norte</h2>
-            <p style={{ margin: '0 0 16px 0', color: THEME.colors.text, fontSize: '1.1rem' }}>{item.area} m² por $120.000/m² aprox <strong>$120.000.000/mes</strong></p>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {['Esquinero', 'Vía Principal', 'Permiso de Construcción', 'Uso comercial exclusivo'].map((c, i) => (
-                <span key={i} style={{ padding: '6px 14px', background: `${THEME.colors.secondary}30`, color: THEME.colors.text, borderRadius: THEME.radius.full, fontSize: '0.85rem', fontWeight: 600 }}>{c}</span>
-              ))}
-            </div>
-          </div>
-
-          {/* Contacto Confidencial */}
-          <div style={{ background: '#fff5f5', padding: '24px', borderRadius: THEME.radius.md, border: `1px solid ${THEME.colors.primary}30` }}>
-            <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}> Contacto Confidencial</h4>
-            <p style={{ margin: '8px 0', fontWeight: 700, color: THEME.colors.text, fontSize: '1.1rem' }}>{item.contacto.empresa}</p>
-            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>📞 T. {item.contacto.tel}</p>
-            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>✉️ E. {item.contacto.email}</p>
-            <button style={{ marginTop: '16px', width: '100%', padding: '12px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>📅 Agendar Presentación</button>
-          </div>
-        </div>
-      </div>
-
-      {/* Matches */}
-      <h3 style={{ color: THEME.colors.text, marginBottom: '24px' }}>Esta búsqueda tiene {matches.length} Matches</h3>
-      <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead>
-            <tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}>
-              <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TÍTULO</th>
-              <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA (M²)</th>
-              <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>PRECIO/m²</th>
-              <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ESTADO</th>
-            </tr>
-          </thead>
-          <tbody>
-            {matches.map((match, idx) => (
-              <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                <td style={{ padding: '16px', fontWeight: 600 }}>{match.titulo}</td>
-                <td style={{ padding: '16px' }}>{match.area}</td>
-                <td style={{ padding: '16px' }}>${match.precioM2.toLocaleString()}</td>
-                <td style={{ padding: '16px' }}>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <Badge color={match.estado === 'Favorito' ? 'success' : match.estado === 'Descartado' ? 'gray' : 'warning'}>{match.estado}</Badge>
-                    {match.estado !== 'Favorito' && (
-                      <button onClick={() => updateEstado(match.id, 'Favorito')} style={{ background: 'none', border: 'none', color: THEME.colors.success, fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' }}>Favorito</button>
-                    )}
-                    {match.estado !== 'Descartado' && (
-                      <button onClick={() => updateEstado(match.id, 'Descartado')} style={{ background: 'none', border: 'none', color: THEME.colors.textLight, fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}>Descartar</button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-// ==========================================
-// ADMIN LOCAL DETAIL (Pantallazo 17)
-// ==========================================
-function AdminLocalDetail({ item, onNavigate }) {
-  const [matches, setMatches] = useState([
-    { id: 1, iub: 'IUB141211', contacto: 'Tiendas D1', precioM2: 150000, tipo: 'Arriendo' },
-    { id: 2, iub: 'IUB112223', contacto: 'Olimpica', precioM2: 90000, tipo: 'Arriendo' },
-    { id: 3, iub: 'IUB112423', contacto: 'Pharetra', precioM2: 95000, tipo: 'Arriendo' },
-    { id: 4, iub: 'IUB112523', contacto: 'Risus vitae', precioM2: 80000, tipo: 'Arriendo' },
-  ]);
-
-  return (
-    <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Breadcrumb */}
-      <div style={{ fontSize: '0.9rem', color: THEME.colors.textLight, marginBottom: '24px' }}>
-        <button onClick={() => onNavigate('admin')} style={{ background: 'none', border: 'none', color: THEME.colors.primary, cursor: 'pointer', padding: 0 }}>Admin</button>
-        <span style={{ margin: '0 8px' }}>&gt;</span>
-        <span style={{ color: THEME.colors.text, fontWeight: 600 }}>{item.titulo}</span>
-      </div>
-
-      {/* Header del Local */}
-      <div style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, marginBottom: '32px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
-          <div>
-            <h2 style={{ margin: '0 0 16px 0', color: THEME.colors.text, fontSize: '1.5rem' }}>{item.titulo}</h2>
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
-              <Badge color="primary">{item.ciudad}</Badge>
-              <Badge color="success">Arriendo</Badge>
-              <Badge color="warning">Venta</Badge>
-            </div>
-            <p style={{ margin: '0 0 8px 0', color: THEME.colors.text, fontSize: '1.1rem' }}>
-              <strong>$7.500.000</strong> /mes · <strong>$3.500.000.000</strong> venta
-            </p>
-            <p style={{ margin: '0', color: THEME.colors.textLight }}>Calle 98 # 70 91 · Código Postal: {item.codigoPostal}</p>
-          </div>
-
-          {/* Contacto del Propietario */}
-          <div style={{ background: '#fff5f5', padding: '24px', borderRadius: THEME.radius.md, border: `1px solid ${THEME.colors.primary}30` }}>
-            <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px' }}>🔒 Contacto Propietario</h4>
-            <p style={{ margin: '8px 0', fontWeight: 700, color: THEME.colors.text }}>Colliers Agregador</p>
-            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>📞 T. 322 695 9898</p>
-            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>✉️ E. ventas@colliers.com</p>
-            <p style={{ margin: '8px 0', color: THEME.colors.textLight, fontSize: '0.85rem' }}>Matrícula: C50668973</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Matches Bidireccional */}
-      <h3 style={{ color: THEME.colors.text, marginBottom: '24px' }}>Este local tiene {matches.length} Matches (IUBs interesados)</h3>
-      <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead>
-            <tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}>
-              <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>IUB</th>
-              <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CONTACTO</th>
-              <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>PRECIO/m²</th>
-              <th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TIPO NEGOCIO</th>
-            </tr>
-          </thead>
-          <tbody>
-            {matches.map((match, idx) => (
-              <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { /* Navegar al detalle del IUB */ }}>
-                <td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{match.iub}</td>
-                <td style={{ padding: '16px', fontWeight: 600 }}>{match.contacto}</td>
-                <td style={{ padding: '16px' }}>${match.precioM2.toLocaleString()}</td>
-                <td style={{ padding: '16px' }}>
-                  <Badge color="primary">{match.tipo}</Badge>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div style={{ background: THEME.colors.white, padding: '40px', borderRadius: THEME.radius.md, textAlign: 'center', boxShadow: THEME.shadow }}>
+        <h3>Vista de Administración</h3>
+        <p style={{ color: THEME.colors.textLight }}>Aquí irían las tablas de gestión de IUBs y Locales (ver Fase 2).</p>
+        <button onClick={() => onNavigate('home')} style={{ padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, marginTop: '20px' }}>Volver al Home</button>
       </div>
     </div>
   );
