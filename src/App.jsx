@@ -113,7 +113,7 @@ function App() {
                     </div>
                   )}
                 </div>
-                {isAdmin && <button onClick={() => setView('admin')} style={{ padding: '8px 16px', background: THEME.colors.text, color: 'white', border: 'none', borderRadius: THEME.radius.full, cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>🛡️ Admin</button>}
+                {isAdmin && <button onClick={() => setView('admin')} style={{ padding: '8px 16px', background: THEME.colors.text, color: 'white', border: 'none', borderRadius: THEME.radius.full, cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>️ Admin</button>}
                 <button onClick={() => setView('dashboard')} style={{ padding: '8px 16px', background: 'transparent', border: `1px solid ${THEME.colors.primary}`, color: THEME.colors.primary, borderRadius: THEME.radius.full, cursor: 'pointer', fontWeight: 600 }}>Dashboard</button>
                 <button onClick={handleLogout} style={{ padding: '8px 16px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, cursor: 'pointer', fontWeight: 600 }}>Salir</button>
               </>
@@ -203,19 +203,10 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
   }
 
   async function aceptarMatch(matchId) {
-    try {
-      await supabase.from('matches').update({ estado: 'aceptado' }).eq('id', matchId);
-      showToast('¡Match Aceptado! Ahora puedes agendar una cita.');
-      loadData();
-    } catch (error) { showToast('Error al aceptar match', 'error'); }
+    try { await supabase.from('matches').update({ estado: 'aceptado' }).eq('id', matchId); showToast('¡Match Aceptado!'); loadData(); } catch (error) { showToast('Error', 'error'); }
   }
-
   async function rechazarMatch(matchId) {
-    try {
-      await supabase.from('matches').update({ estado: 'rechazado' }).eq('id', matchId);
-      showToast('Match Rechazado');
-      loadData();
-    } catch (error) { showToast('Error al rechazar match', 'error'); }
+    try { await supabase.from('matches').update({ estado: 'rechazado' }).eq('id', matchId); showToast('Match Rechazado'); loadData(); } catch (error) { showToast('Error', 'error'); }
   }
 
   const matchesAceptados = matches.filter(m => m.estado === 'aceptado').length;
@@ -250,29 +241,21 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '32px' }}>
-        <div onClick={() => onNavigate('iub')} style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, cursor: 'pointer', transition: 'all 0.3s' }}
-             onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; }}
-             onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}>
+        <div onClick={() => onNavigate('iub')} style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, cursor: 'pointer' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>🔍</div>
-          <h3 style={{ marginBottom: '8px' }}>Busco Locales</h3>
-          <p style={{ color: THEME.colors.textLight, margin: 0 }}>Crear nuevo IUB</p>
+          <h3>Busco Locales</h3><p style={{ color: THEME.colors.textLight }}>Crear nuevo IUB</p>
         </div>
-        <div onClick={() => onNavigate('oferta')} style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, cursor: 'pointer', transition: 'all 0.3s' }}
-             onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; }}
-             onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}>
+        <div onClick={() => onNavigate('oferta')} style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, cursor: 'pointer' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>🏪</div>
-          <h3 style={{ marginBottom: '8px' }}>Tengo Locales</h3>
-          <p style={{ color: THEME.colors.textLight, margin: 0 }}>Publicar inmueble</p>
+          <h3>Tengo Locales</h3><p style={{ color: THEME.colors.textLight }}>Publicar inmueble</p>
         </div>
       </div>
 
       <div style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow }}>
         <h3 style={{ marginBottom: '24px' }}>🎯 Tus Matches</h3>
-        {matches.length === 0 ? (
-          <p style={{ color: THEME.colors.textLight, textAlign: 'center', padding: '40px' }}>Aún no tienes matches. Crea un IUB para empezar.</p>
-        ) : (
+        {matches.length === 0 ? <p style={{ color: THEME.colors.textLight, textAlign: 'center', padding: '40px' }}>Aún no tienes matches. Crea un IUB para empezar.</p> : (
           matches.map(match => (
-            <div key={match.id} style={{ background: '#f8fafc', padding: '20px', borderRadius: THEME.radius.md, marginBottom: '16px', border: `2px solid ${match.estado === 'aceptado' ? THEME.colors.success : match.estado === 'rechazado' ? '#e2e8f0' : THEME.colors.primary}20` }}>
+            <div key={match.id} style={{ background: '#f8fafc', padding: '20px', borderRadius: THEME.radius.md, marginBottom: '16px', border: `2px solid ${match.estado === 'aceptado' ? THEME.colors.success : THEME.colors.primary}20` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <div>
                   <h4 style={{ margin: '0 0 4px 0', textTransform: 'capitalize' }}>{match.propiedades?.tipo_inmueble || 'Inmueble'} en {match.propiedades?.zona}</h4>
@@ -302,7 +285,7 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
       {showCitaModal && matchSeleccionado && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, maxWidth: '500px', width: '90%' }}>
-            <h3 style={{ marginBottom: '16px' }}> Agendar Visita al Inmueble</h3>
+            <h3 style={{ marginBottom: '16px' }}>📅 Agendar Visita</h3>
             <p style={{ color: THEME.colors.textLight, marginBottom: '24px' }}>Inmueble: {matchSeleccionado.propiedades?.tipo_inmueble} en {matchSeleccionado.propiedades?.zona}</p>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Fecha propuesta</label>
             <input type="date" style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '16px', boxSizing: 'border-box' }} />
@@ -310,7 +293,7 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
             <input type="time" style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '24px', boxSizing: 'border-box' }} />
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={() => setShowCitaModal(false)} style={{ flex: 1, padding: '12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
-              <button onClick={() => { showToast('Cita agendada. TerraMatch contactará al propietario.'); setShowCitaModal(false); }} style={{ flex: 1, padding: '12px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer' }}>Confirmar Cita</button>
+              <button onClick={() => { showToast('Cita agendada.'); setShowCitaModal(false); }} style={{ flex: 1, padding: '12px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer' }}>Confirmar Cita</button>
             </div>
           </div>
         </div>
@@ -319,9 +302,6 @@ function DashboardView({ user, profile, supabase, showToast, onNavigate }) {
   );
 }
 
-// ==========================================
-// ADMIN VIEW CON GESTIÓN DE DUPLICADOS
-// ==========================================
 function AdminView({ supabase, showToast }) {
   const [stats, setStats] = useState({ users: 0, iubs: 0, matches: 0, aceptados: 0, propiedades: 0 });
   const [duplicados, setDuplicados] = useState([]);
@@ -352,24 +332,19 @@ function AdminView({ supabase, showToast }) {
 
   async function resolverDuplicado(propiedadId, accion) {
     try {
-      if (accion === 'aprobar') {
-        await supabase.from('propiedades').update({ estado_curacion: 'aprobado', es_duplicado: false }).eq('id', propiedadId);
-        showToast('Propiedad aprobada como original');
-      } else if (accion === 'rechazar') {
-        await supabase.from('propiedades').update({ estado_curacion: 'rechazado', disponible: false }).eq('id', propiedadId);
-        showToast('Duplicado rechazado y ocultado');
-      }
+      if (accion === 'aprobar') { await supabase.from('propiedades').update({ estado_curacion: 'aprobado', es_duplicado: false }).eq('id', propiedadId); showToast('Aprobado'); } 
+      else if (accion === 'rechazar') { await supabase.from('propiedades').update({ estado_curacion: 'rechazado', disponible: false }).eq('id', propiedadId); showToast('Rechazado'); }
       loadDuplicados();
-    } catch (error) { showToast('Error al resolver', 'error'); }
+    } catch (error) { showToast('Error', 'error'); }
   }
 
-  if (loading) return <div style={{ padding: '50px', textAlign: 'center' }}>Cargando Panel de Administración...</div>;
+  if (loading) return <div style={{ padding: '50px', textAlign: 'center' }}>Cargando Panel...</div>;
   const tasaConversion = stats.matches > 0 ? ((stats.aceptados / stats.matches) * 100).toFixed(1) : 0;
 
   return (
     <div style={{ padding: '40px 24px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ background: THEME.colors.text, color: 'white', padding: '30px', borderRadius: THEME.radius.lg, marginBottom: '30px' }}>
-        <h2 style={{ color: 'white', margin: '0 0 8px 0' }}>🛡️ Panel de Administrador</h2>
+        <h2 style={{ color: 'white', margin: '0 0 8px 0' }}>️ Panel de Administrador</h2>
         <p style={{ opacity: 0.8, margin: 0 }}>Embudo de Conversión y Curación de Contenido</p>
       </div>
 
@@ -379,80 +354,29 @@ function AdminView({ supabase, showToast }) {
       </div>
 
       {tab === 'overview' && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-            <div style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: THEME.shadow, borderLeft: `4px solid ${THEME.colors.primary}` }}>
-              <div style={{ color: THEME.colors.textLight, fontSize: '0.85rem', marginBottom: '8px' }}>USUARIOS</div>
-              <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.users}</div>
-            </div>
-            <div style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: THEME.shadow, borderLeft: `4px solid ${THEME.colors.secondary}` }}>
-              <div style={{ color: THEME.colors.textLight, fontSize: '0.85rem', marginBottom: '8px' }}>IUBs CREADOS</div>
-              <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.iubs}</div>
-            </div>
-            <div style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: THEME.shadow, borderLeft: `4px solid ${THEME.colors.warning}` }}>
-              <div style={{ color: THEME.colors.textLight, fontSize: '0.85rem', marginBottom: '8px' }}>MATCHES GENERADOS</div>
-              <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.matches}</div>
-            </div>
-            <div style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: THEME.shadow, borderLeft: `4px solid ${THEME.colors.success}` }}>
-              <div style={{ color: THEME.colors.textLight, fontSize: '0.85rem', marginBottom: '8px' }}>MATCHES ACEPTADOS</div>
-              <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.aceptados}</div>
-              <div style={{ fontSize: '0.85rem', color: THEME.colors.success, marginTop: '8px' }}>{tasaConversion}% conversión</div>
-            </div>
-          </div>
-          <div style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow }}>
-            <h3 style={{ marginBottom: '24px' }}>📊 Embudo de Conversión</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span style={{ fontWeight: 600 }}>IUBs Creados</span><span>{stats.iubs}</span></div>
-                <div style={{ height: '32px', background: THEME.colors.primary, borderRadius: THEME.radius.sm, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>{stats.iubs} usuarios buscando</div>
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span style={{ fontWeight: 600 }}>Matches Generados</span><span>{stats.matches}</span></div>
-                <div style={{ height: '32px', background: THEME.colors.warning, borderRadius: THEME.radius.sm, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, width: `${Math.min(100, (stats.matches / Math.max(stats.iubs, 1)) * 100)}%` }}>{stats.matches} matches encontrados</div>
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span style={{ fontWeight: 600 }}>Matches Aceptados</span><span>{stats.aceptados}</span></div>
-                <div style={{ height: '32px', background: THEME.colors.success, borderRadius: THEME.radius.sm, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, width: `${Math.min(100, (stats.aceptados / Math.max(stats.matches, 1)) * 100)}%` }}>{stats.aceptados} aceptados ({tasaConversion}%)</div>
-              </div>
-            </div>
-          </div>
-        </>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+          <div style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: THEME.shadow, borderLeft: `4px solid ${THEME.colors.primary}` }}><div style={{ color: THEME.colors.textLight, fontSize: '0.85rem' }}>USUARIOS</div><div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.users}</div></div>
+          <div style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: THEME.shadow, borderLeft: `4px solid ${THEME.colors.secondary}` }}><div style={{ color: THEME.colors.textLight, fontSize: '0.85rem' }}>IUBs CREADOS</div><div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.iubs}</div></div>
+          <div style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: THEME.shadow, borderLeft: `4px solid ${THEME.colors.warning}` }}><div style={{ color: THEME.colors.textLight, fontSize: '0.85rem' }}>MATCHES</div><div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.matches}</div></div>
+          <div style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: THEME.shadow, borderLeft: `4px solid ${THEME.colors.success}` }}><div style={{ color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACEPTADOS</div><div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.aceptados}</div><div style={{ fontSize: '0.85rem', color: THEME.colors.success }}>{tasaConversion}% conversión</div></div>
+        </div>
       )}
 
       {tab === 'duplicados' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h3 style={{ margin: 0 }}>Propiedades Duplicadas ({duplicados.length})</h3>
-            <div style={{ background: THEME.colors.white, padding: '16px 24px', borderRadius: THEME.radius.md, boxShadow: THEME.shadow, borderLeft: `4px solid ${THEME.colors.warning}` }}>
-              <div style={{ color: THEME.colors.textLight, fontSize: '0.85rem' }}>Contenido Único</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: THEME.colors.success }}>
-                {((1 - duplicados.length / Math.max(stats.propiedades, 1)) * 100).toFixed(1)}%
-              </div>
-            </div>
-          </div>
-          
-          {duplicados.length === 0 ? (
-            <div style={{ background: THEME.colors.white, padding: '60px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, textAlign: 'center' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✅</div>
-              <h3 style={{ color: THEME.colors.success, marginBottom: '8px' }}>¡Excelente curación!</h3>
-              <p style={{ color: THEME.colors.textLight }}>No hay duplicados pendientes en la plataforma.</p>
-            </div>
-          ) : (
+          <h3 style={{ marginBottom: '24px' }}>Propiedades Duplicadas ({duplicados.length})</h3>
+          {duplicados.length === 0 ? <div style={{ background: THEME.colors.white, padding: '60px', borderRadius: THEME.radius.lg, textAlign: 'center' }}><div style={{ fontSize: '3rem', marginBottom: '16px' }}>✅</div><h3 style={{ color: THEME.colors.success }}>¡Excelente curación!</h3></div> : (
             duplicados.map(prop => (
               <div key={prop.id} style={{ background: '#fff5f5', padding: '20px', borderRadius: THEME.radius.md, marginBottom: '16px', border: `2px solid ${THEME.colors.primary}30` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                   <div style={{ flex: 1 }}>
                     <h4 style={{ margin: '0 0 4px 0' }}>{prop.titulo || 'Sin título'}</h4>
-                    <p style={{ margin: '0 0 4px 0', color: THEME.colors.textLight, fontSize: '0.9rem' }}>
-                      {prop.ciudad} · {prop.zona} · {prop.area_total} m² · ${prop.precio?.toLocaleString()}
-                    </p>
-                    <p style={{ margin: 0, fontSize: '0.8rem', color: THEME.colors.primary, fontFamily: 'monospace' }}>
-                      🔑 Fingerprint: {prop.fingerprint?.substring(0, 16)}...
-                    </p>
+                    <p style={{ margin: '0 0 4px 0', color: THEME.colors.textLight, fontSize: '0.9rem' }}>{prop.ciudad} · {prop.zona} · {prop.area_total} m² · ${prop.precio?.toLocaleString()}</p>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: THEME.colors.primary, fontFamily: 'monospace' }}> Matrícula: {prop.matricula_inmobiliaria || 'N/A'}</p>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => resolverDuplicado(prop.id, 'aprobar')} style={{ padding: '8px 16px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}>✓ Aprobar</button>
-                    <button onClick={() => resolverDuplicado(prop.id, 'rechazar')} style={{ padding: '8px 16px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}>✗ Rechazar</button>
+                    <button onClick={() => resolverDuplicado(prop.id, 'aprobar')} style={{ padding: '8px 16px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer' }}>✓ Aprobar</button>
+                    <button onClick={() => resolverDuplicado(prop.id, 'rechazar')} style={{ padding: '8px 16px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer' }}>✗ Rechazar</button>
                   </div>
                 </div>
               </div>
@@ -465,12 +389,12 @@ function AdminView({ supabase, showToast }) {
 }
 
 // ==========================================
-// IUB VIEW
+// IUB VIEW (BUSCO LOCALES) - CON MATRÍCULA
 // ==========================================
 function IUBView({ user, supabase, showToast, onNavigate }) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
-    segmentos: [], actividad: '', nombre: '', id: '', contacto: '', email: '', ciudad: '', cantidad_locales: 1,
+    segmentos: [], actividad: '', nombre: '', id: '', matricula: '', contacto: '', email: '', ciudad: '', cantidad_locales: 1,
     barrio: '', zonas_ok: '', zonas_no: '', accesos: [],
     tipo_negocio: 'Arriendo', uso_suelo: 'Comercial', area_total: '', area_construida: '', altura: '', parqueaderos: '',
     caracteristicas: [], presupuesto_compra: '', canon_arriendo: '', admin: '', financiacion: 'No requiere', plazo: 'Negociación abierta',
@@ -498,10 +422,11 @@ function IUBView({ user, supabase, showToast, onNavigate }) {
         user_id: user.id, codigo_iub: codigoIub, segmentos: form.segmentos.join(','), ciudad: form.ciudad, barrio: form.barrio,
         tipo_negocio: form.tipo_negocio, uso_suelo: form.uso_suelo, area_min: parseFloat(form.area_total) || null, area_max: parseFloat(form.area_construida) || null,
         canon_arriendo: form.canon_arriendo || null, presupuesto_compra: form.presupuesto_compra || null,
-        caracteristicas: JSON.stringify(form.caracteristicas), horizonte: form.horizonte, estado: 'activo'
+        caracteristicas: JSON.stringify(form.caracteristicas), horizonte: form.horizonte, estado: 'activo',
+        matricula_inmobiliaria: form.matricula || null // ← CAMPO AGREGADO
       }]);
       if (error) throw error;
-      showToast(`¡IUB ${codigoIub} generado! Buscando matches...`);
+      showToast(`¡IUB ${codigoIub} generado!`);
       onNavigate('dashboard');
     } catch (error) { showToast(error.message, 'error'); }
   }
@@ -516,7 +441,7 @@ function IUBView({ user, supabase, showToast, onNavigate }) {
 
         {step === 1 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary }}>👤 1. Identificación y Segmentos</h3>
+            <h3 style={{ color: THEME.colors.primary }}> 1. Identificación y Segmentos</h3>
             <label style={labelStyle}>¿Qué segmentos te interesan? *</label>
             <div style={{ marginBottom: '24px' }}>
               {['Locales Comerciales', 'Bodegas', 'Oficinas'].map(seg => (
@@ -527,10 +452,17 @@ function IUBView({ user, supabase, showToast, onNavigate }) {
               <div><label style={labelStyle}>Nombre / Empresa *</label><input style={inputStyle} value={form.nombre} onChange={e => update('nombre', e.target.value)} /></div>
               <div><label style={labelStyle}>ID (CC / NIT)</label><input style={inputStyle} value={form.id} onChange={e => update('id', e.target.value)} /></div>
             </div>
+            {/* CAMPO MATRÍCULA AGREGADO */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div><label style={labelStyle}>Contacto / Teléfono</label><input style={inputStyle} value={form.contacto} onChange={e => update('contacto', e.target.value)} /></div>
+              <div><label style={labelStyle}>Matrícula Inmobiliaria</label><input style={inputStyle} value={form.matricula} onChange={e => update('matricula', e.target.value)} placeholder="Ej: 123456" /></div>
               <div><label style={labelStyle}>Email *</label><input style={inputStyle} value={form.email} onChange={e => update('email', e.target.value)} /></div>
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><label style={labelStyle}>Ciudad Principal</label><input style={inputStyle} value={form.ciudad} onChange={e => update('ciudad', e.target.value)} /></div>
+              <div><label style={labelStyle}>Cantidad de Locales</label><input type="number" style={inputStyle} value={form.cantidad_locales} onChange={e => update('cantidad_locales', e.target.value)} /></div>
+            </div>
+            <label style={labelStyle}>Actividad / Uso del Negocio</label>
+            <input style={inputStyle} placeholder="Ej: Restaurante, Boutique..." value={form.actividad} onChange={e => update('actividad', e.target.value)} />
           </div>
         )}
 
@@ -550,7 +482,7 @@ function IUBView({ user, supabase, showToast, onNavigate }) {
 
         {step === 3 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary }}> 3. Características</h3>
+            <h3 style={{ color: THEME.colors.primary }}>🏢 3. Características</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={labelStyle}>Tipo de Negocio</label><select style={inputStyle} value={form.tipo_negocio} onChange={e => update('tipo_negocio', e.target.value)}><option>Arriendo</option><option>Venta</option></select></div>
               <div><label style={labelStyle}>Uso del Suelo</label><select style={inputStyle} value={form.uso_suelo} onChange={e => update('uso_suelo', e.target.value)}><option>Mixto</option><option>Comercial</option><option>Industrial</option></select></div>
@@ -570,7 +502,7 @@ function IUBView({ user, supabase, showToast, onNavigate }) {
 
         {step === 4 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary }}> 4. Económico</h3>
+            <h3 style={{ color: THEME.colors.primary }}>💰 4. Económico</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={labelStyle}>Presupuesto Compra ($)</label><input type="number" style={inputStyle} value={form.presupuesto_compra} onChange={e => update('presupuesto_compra', e.target.value)} /></div>
               <div><label style={labelStyle}>Canon Arriendo ($)</label><input type="number" style={inputStyle} value={form.canon_arriendo} onChange={e => update('canon_arriendo', e.target.value)} /></div>
@@ -598,6 +530,7 @@ function IUBView({ user, supabase, showToast, onNavigate }) {
               <p><strong>Ubicación:</strong> {form.ciudad} - {form.barrio}</p>
               <p><strong>Área:</strong> {form.area_total} - {form.area_construida} m²</p>
               <p><strong>Presupuesto:</strong> ${form.canon_arriendo}</p>
+              {form.matricula && <p><strong>Matrícula Inmobiliaria:</strong> {form.matricula}</p>}
             </div>
             <label style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', cursor: 'pointer' }}>
               <input type="checkbox" defaultChecked style={{ marginTop: '4px' }} />
@@ -620,11 +553,11 @@ function IUBView({ user, supabase, showToast, onNavigate }) {
 }
 
 // ==========================================
-// OFERTA VIEW CON VALIDACIÓN ANTI-DUPLICADOS
+// OFERTA VIEW (TENGO LOCALES) - CON MATRÍCULA
 // ==========================================
 function OfertaView({ user, supabase, showToast, onNavigate }) {
   const [form, setForm] = useState({
-    segmentos: [], rol: 'Propietario', nombre: '', id: '', contacto: '', email: '', ciudad: '',
+    segmentos: [], rol: 'Propietario', nombre: '', id: '', matricula: '', contacto: '', email: '', ciudad: '',
     barrio: '', direccion: '', tipo_negocio: 'Arriendo', uso_suelo: 'Comercial',
     area_total: '', area_construida: '', altura: '', parqueaderos: '',
     caracteristicas: [], precio_venta: '', canon: '', admin: '', plazo: 'Negociación abierta',
@@ -645,7 +578,6 @@ function OfertaView({ user, supabase, showToast, onNavigate }) {
   const inputStyle = { width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, boxSizing: 'border-box', marginBottom: '16px', fontSize: '0.95rem' };
   const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 600, color: THEME.colors.text, fontSize: '0.9rem' };
 
-  // FUNCIÓN ACTUALIZADA CON VALIDACIÓN ANTI-DUPLICADOS
   async function handleSubmit() {
     try {
       // 1. Verificar duplicados antes de publicar
@@ -659,21 +591,16 @@ function OfertaView({ user, supabase, showToast, onNavigate }) {
 
       if (dupError) throw dupError;
 
-      // 2. Si hay duplicados exactos, mostrar alerta
       if (duplicados && duplicados.length > 0) {
         const confirmar = window.confirm(
           `⚠️ Ya existe ${duplicados.length} propiedad similar en nuestra base de datos:\n\n` +
           duplicados.map(d => `• ${d.titulo} (${d.razon})`).join('\n') +
           `\n\n¿Deseas publicar de todas formas? (Será marcada como posible duplicado)`
         );
-        
-        if (!confirmar) {
-          showToast('Publicación cancelada. Revisa los duplicados.', 'error');
-          return;
-        }
+        if (!confirmar) { showToast('Publicación cancelada.', 'error'); return; }
       }
 
-      // 3. Publicar propiedad
+      // 2. Publicar propiedad
       const { error } = await supabase.from('propiedades').insert([{
         user_id: user.id,
         segmento: form.segmentos[0]?.toLowerCase().includes('local') ? 'locales' : form.segmentos[0]?.toLowerCase().includes('bodega') ? 'bodegas' : 'oficinas',
@@ -686,13 +613,14 @@ function OfertaView({ user, supabase, showToast, onNavigate }) {
         area_util: parseFloat(form.area_construida) || 0,
         precio: parseFloat(form.canon) || parseFloat(form.precio_venta) || 0,
         caracteristicas: JSON.stringify(form.caracteristicas),
-        propietario_id: form.id, // Importante para el fingerprint
+        propietario_id: form.id,
+        matricula_inmobiliaria: form.matricula || null, // ← CAMPO AGREGADO
         disponible: true,
         estado: 'activo'
       }]);
       
       if (error) throw error;
-      showToast('¡Inmueble publicado! Buscando IUBs compatibles...');
+      showToast('¡Inmueble publicado!');
       onNavigate('dashboard');
     } catch (error) { showToast(error.message, 'error'); }
   }
@@ -715,12 +643,15 @@ function OfertaView({ user, supabase, showToast, onNavigate }) {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div><label style={labelStyle}>ID (CC/NIT)</label><input style={inputStyle} value={form.id} onChange={e => update('id', e.target.value)} /></div>
-          <div><label style={labelStyle}>Ciudad</label><input style={inputStyle} value={form.ciudad} onChange={e => update('ciudad', e.target.value)} /></div>
+          {/* CAMPO MATRÍCULA AGREGADO */}
+          <div><label style={labelStyle}>Matrícula Inmobiliaria</label><input style={inputStyle} value={form.matricula} onChange={e => update('matricula', e.target.value)} placeholder="Ej: 123456" /></div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div><label style={labelStyle}>Ciudad</label><input style={inputStyle} value={form.ciudad} onChange={e => update('ciudad', e.target.value)} /></div>
           <div><label style={labelStyle}>Barrio</label><input style={inputStyle} value={form.barrio} onChange={e => update('barrio', e.target.value)} /></div>
-          <div><label style={labelStyle}>Dirección Exacta *</label><input style={inputStyle} value={form.direccion} onChange={e => update('direccion', e.target.value)} /></div>
         </div>
+        <label style={labelStyle}>Dirección</label>
+        <input style={inputStyle} value={form.direccion} onChange={e => update('direccion', e.target.value)} />
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div><label style={labelStyle}>Área Total (m²)</label><input type="number" style={inputStyle} value={form.area_total} onChange={e => update('area_total', e.target.value)} /></div>
