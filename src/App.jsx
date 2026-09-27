@@ -40,18 +40,7 @@ function useBrandFont() {
     link.rel = 'stylesheet';
     document.head.appendChild(link);
     const style = document.createElement('style');
-    style.innerHTML = `
-      * { box-sizing: border-box; }
-      body { font-family: 'Comfortaa', cursive !important; background-color: ${THEME.colors.bg}; color: ${THEME.colors.text}; margin: 0; scroll-behavior: smooth; }
-      h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.5px; }
-      input, select, textarea, button { font-family: 'Comfortaa', cursive !important; transition: all 0.2s; }
-      button { cursor: pointer; }
-      input:focus, select:focus, textarea:focus { outline: none; border-color: ${THEME.colors.primary} !important; box-shadow: 0 0 0 3px rgba(233, 84, 66, 0.1); }
-      @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
-      @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-      .animate-float { animation: float 4s ease-in-out infinite; }
-      .animate-slide-up { animation: slide-up 0.6s ease-out forwards; }
-    `;
+    style.innerHTML = `* { box-sizing: border-box; } body { font-family: 'Comfortaa', cursive !important; background-color: ${THEME.colors.bg}; color: ${THEME.colors.text}; margin: 0; scroll-behavior: smooth; } h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.5px; } input, select, textarea, button { font-family: 'Comfortaa', cursive !important; transition: all 0.2s; } button { cursor: pointer; } input:focus, select:focus, textarea:focus { outline: none; border-color: ${THEME.colors.primary} !important; box-shadow: 0 0 0 3px rgba(233, 84, 66, 0.1); }`;
     document.head.appendChild(style);
   }, []);
 }
@@ -137,20 +126,18 @@ function HomeView({ onNavigate }) {
   return (
     <div>
       <div style={{ background: THEME.colors.dark, color: 'white', padding: '10px 0', overflow: 'hidden', fontSize: '0.85rem' }}>
-        <div style={{ display: 'flex', gap: '40px', animation: 'slide-up 0.5s ease-out' }}>
+        <div style={{ display: 'flex', gap: '40px' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '32px' }}><span style={{ color: THEME.colors.success }}>●</span> 🔥 3 nuevos matches en Bogotá hace 5 min</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: THEME.colors.success }}>●</span> 🏪 Local en Chapinero arrendado en 48h</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: THEME.colors.success }}>●</span>  Local en Chapinero arrendado en 48h</span>
         </div>
       </div>
       <div style={{ position: 'relative', minHeight: '80vh', display: 'flex', alignItems: 'center', background: `linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80') center/cover`, overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '10%', right: '10%', width: '300px', height: '300px', border: `2px solid ${THEME.colors.secondary}`, borderRadius: '50%', opacity: 0.4 }}></div>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 32px', textAlign: 'center', position: 'relative', zIndex: 1, width: '100%' }}>
-          <div className="animate-slide-up">
-            <div style={{ display: 'inline-block', background: `${THEME.colors.primary}15`, color: THEME.colors.primary, padding: '8px 20px', borderRadius: THEME.radius.full, fontSize: '0.9rem', fontWeight: 700, marginBottom: '24px' }}>La mayor comunidad de búsqueda inteligente</div>
-            <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '24px', lineHeight: 1.1, margin: '0 0 24px 0', color: THEME.colors.text }}>Hagamos Match entre tu<br/><span style={{ color: THEME.colors.primary }}>Local y el Negocio Perfecto</span></h1>
-            <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px', lineHeight: 1.6 }}>Deja de buscar. Empieza a encontrar. Nuestro algoritmo conecta empresas en expansión con locales comerciales ideales en tiempo real.</p>
-            <button onClick={() => onNavigate('register')} style={{ padding: '16px 40px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem', boxShadow: '0 10px 30px rgba(233,84,66,0.3)' }}>Regístrate gratis y empieza →</button>
-          </div>
+          <div style={{ display: 'inline-block', background: `${THEME.colors.primary}15`, color: THEME.colors.primary, padding: '8px 20px', borderRadius: THEME.radius.full, fontSize: '0.9rem', fontWeight: 700, marginBottom: '24px' }}>La mayor comunidad de búsqueda inteligente</div>
+          <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '24px', lineHeight: 1.1, margin: '0 0 24px 0', color: THEME.colors.text }}>Hagamos Match entre tu<br/><span style={{ color: THEME.colors.primary }}>Local y el Negocio Perfecto</span></h1>
+          <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px', lineHeight: 1.6 }}>Deja de buscar. Empieza a encontrar. Nuestro algoritmo conecta empresas en expansión con locales comerciales ideales en tiempo real.</p>
+          <button onClick={() => onNavigate('register')} style={{ padding: '16px 40px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem', boxShadow: '0 10px 30px rgba(233,84,66,0.3)' }}>Regístrate gratis y empieza →</button>
         </div>
       </div>
       <div style={{ padding: '80px 32px', maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
@@ -179,7 +166,7 @@ function HomeView({ onNavigate }) {
 }
 
 // ==========================================
-// REGISTRO Y LOGIN
+// AUTH VIEWS
 // ==========================================
 function RegisterView({ supabase, onSuccess, onNavigate }) {
   const [form, setForm] = useState({ nombre: '', apellido: '', cedula: '', email: '', celular: '' });
@@ -193,7 +180,7 @@ function RegisterView({ supabase, onSuccess, onNavigate }) {
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({ email: form.email, password: 'TerraMatch2026!' });
       if (authError) throw authError;
-      await supabase.from('profiles').insert([{ id: authData.user.id, nombre: form.nombre, apellido: form.apellido, email: form.email, celular: form.celular, acepto_terminos: true, acepto_privacidad: true, autorizo_datos: true, fecha_aceptacion: new Date().toISOString() }]);
+      await supabase.from('profiles').insert([{ id: authData.user.id, nombre: form.nombre, apellido: form.apellido, email: form.email, celular: form.celular, acepto_terminos: true }]);
       onSuccess(authData.user);
     } catch (err) { setError(err.message || 'Error al crear cuenta'); } finally { setLoading(false); }
   };
@@ -312,7 +299,7 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem })
 }
 
 // ==========================================
-// WIZARD IUB (COMPLETO - 4 PASOS)
+// WIZARD IUB (BUSCO LOCALES)
 // ==========================================
 function IUBWizard({ user, profile, supabase, onNavigate }) {
   const [step, setStep] = useState(1);
@@ -463,7 +450,7 @@ function IUBWizard({ user, profile, supabase, onNavigate }) {
 }
 
 // ==========================================
-// WIZARD OFERTA (COMPLETO)
+// WIZARD OFERTA (TENGO LOCALES)
 // ==========================================
 function OfertaWizard({ user, profile, supabase, onNavigate }) {
   const [form, setForm] = useState({
@@ -474,7 +461,6 @@ function OfertaWizard({ user, profile, supabase, onNavigate }) {
   const [loading, setLoading] = useState(false);
 
   const handleDireccionChange = (direccion) => {
-    // Simulación realista de Código Postal en Colombia (5-6 dígitos)
     setForm({...form, direccion, barrio: 'Chapinero', zona: 'Norte', codigoPostal: '110221'});
   };
 
@@ -490,7 +476,7 @@ function OfertaWizard({ user, profile, supabase, onNavigate }) {
         area_total: form.area ? parseFloat(form.area) : 0,
         precio: form.tipo.includes('Arriendo') ? (parseFloat(form.valorCanon) || 0) : (parseFloat(form.valorVenta) || 0),
         caracteristicas: JSON.stringify(form.caracteristicas),
-        matricula_inmobiliaria: form.matricula || null, // Ahora es texto, soporta alfanumérico
+        matricula_inmobiliaria: form.matricula || null,
         disponible: true, estado: 'activo'
       }]);
       if (error) throw error;
@@ -565,7 +551,7 @@ function OfertaWizard({ user, profile, supabase, onNavigate }) {
 }
 
 // ==========================================
-// IUB DETAIL VIEW
+// DETAIL VIEWS
 // ==========================================
 function IUBDetailView({ item, supabase, onNavigate }) {
   const [matches, setMatches] = useState([]);
@@ -634,9 +620,6 @@ function IUBDetailView({ item, supabase, onNavigate }) {
   );
 }
 
-// ==========================================
-// LOCAL DETAIL VIEW
-// ==========================================
 function LocalDetailView({ item, supabase, profile, onNavigate }) {
   const [iubsInteresados, setIubsInteresados] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -671,7 +654,7 @@ function LocalDetailView({ item, supabase, profile, onNavigate }) {
           <div style={{ background: '#fff5f5', padding: '24px', borderRadius: THEME.radius.md, border: `1px solid ${THEME.colors.primary}30` }}>
             <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px' }}>🔒 Contacto Propietario</h4>
             <p style={{ margin: '8px 0', fontWeight: 700, color: THEME.colors.text }}>{profile?.nombre}</p>
-            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>📞 {profile?.celular}</p>
+            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}> {profile?.celular}</p>
             <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>✉️ {profile?.email}</p>
             {item.matricula_inmobiliaria && <p style={{ margin: '8px 0', color: THEME.colors.textLight, fontSize: '0.85rem' }}>Matrícula: {item.matricula_inmobiliaria}</p>}
           </div>
