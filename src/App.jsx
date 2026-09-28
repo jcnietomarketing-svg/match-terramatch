@@ -281,7 +281,7 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem })
         </div>
       ) : (
         <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
-          {locales.length === 0 ? <div style={{ padding: '60px', textAlign: 'center', color: THEME.colors.textLight }}><div style={{ fontSize: '3rem', marginBottom: '16px' }}></div><h3>Aún no has publicado locales</h3><button onClick={() => onNavigate('oferta-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Publicar mi primer local</button></div> : (
+          {locales.length === 0 ? <div style={{ padding: '60px', textAlign: 'center', color: THEME.colors.textLight }}><div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏪</div><h3>Aún no has publicado locales</h3><button onClick={() => onNavigate('oferta-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Publicar mi primer local</button></div> : (
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead><tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TÍTULO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA (M²)</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>PRECIO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ESTADO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th></tr></thead>
               <tbody>{locales.map((local, idx) => (<tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem(local); onNavigate('local-detail'); }}><td style={{ padding: '16px', fontWeight: 600 }}>{local.titulo || 'Sin título'}</td><td style={{ padding: '16px' }}>{local.ciudad}</td><td style={{ padding: '16px' }}>{local.area_total} m²</td><td style={{ padding: '16px' }}>${local.precio?.toLocaleString()}</td><td style={{ padding: '16px' }}><Badge color={local.disponible ? 'success' : 'gray'}>{local.disponible ? 'Disponible' : 'No disponible'}</Badge></td><td style={{ padding: '16px' }}><button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer' }}>Ver IUBs →</button></td></tr>))}</tbody>
@@ -374,7 +374,7 @@ function IUBWizard({ user, profile, supabase, onNavigate }) {
 
         {step === 2 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}> 2. Ubicación y Características</h3>
+            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>📍 2. Ubicación y Características</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={labelStyle}>Barrio / Zona preferida</label><input value={form.barrio} onChange={e => update('barrio', e.target.value)} style={inputStyle} /></div>
               <div><label style={labelStyle}>Zona</label><select value={form.zona} onChange={e => update('zona', e.target.value)} style={inputStyle}><option>Norte</option><option>Sur</option><option>Centro</option></select></div>
@@ -398,7 +398,7 @@ function IUBWizard({ user, profile, supabase, onNavigate }) {
 
         {step === 3 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>💰 3. Económico y Horizonte</h3>
+            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}> 3. Económico y Horizonte</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={labelStyle}>Canon mensual máximo de Arriendo ($)</label><input type="number" value={form.canon_arriendo} onChange={e => update('canon_arriendo', e.target.value)} style={inputStyle} /></div>
               <div><label style={labelStyle}>Presupuesto máximo de Compra ($)</label><input type="number" value={form.presupuesto_compra} onChange={e => update('presupuesto_compra', e.target.value)} style={inputStyle} /></div>
@@ -436,6 +436,7 @@ function OfertaWizard({ user, profile, supabase, onNavigate }) {
     matricula: '', tipo: ['Arriendo'], valorCanon: '', valorVenta: '',
     area: '', caracteristicas: [], usoSuelo: 'Comercial'
   });
+  const [archivos, setArchivos] = useState([]); // Estado para los archivos
   const [loading, setLoading] = useState(false);
 
   const handleDireccionChange = (direccion) => {
@@ -528,6 +529,38 @@ function OfertaWizard({ user, profile, supabase, onNavigate }) {
           ))}
         </div>
 
+        {/* SECCIÓN DE FOTOS Y PLANOS RESTAURADA */}
+        <label style={labelStyle}>Fotos / Planos del Local</label>
+        <div
+          onClick={() => document.getElementById('file-upload').click()}
+          style={{ border: '2px dashed #e2e8f0', borderRadius: THEME.radius.md, padding: '32px', textAlign: 'center', marginBottom: '24px', cursor: 'pointer', background: '#f8f9fa', transition: 'all 0.2s' }}
+          onMouseEnter={(e) => e.currentTarget.style.borderColor = THEME.colors.primary}
+          onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
+        >
+          <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📁</div>
+          <p style={{ margin: '0 0 8px 0', fontWeight: 600, color: THEME.colors.text }}>Arrastra fotos o planos aquí</p>
+          <p style={{ margin: 0, fontSize: '0.85rem', color: THEME.colors.textLight }}>o haz clic para seleccionar archivos (JPG, PDF, DWG)</p>
+          <input
+            id="file-upload"
+            type="file"
+            multiple
+            accept="image/*,.pdf,.dwg"
+            style={{ display: 'none' }}
+            onChange={(e) => setArchivos(Array.from(e.target.files))}
+          />
+          {archivos.length > 0 && (
+            <div style={{ marginTop: '16px', textAlign: 'left' }}>
+              <p style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px' }}>{archivos.length} archivo(s) seleccionado(s):</p>
+              {archivos.map((file, idx) => (
+                <div key={idx} style={{ fontSize: '0.8rem', color: THEME.colors.textLight, background: 'white', padding: '6px 12px', borderRadius: '6px', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>{file.name}</span>
+                  <span style={{ color: THEME.colors.success }}>✓</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
           <button onClick={() => onNavigate('dashboard')} style={{ flex: 1, padding: '14px', background: 'white', border: `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 600, color: THEME.colors.text }}>CANCELAR</button>
           <button onClick={handleSubmit} disabled={loading} style={{ flex: 2, padding: '14px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>{loading ? 'Publicando...' : '✓ PUBLICAR LOCAL'}</button>
@@ -586,9 +619,9 @@ function IUBDetailView({ item, supabase, onNavigate }) {
               <div style={{ flex: 1, minWidth: '250px' }}>
                 <h4 style={{ margin: '0 0 8px 0', color: THEME.colors.text, fontSize: '1.1rem' }}>{match.propiedades?.titulo || 'Inmueble'}</h4>
                 <div style={{ display: 'flex', gap: '16px', color: THEME.colors.textLight, fontSize: '0.9rem', marginBottom: '12px', flexWrap: 'wrap' }}>
-                  <span>📍 {match.propiedades?.ciudad} - {match.propiedades?.zona}</span>
+                  <span> {match.propiedades?.ciudad} - {match.propiedades?.zona}</span>
                   <span>📐 {match.propiedades?.area_total} m²</span>
-                  <span>💰 ${match.propiedades?.precio?.toLocaleString()}/mes</span>
+                  <span> ${match.propiedades?.precio?.toLocaleString()}/mes</span>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -638,7 +671,7 @@ function LocalDetailView({ item, supabase, profile, onNavigate }) {
           <div style={{ background: '#fff5f5', padding: '24px', borderRadius: THEME.radius.md, border: `1px solid ${THEME.colors.primary}30` }}>
             <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px' }}>🔒 Contacto Propietario</h4>
             <p style={{ margin: '8px 0', fontWeight: 700, color: THEME.colors.text }}>{profile?.nombre}</p>
-            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>📞 {profile?.celular}</p>
+            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}> {profile?.celular}</p>
             <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>✉️ {profile?.email}</p>
             {item.matricula_inmobiliaria && <p style={{ margin: '8px 0', color: THEME.colors.textLight, fontSize: '0.85rem' }}>Matrícula: {item.matricula_inmobiliaria}</p>}
           </div>
@@ -690,7 +723,7 @@ function AdminPanel({ supabase, onNavigate, setSelectedItem }) {
   return (
     <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ background: THEME.colors.dark, color: 'white', padding: '32px', borderRadius: THEME.radius.lg, marginBottom: '32px' }}>
-        <h2 style={{ margin: '0 0 8px 0' }}>️ Torre de Control (Admin)</h2>
+        <h2 style={{ margin: '0 0 8px 0' }}>🛡️ Torre de Control (Admin)</h2>
         <p style={{ margin: 0, opacity: 0.8 }}>Gestión global de IUBs, Locales y Matches</p>
       </div>
 
