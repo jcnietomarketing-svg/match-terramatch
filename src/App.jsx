@@ -58,10 +58,16 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('locales');
+  
+  //  ESTADO PARA NOTIFICACIONES
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifs, setShowNotifs] = useState(false);
 
   const isAdmin = profile?.email === 'jcnieto.marketing@gmail.com';
 
   useEffect(() => { checkSession(); }, []);
+  useEffect(() => { if (user) loadNotifications(); }, [user]);
 
   async function checkSession() {
     try {
@@ -76,7 +82,25 @@ export default function App() {
     catch (error) { setProfile({ nombre: 'Usuario', email: userEmail }); }
   }
 
-  async function handleLogout() { await supabase.auth.signOut(); setUser(null); setProfile(null); setView('home'); }
+  // 🚨 CARGAR NOTIFICACIONES
+  async function loadNotifications() {
+    if (!user) return;
+    try {
+      const { data } = await supabase.from('notificaciones').select('*').eq('user_id', user.id).order('creado_en', { ascending: false }).limit(10);
+      setNotifications(data || []);
+      setUnreadCount((data || []).filter(n => !n.leida).length);
+    } catch (error) { console.error('Error cargando notificaciones:', error); }
+  }
+
+  // 🚨 MARCAR COMO LEÍDA
+  async function markAsRead(id) {
+    try {
+      await supabase.from('notificaciones').update({ leida: true }).eq('id', id);
+      loadNotifications(); // Recargar lista
+    } catch (error) { console.error('Error actualizando:', error); }
+  }
+
+  async function handleLogout() { await supabase.auth.signOut(); setUser(null); setProfile(null); setView('home'); setNotifications([]); setUnreadCount(0); }
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Logo size={120} /></div>;
 
@@ -89,6 +113,37 @@ export default function App() {
           {user ? (
             <>
               <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Hola, <span style={{ color: THEME.colors.primary }}>{profile?.nombre}</span></span>
+              
+              {/* 🚨 CAMPANA DE NOTIFICACIONES */}
+              <div style={{ position: 'relative' }}>
+                <button onClick={() => setShowNotifs(!showNotifs)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', padding: '8px', position: 'relative', cursor: 'pointer' }}>
+                  🔔
+                  {unreadCount > 0 && (
+                    <span style={{ position: 'absolute', top: '0', right: '0', background: THEME.colors.primary, color: 'white', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: THEME.radius.full, minWidth: '18px' }}>
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+                {showNotifs && (
+                  <div style={{ position: 'absolute', top: '40px', right: '0', background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, width: '320px', maxHeight: '400px', overflowY: 'auto', zIndex: 200, border: '1px solid #e2e8f0' }}>
+                    <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', fontWeight: 700, display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Notificaciones</span>
+                      {unreadCount > 0 && <span style={{ fontSize: '0.8rem', color: THEME.colors.primary }}>{unreadCount} nuevas</span>}
+                    </div>
+                    {notifications.length === 0 ? (
+                      <div style={{ padding: '24px', textAlign: 'center', color: THEME.colors.textLight }}>No tienes notificaciones</div>
+                    ) : (
+                      notifications.map(n => (
+                        <div key={n.id} onClick={() => markAsRead(n.id)} style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', background: n.leida ? 'white' : '#fff5f5', cursor: 'pointer', transition: 'background 0.2s' }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '4px', color: THEME.colors.text }}>{n.titulo}</div>
+                          <div style={{ fontSize: '0.8rem', color: THEME.colors.textLight }}>{n.mensaje}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+
               <button onClick={() => setView('dashboard')} style={{ padding: '8px 20px', background: 'transparent', border: `1px solid ${THEME.colors.primary}`, color: THEME.colors.primary, borderRadius: THEME.radius.full, fontWeight: 700 }}>Dashboard</button>
               {isAdmin && <button onClick={() => setView('admin')} style={{ padding: '8px 20px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>🛡️ Admin</button>}
               <button onClick={handleLogout} style={{ padding: '8px 20px', background: THEME.colors.textLight, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Salir</button>
@@ -152,7 +207,7 @@ export default function App() {
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <p style={{ fontSize: '0.85rem', opacity: 0.6, margin: 0 }}>© 2026 TerraMatch · NIT 901.612.770-8 · Todos los derechos reservados</p>
             <div style={{ display: 'flex', gap: '16px' }}>
-              <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>📘</a>
+              <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}></a>
               <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>📸</a>
               <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>💼</a>
             </div>
@@ -169,8 +224,8 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
   const tickerItems = [
     { icon: '🔥', text: '3 nuevos matches en Bogotá hace 5 min', type: 'terramatch' },
     { icon: '', text: 'Local en Chapinero arrendado en 48h', type: 'terramatch' },
-    { icon: '🌤️', text: 'Bogotá: 18°C · Parcialmente nublado', type: 'clima' },
-    { icon: '💱', text: 'TRM hoy: $4.125 COP/USD', type: 'trm' },
+    { icon: '️', text: 'Bogotá: 18°C · Parcialmente nublado', type: 'clima' },
+    { icon: '', text: 'TRM hoy: $4.125 COP/USD', type: 'trm' },
     { icon: '📈', text: '142 empresas buscando locales esta semana', type: 'terramatch' },
     { icon: '🏢', text: 'Próximamente: Bodegas y Oficinas en TerraMatch', type: 'noticia' },
     { icon: '🌦️', text: 'Medellín: 24°C · Lluvia ligera', type: 'clima' },
@@ -289,35 +344,21 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
 
   const categoriaInfo = {
     bodegas: {
-      icon: '🏭',
-      titulo: 'Bodegas',
-      color: THEME.colors.warning,
-      descripcion: 'Bodegas industriales, centros de distribución y naves logísticas',
+      icon: '🏭', titulo: 'Bodegas', color: THEME.colors.warning, descripcion: 'Bodegas industriales, centros de distribución y naves logísticas',
       campos: [
-        { icon: '📏', texto: 'Área mínima y máxima en m²' },
-        { icon: '️', texto: 'Altura libre (m) y capacidad de carga' },
-        { icon: '🚛', texto: 'Acceso para tractomulas y bahías de cargue' },
-        { icon: '⚡', texto: 'Capacidad eléctrica (KVA) y servicios' },
-        { icon: '🔥', texto: 'Certificaciones bomberos y riesgos' },
-        { icon: '📍', texto: 'Zonas logísticas y corredores viales' },
-        { icon: '🏢', texto: 'Oficinas anexas y zonas administrativas' },
-        { icon: '🔒', texto: 'Seguridad 24/7 y control de acceso' },
+        { icon: '📏', texto: 'Área mínima y máxima en m²' }, { icon: '🏗️', texto: 'Altura libre (m) y capacidad de carga' },
+        { icon: '🚛', texto: 'Acceso para tractomulas y bahías de cargue' }, { icon: '⚡', texto: 'Capacidad eléctrica (KVA) y servicios' },
+        { icon: '🔥', texto: 'Certificaciones bomberos y riesgos' }, { icon: '📍', texto: 'Zonas logísticas y corredores viales' },
+        { icon: '🏢', texto: 'Oficinas anexas y zonas administrativas' }, { icon: '', texto: 'Seguridad 24/7 y control de acceso' },
       ]
     },
     oficinas: {
-      icon: '🏢',
-      titulo: 'Oficinas',
-      color: THEME.colors.info,
-      descripcion: 'Oficinas corporativas, centros de negocios y coworking',
+      icon: '', titulo: 'Oficinas', color: THEME.colors.info, descripcion: 'Oficinas corporativas, centros de negocios y coworking',
       campos: [
-        { icon: '👥', texto: 'Número de puestos de trabajo' },
-        { icon: '', texto: 'Oficinas privadas vs abiertas' },
-        { icon: '🏢', texto: 'Piso y vistas (exterior/interior)' },
-        { icon: '🅿️', texto: 'Parqueaderos incluidos' },
-        { icon: '🛗', texto: 'Número de ascensores y tiempos' },
-        { icon: '☕', texto: 'Salas de reuniones y zonas comunes' },
-        { icon: '🌐', texto: 'Conectividad y fibra óptica' },
-        { icon: '🏙️', texto: 'Edificio inteligente y sostenibilidad' },
+        { icon: '👥', texto: 'Número de puestos de trabajo' }, { icon: '🪑', texto: 'Oficinas privadas vs abiertas' },
+        { icon: '', texto: 'Piso y vistas (exterior/interior)' }, { icon: '️', texto: 'Parqueaderos incluidos' },
+        { icon: '🛗', texto: 'Número de ascensores y tiempos' }, { icon: '☕', texto: 'Salas de reuniones y zonas comunes' },
+        { icon: '🌐', texto: 'Conectividad y fibra óptica' }, { icon: '🏙️', texto: 'Edificio inteligente y sostenibilidad' },
       ]
     }
   };
@@ -328,17 +369,9 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
     if (!email) { alert('Por favor ingresa tu email'); return; }
     setLoading(true);
     try {
-      await supabase.from('interesados_proximamente').insert([{
-        email: email,
-        categoria: category,
-        fecha: new Date().toISOString()
-      }]).catch(() => console.log('Tabla no existe, pero se registró el interés'));
+      await supabase.from('interesados_proximamente').insert([{ email: email, categoria: category, fecha: new Date().toISOString() }]).catch(() => console.log('Tabla no existe'));
       setSuscrito(true);
-    } catch (err) {
-      setSuscrito(true);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setSuscrito(true); } finally { setLoading(false); }
   };
 
   return (
@@ -348,18 +381,12 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
           {info.icon}
         </div>
         <Badge color={category === 'bodegas' ? 'warning' : 'info'}>PRÓXIMAMENTE</Badge>
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text, marginTop: '16px' }}>
-          {info.titulo} en TerraMatch
-        </h1>
-        <p style={{ fontSize: '1.2rem', color: THEME.colors.textLight, maxWidth: '600px', margin: '0 auto', lineHeight: 1.6 }}>
-          {info.descripcion}
-        </p>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text, marginTop: '16px' }}>{info.titulo} en TerraMatch</h1>
+        <p style={{ fontSize: '1.2rem', color: THEME.colors.textLight, maxWidth: '600px', margin: '0 auto', lineHeight: 1.6 }}>{info.descripcion}</p>
       </div>
 
       <div style={{ background: THEME.colors.white, padding: '48px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, marginBottom: '32px' }}>
-        <h2 style={{ color: THEME.colors.text, marginBottom: '24px', fontSize: '1.5rem' }}>
-          🎯 ¿Qué podrás hacer cuando esté disponible?
-        </h2>
+        <h2 style={{ color: THEME.colors.text, marginBottom: '24px', fontSize: '1.5rem' }}>🎯 ¿Qué podrás hacer cuando esté disponible?</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '32px' }}>
           {info.campos.map((campo, idx) => (
             <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', background: '#f8f9fa', borderRadius: THEME.radius.sm, border: '1px solid #e2e8f0' }}>
@@ -373,30 +400,18 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
           <h3 style={{ color: info.color, marginTop: 0, marginBottom: '12px' }}>💡 ¿Por qué estamos desarrollando esto?</h3>
           <p style={{ color: THEME.colors.text, lineHeight: 1.6, margin: 0 }}>
             {category === 'bodegas' 
-              ? 'El sector logístico en Colombia está en auge. Queremos conectar bodegas disponibles con empresas en expansión que necesitan centros de distribución estratégicos, con criterios específicos como altura libre, acceso para tractomulas y capacidad eléctrica.'
-              : 'El mercado de oficinas está evolucionando. Buscamos ofrecer una plataforma especializada que entienda las necesidades únicas de las empresas: puestos de trabajo, conectividad, salas de reuniones y edificios inteligentes.'}
+              ? 'El sector logístico en Colombia está en auge. Queremos conectar bodegas disponibles con empresas en expansión que necesitan centros de distribución estratégicos.'
+              : 'El mercado de oficinas está evolucionando. Buscamos ofrecer una plataforma especializada que entienda las necesidades únicas de las empresas.'}
           </p>
         </div>
 
         {!suscrito ? (
           <div style={{ background: '#f8f9fa', padding: '32px', borderRadius: THEME.radius.md, textAlign: 'center' }}>
             <h3 style={{ color: THEME.colors.text, marginTop: 0, marginBottom: '12px' }}>🔔 Sé el primero en saberlo</h3>
-            <p style={{ color: THEME.colors.textLight, marginBottom: '24px' }}>
-              Déjanos tu email y te notificaremos cuando lancemos esta categoría
-            </p>
+            <p style={{ color: THEME.colors.textLight, marginBottom: '24px' }}>Déjanos tu email y te notificaremos cuando lancemos esta categoría</p>
             <div style={{ display: 'flex', gap: '12px', maxWidth: '500px', margin: '0 auto', flexWrap: 'wrap' }}>
-              <input 
-                type="email" 
-                placeholder="tu@email.com" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ flex: 1, minWidth: '250px', padding: '14px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, fontSize: '1rem', fontFamily: 'Comfortaa' }}
-              />
-              <button 
-                onClick={handleSuscribir}
-                disabled={loading}
-                style={{ padding: '14px 32px', background: info.color, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
-              >
+              <input type="email" placeholder="tu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} style={{ flex: 1, minWidth: '250px', padding: '14px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, fontSize: '1rem', fontFamily: 'Comfortaa' }} />
+              <button onClick={handleSuscribir} disabled={loading} style={{ padding: '14px 32px', background: info.color, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>
                 {loading ? 'Enviando...' : 'NOTIFICARME'}
               </button>
             </div>
@@ -405,26 +420,14 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
           <div style={{ background: `${THEME.colors.success}15`, padding: '32px', borderRadius: THEME.radius.md, textAlign: 'center', border: `1px solid ${THEME.colors.success}` }}>
             <div style={{ fontSize: '3rem', marginBottom: '12px' }}>✅</div>
             <h3 style={{ color: THEME.colors.success, marginTop: 0, marginBottom: '12px' }}>¡Estás en la lista!</h3>
-            <p style={{ color: THEME.colors.text, marginBottom: '24px' }}>
-              Te notificaremos a <strong>{email}</strong> cuando lancemos {info.titulo} en TerraMatch
-            </p>
+            <p style={{ color: THEME.colors.text, marginBottom: '24px' }}>Te notificaremos a <strong>{email}</strong> cuando lancemos {info.titulo} en TerraMatch</p>
           </div>
         )}
       </div>
 
       <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button 
-          onClick={() => onNavigate('home')}
-          style={{ padding: '14px 32px', background: 'white', color: THEME.colors.text, border: `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 700 }}
-        >
-          ← Volver al Inicio
-        </button>
-        <button 
-          onClick={() => { setSelectedCategory('locales'); onNavigate('register'); }}
-          style={{ padding: '14px 32px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}
-        >
-          🏪 Probar con Locales (disponible)
-        </button>
+        <button onClick={() => onNavigate('home')} style={{ padding: '14px 32px', background: 'white', color: THEME.colors.text, border: `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 700 }}>← Volver al Inicio</button>
+        <button onClick={() => { setSelectedCategory('locales'); onNavigate('register'); }} style={{ padding: '14px 32px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}> Probar con Locales (disponible)</button>
       </div>
     </div>
   );
@@ -435,7 +438,6 @@ function RegisterView({ supabase, category, onSuccess, onNavigate }) {
   const [acepta, setAcepta] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
   const categoriaLabels = { locales: 'Locales', bodegas: 'Bodegas', oficinas: 'Oficinas' };
 
   const handleRegister = async () => {
@@ -539,7 +541,7 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem, s
   return (
     <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-        <div><h2 style={{ margin: 0, color: THEME.colors.text }}>Hola, {profile?.nombre} 👋</h2><p style={{ margin: '8px 0 0 0', color: THEME.colors.textLight }}>Bienvenido a tu centro de control TerraMatch</p></div>
+        <div><h2 style={{ margin: 0, color: THEME.colors.text }}>Hola, {profile?.nombre} </h2><p style={{ margin: '8px 0 0 0', color: THEME.colors.textLight }}>Bienvenido a tu centro de control TerraMatch</p></div>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button onClick={() => { setSelectedCategory('locales'); onNavigate('iub-wizard'); }} style={{ padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>+ Crear IUB</button>
           <button onClick={() => { setSelectedCategory('locales'); onNavigate('oferta-wizard'); }} style={{ padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>+ Cargar Local</button>
@@ -598,15 +600,14 @@ function IUBWizard({ user, profile, supabase, category, onNavigate }) {
         nombre_completo: form.nombre, nit_cedula: form.cedula, matricula_inmobiliaria: form.matricula || null,
         email_contacto: form.email, celular: form.celular, ciudad: form.ciudad, zona: form.zona, barrio: form.barrio,
         tipo_negocio: form.tipo_negocio, uso_suelo: form.uso_suelo,
-        area_min: area,
-        area_max: area,
+        area_min: area, area_max: area,
         canon_arriendo: form.canon_arriendo ? parseFloat(form.canon_arriendo) : null,
         presupuesto_compra: form.presupuesto_compra ? parseFloat(form.presupuesto_compra) : null,
         caracteristicas: JSON.stringify(form.caracteristicas), horizonte: form.horizonte,
         estado: 'activo', cantidad_locales: 1, actividad: form.actividad
       }]);
       if (error) throw error;
-      alert(`¡IUB ${codigoIub} creado exitosamente!`);
+      alert(`¡IUB ${codigoIub} creado exitosamente! El sistema buscará matches automáticamente.`);
       onNavigate('dashboard');
     } catch (err) { alert('Error: ' + err.message); } finally { setLoading(false); }
   };
@@ -725,7 +726,7 @@ function OfertaWizard({ user, profile, supabase, category, onNavigate }) {
         disponible: true, estado: 'activo'
       }]);
       if (error) throw error;
-      alert(`¡${categoriaLabels[category]} publicado exitosamente! Tu código es: ${codigoProp}`);
+      alert(`¡${categoriaLabels[category]} publicado exitosamente! Tu código es: ${codigoProp}. El sistema buscará matches automáticamente.`);
       onNavigate('dashboard');
     } catch (err) { alert('Error: ' + err.message); } finally { setLoading(false); }
   };
@@ -788,7 +789,7 @@ function OfertaWizard({ user, profile, supabase, category, onNavigate }) {
         <div onClick={() => document.getElementById('file-upload').click()} style={{ border: '2px dashed #e2e8f0', borderRadius: THEME.radius.md, padding: '32px', textAlign: 'center', marginBottom: '24px', cursor: 'pointer', background: '#f8f9fa', transition: 'all 0.2s' }}
              onMouseEnter={(e) => e.currentTarget.style.borderColor = THEME.colors.primary}
              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
-          <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📁</div>
+          <div style={{ fontSize: '2rem', marginBottom: '8px' }}></div>
           <p style={{ margin: '0 0 8px 0', fontWeight: 600, color: THEME.colors.text }}>Arrastra fotos o planos aquí</p>
           <p style={{ margin: 0, fontSize: '0.85rem', color: THEME.colors.textLight }}>o haz clic para seleccionar archivos (JPG, PDF, DWG)</p>
           <input id="file-upload" type="file" multiple accept="image/*,.pdf,.dwg" style={{ display: 'none' }} onChange={(e) => setArchivos(Array.from(e.target.files))} />
@@ -817,7 +818,6 @@ function MasivaWizard({ user, profile, supabase, category, onNavigate }) {
   const [archivo, setArchivo] = useState(null);
   const [preview, setPreview] = useState([]);
   const [loading, setLoading] = useState(false);
-
   const categoriaLabels = { locales: 'Locales', bodegas: 'Bodegas', oficinas: 'Oficinas' };
 
   const handleFileChange = (e) => {
@@ -1107,4 +1107,3 @@ function AdminPanel({ supabase, onNavigate, setSelectedItem }) {
     </div>
   );
 }
-// FIN DEL ARCHIVO - Si ves esto, el archivo está completo y sin cortes.
