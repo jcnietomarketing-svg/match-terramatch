@@ -83,7 +83,7 @@ export default function App() {
   async function loadNotifications() {
     if (!user) return;
     try {
-      const { data } = await supabase.from('notificaciones').select('*').eq('user_id', user.id).order('creado_en', { ascending: false }).limit(10);
+      const { data } = await supabase.from('notificaciones').select('*').eq('user_id', user.id).order('creado_en', { ascending: false }).limit(20);
       setNotifications(data || []);
       setUnreadCount((data || []).filter(n => !n.leida).length);
     } catch (error) { console.error('Error cargando notificaciones:', error); }
@@ -93,7 +93,7 @@ export default function App() {
     try {
       await supabase.from('notificaciones').update({ leida: true }).eq('id', id);
       loadNotifications();
-    } catch (error) { console.error('Error actualizando:', error); }
+    } catch (error) { console.error('Error:', error); }
   }
 
   async function handleLogout() { await supabase.auth.signOut(); setUser(null); setProfile(null); setView('home'); setNotifications([]); setUnreadCount(0); }
@@ -201,7 +201,7 @@ export default function App() {
             <p style={{ fontSize: '0.85rem', opacity: 0.6, margin: 0 }}>© 2026 TerraMatch · NIT 901.612.770-8 · Todos los derechos reservados</p>
             <div style={{ display: 'flex', gap: '16px' }}>
               <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>📘</a>
-              <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>📸</a>
+              <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}></a>
               <a href="#" style={{ color: 'white', opacity: 0.6, textDecoration: 'none', fontSize: '1.2rem' }}>💼</a>
             </div>
           </div>
@@ -214,7 +214,7 @@ export default function App() {
 function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
   const [tickerIndex, setTickerIndex] = useState(0);
   const tickerItems = [
-    { icon: '🔥', text: '3 nuevos matches en Bogotá hace 5 min', type: 'terramatch' },
+    { icon: '', text: '3 nuevos matches en Bogotá hace 5 min', type: 'terramatch' },
     { icon: '🏪', text: 'Local en Chapinero arrendado en 48h', type: 'terramatch' },
     { icon: '🌤️', text: 'Bogotá: 18°C · Parcialmente nublado', type: 'clima' },
     { icon: '💱', text: 'TRM hoy: $4.125 COP/USD', type: 'trm' },
@@ -309,10 +309,10 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
   const [loading, setLoading] = useState(false);
   const categoriaInfo = {
     bodegas: { icon: '🏭', titulo: 'Bodegas', color: THEME.colors.warning, descripcion: 'Bodegas industriales, centros de distribución y naves logísticas',
-      campos: [{ icon: '📏', texto: 'Área mínima y máxima en m²' }, { icon: '🏗️', texto: 'Altura libre (m) y capacidad de carga' }, { icon: '🚛', texto: 'Acceso para tractomulas y bahías de cargue' }, { icon: '⚡', texto: 'Capacidad eléctrica (KVA) y servicios' }, { icon: '🔥', texto: 'Certificaciones bomberos y riesgos' }, { icon: '', texto: 'Zonas logísticas y corredores viales' }, { icon: '🏢', texto: 'Oficinas anexas y zonas administrativas' }, { icon: '🔒', texto: 'Seguridad 24/7 y control de acceso' }]
+      campos: [{ icon: '📏', texto: 'Área mínima y máxima en m²' }, { icon: '️', texto: 'Altura libre (m) y capacidad de carga' }, { icon: '', texto: 'Acceso para tractomulas y bahías de cargue' }, { icon: '', texto: 'Capacidad eléctrica (KVA) y servicios' }, { icon: '🔥', texto: 'Certificaciones bomberos y riesgos' }, { icon: '📍', texto: 'Zonas logísticas y corredores viales' }, { icon: '🏢', texto: 'Oficinas anexas y zonas administrativas' }, { icon: '🔒', texto: 'Seguridad 24/7 y control de acceso' }]
     },
     oficinas: { icon: '🏢', titulo: 'Oficinas', color: THEME.colors.info, descripcion: 'Oficinas corporativas, centros de negocios y coworking',
-      campos: [{ icon: '👥', texto: 'Número de puestos de trabajo' }, { icon: '🪑', texto: 'Oficinas privadas vs abiertas' }, { icon: '', texto: 'Piso y vistas (exterior/interior)' }, { icon: '️', texto: 'Parqueaderos incluidos' }, { icon: '🛗', texto: 'Número de ascensores y tiempos' }, { icon: '☕', texto: 'Salas de reuniones y zonas comunes' }, { icon: '🌐', texto: 'Conectividad y fibra óptica' }, { icon: '🏙️', texto: 'Edificio inteligente y sostenibilidad' }]
+      campos: [{ icon: '👥', texto: 'Número de puestos de trabajo' }, { icon: '🪑', texto: 'Oficinas privadas vs abiertas' }, { icon: '🏢', texto: 'Piso y vistas (exterior/interior)' }, { icon: '🅿️', texto: 'Parqueaderos incluidos' }, { icon: '🛗', texto: 'Número de ascensores y tiempos' }, { icon: '☕', texto: 'Salas de reuniones y zonas comunes' }, { icon: '🌐', texto: 'Conectividad y fibra óptica' }, { icon: '🏙️', texto: 'Edificio inteligente y sostenibilidad' }]
     }
   };
   const info = categoriaInfo[category] || categoriaInfo.bodegas;
@@ -483,7 +483,7 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem, s
         </div>
       ) : (
         <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
-          {locales.length === 0 ? <div style={{ padding: '60px', textAlign: 'center', color: THEME.colors.textLight }}><div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏪</div><h3>Aún no has publicado locales</h3><button onClick={() => onNavigate('oferta-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Publicar mi primer local</button></div> : (
+          {locales.length === 0 ? <div style={{ padding: '60px', textAlign: 'center', color: THEME.colors.textLight }}><div style={{ fontSize: '3rem', marginBottom: '16px' }}></div><h3>Aún no has publicado locales</h3><button onClick={() => onNavigate('oferta-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Publicar mi primer local</button></div> : (
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead><tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CÓDIGO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TÍTULO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA (M²)</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>PRECIO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>MATCHES</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ESTADO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th></tr></thead>
               <tbody>{locales.map((local) => (<tr key={local.id} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem(local); onNavigate('local-detail'); }}><td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{local.codigo_propiedad || 'SIN ID'}</td><td style={{ padding: '16px', fontWeight: 600 }}>{local.titulo || 'Sin título'}</td><td style={{ padding: '16px' }}>{local.ciudad}</td><td style={{ padding: '16px' }}>{local.area_total} m²</td><td style={{ padding: '16px' }}>${local.precio?.toLocaleString()}</td><td style={{ padding: '16px' }}><Badge color="primary">{matchCounts.props[local.id] || 0}</Badge></td><td style={{ padding: '16px' }}><Badge color={local.disponible ? 'success' : 'gray'}>{local.disponible ? 'Disponible' : 'No disponible'}</Badge></td><td style={{ padding: '16px' }}><button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer' }}>Ver IUBs →</button></td></tr>))}</tbody>
@@ -637,7 +637,7 @@ function OfertaWizard({ user, profile, supabase, category, onNavigate }) {
         </div>
         <label style={labelStyle}>Fotos / Planos</label>
         <div onClick={() => document.getElementById('file-upload').click()} style={{ border: '2px dashed #e2e8f0', borderRadius: THEME.radius.md, padding: '32px', textAlign: 'center', marginBottom: '24px', cursor: 'pointer', background: '#f8f9fa', transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.borderColor = THEME.colors.primary} onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
-          <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📁</div>
+          <div style={{ fontSize: '2rem', marginBottom: '8px' }}></div>
           <p style={{ margin: '0 0 8px 0', fontWeight: 600, color: THEME.colors.text }}>Arrastra fotos o planos aquí</p>
           <p style={{ margin: 0, fontSize: '0.85rem', color: THEME.colors.textLight }}>o haz clic para seleccionar archivos (JPG, PDF, DWG)</p>
           <input id="file-upload" type="file" multiple accept="image/*,.pdf,.dwg" style={{ display: 'none' }} onChange={(e) => setArchivos(Array.from(e.target.files))} />
@@ -706,14 +706,16 @@ function MasivaWizard({ user, profile, supabase, category, onNavigate }) {
   );
 }
 
+// ==========================================
+// IUB DETAIL VIEW - BLINDADO (sin contacto directo)
+// ==========================================
 function IUBDetailView({ item, supabase, profile, onNavigate }) {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showContact, setShowContact] = useState(null);
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const [scheduleForm, setScheduleForm] = useState({ fecha: '', hora: '', notas: '' });
-  const [scheduling, setScheduling] = useState(false);
+  const [requestForm, setRequestForm] = useState({ fecha: '', hora: '', notas: '' });
+  const [requesting, setRequesting] = useState(false);
 
   useEffect(() => { loadMatches(); }, [item]);
   async function loadMatches() {
@@ -721,7 +723,7 @@ function IUBDetailView({ item, supabase, profile, onNavigate }) {
       setLoading(true);
       const { data } = await supabase.from('matches').select('*, propiedades(*)').eq('iub_id', item.id).order('score', { ascending: false });
       setMatches(data || []);
-    } catch (error) { console.error('Error loading matches:', error); } finally { setLoading(false); }
+    } catch (error) { console.error('Error:', error); } finally { setLoading(false); }
   }
 
   const updateEstado = async (matchId, estado) => {
@@ -729,20 +731,52 @@ function IUBDetailView({ item, supabase, profile, onNavigate }) {
     catch (error) { alert('Error: ' + error.message); }
   };
 
-  const handleSchedule = async () => {
-    if (!selectedMatch || !scheduleForm.fecha || !scheduleForm.hora) { alert('Por favor completa fecha y hora'); return; }
-    setScheduling(true);
+  const handleRequestMeeting = async () => {
+    if (!selectedMatch || !requestForm.fecha || !requestForm.hora) { alert('Completa fecha y hora'); return; }
+    setRequesting(true);
     try {
-      const { error } = await supabase.from('reuniones').insert([{ match_id: selectedMatch.id, iub_id: item.id, propiedad_id: selectedMatch.propiedad_id, user_iub: item.user_id, user_prop: selectedMatch.propiedades?.user_id, fecha_propuesta: scheduleForm.fecha, hora_propuesta: scheduleForm.hora, estado: 'pendiente', notas: scheduleForm.notas }]);
+      const { data: solicitud, error } = await supabase.from('solicitudes_reunion').insert([{
+        match_id: selectedMatch.id,
+        iub_id: item.id,
+        propiedad_id: selectedMatch.propiedad_id,
+        user_solicitante: item.user_id,
+        user_destinatario: selectedMatch.propiedades?.user_id,
+        tipo_solicitante: 'buscador',
+        fecha_propuesta: requestForm.fecha,
+        hora_propuesta: requestForm.hora,
+        notas: requestForm.notas,
+        estado: 'pendiente',
+        contacto_revelado: false
+      }]).select().single();
+      
       if (error) throw error;
-      await supabase.from('notificaciones').insert([{ user_id: selectedMatch.propiedades?.user_id, titulo: '📅 Solicitud de reunión', mensaje: `Un usuario quiere agendar una reunión para tu inmueble ${selectedMatch.propiedades?.codigo_propiedad} el ${scheduleForm.fecha} a las ${scheduleForm.hora}`, tipo: 'reunion' }]);
-      alert('✅ Reunión agendada. El propietario recibirá una notificación.');
-      setShowScheduleModal(false);
-      setScheduleForm({ fecha: '', hora: '', notas: '' });
-    } catch (err) { alert('Error: ' + err.message); } finally { setScheduling(false); }
+
+      // Notificar al propietario
+      await supabase.from('notificaciones').insert([{
+        user_id: selectedMatch.propiedades?.user_id,
+        titulo: ' Nueva solicitud de reunión',
+        mensaje: `Un buscador quiere visitar tu inmueble ${selectedMatch.propiedades?.codigo_propiedad} el ${requestForm.fecha} a las ${requestForm.hora}.`,
+        tipo: 'solicitud_reunion'
+      }]);
+
+      // Notificar al ADMIN (TerraMatch)
+      const { data: adminProfile } = await supabase.from('profiles').select('id').eq('email', 'jcnieto.marketing@gmail.com').single();
+      if (adminProfile) {
+        await supabase.from('notificaciones').insert([{
+          user_id: adminProfile.id,
+          titulo: '🚨 Nueva solicitud requiere coordinación',
+          mensaje: `Solicitud #${solicitud.id?.slice(0,8)}: Buscador ${profile?.nombre} quiere visitar ${selectedMatch.propiedades?.codigo_propiedad}. Coordina la cita.`,
+          tipo: 'admin_coordinacion'
+        }]);
+      }
+
+      alert('✅ Solicitud enviada. TerraMatch coordinará la cita presencial.');
+      setShowRequestModal(false);
+      setRequestForm({ fecha: '', hora: '', notas: '' });
+    } catch (err) { alert('Error: ' + err.message); } finally { setRequesting(false); }
   };
 
-  const safeParseJSON = (str) => { try { const parsed = JSON.parse(str); return Array.isArray(parsed) ? parsed : []; } catch (e) { return []; } };
+  const safeParseJSON = (str) => { try { return Array.isArray(JSON.parse(str)) ? JSON.parse(str) : []; } catch (e) { return []; } };
 
   return (
     <div style={{ padding: '40px 32px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -761,6 +795,17 @@ function IUBDetailView({ item, supabase, profile, onNavigate }) {
         {item.caracteristicas && (<div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>{safeParseJSON(item.caracteristicas).map((c, i) => (<span key={i} style={{ padding: '6px 14px', background: `${THEME.colors.secondary}30`, color: THEME.colors.text, borderRadius: THEME.radius.full, fontSize: '0.85rem', fontWeight: 600 }}>{c}</span>))}</div>)}
       </div>
 
+      {/*  AVISO DE PRIVACIDAD */}
+      <div style={{ background: `${THEME.colors.info}10`, border: `1px solid ${THEME.colors.info}30`, padding: '16px 20px', borderRadius: THEME.radius.md, marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <span style={{ fontSize: '1.5rem' }}>🔒</span>
+        <div>
+          <strong style={{ color: THEME.colors.text, fontSize: '0.9rem' }}>Información protegida por TerraMatch</strong>
+          <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: THEME.colors.textLight }}>
+            Los datos de contacto se revelan solo cuando TerraMatch coordina la cita presencial. Esto protege a ambas partes.
+          </p>
+        </div>
+      </div>
+
       <h3 style={{ color: THEME.colors.text, marginBottom: '24px' }}>Esta búsqueda tiene {matches.length} Matches</h3>
       {loading ? <div style={{ textAlign: 'center', padding: '40px', color: THEME.colors.textLight }}>Cargando...</div> : matches.length === 0 ? (
         <div style={{ background: THEME.colors.white, padding: '60px', borderRadius: THEME.radius.lg, textAlign: 'center', boxShadow: THEME.shadow }}><div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div><h3>Aún no hay matches</h3></div>
@@ -771,46 +816,49 @@ function IUBDetailView({ item, supabase, profile, onNavigate }) {
               <div style={{ flex: 1, minWidth: '250px' }}>
                 <h4 style={{ margin: '0 0 8px 0', color: THEME.colors.text, fontSize: '1.1rem' }}>{match.propiedades?.titulo || 'Inmueble'}</h4>
                 <div style={{ display: 'flex', gap: '16px', color: THEME.colors.textLight, fontSize: '0.9rem', marginBottom: '12px', flexWrap: 'wrap' }}>
-                  <span> {match.propiedades?.ciudad} - {match.propiedades?.zona}</span>
+                  <span>📍 {match.propiedades?.ciudad} - {match.propiedades?.zona}</span>
                   <span>📐 {match.propiedades?.area_total} m²</span>
                   <span>💰 ${match.propiedades?.precio?.toLocaleString()}/mes</span>
                 </div>
-                {showContact === match.id ? (
-                  <div style={{ background: '#f8f9fa', padding: '16px', borderRadius: THEME.radius.sm, marginTop: '12px', border: `1px solid ${THEME.colors.primary}30` }}>
-                    <h5 style={{ margin: '0 0 8px 0', color: THEME.colors.primary }}>🔒 Contacto del Propietario</h5>
-                    <p style={{ margin: '4px 0', fontSize: '0.9rem' }}><strong>Email:</strong> {match.propiedades?.email_contacto || 'No disponible'}</p>
-                    <p style={{ margin: '4px 0', fontSize: '0.9rem' }}><strong>Teléfono:</strong> {match.propiedades?.telefono || 'No disponible'}</p>
-                    <button onClick={() => setShowContact(null)} style={{ marginTop: '8px', padding: '6px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontSize: '0.85rem', cursor: 'pointer' }}>Ocultar</button>
-                  </div>
-                ) : (
-                  <button onClick={() => setShowContact(match.id)} style={{ marginTop: '12px', padding: '8px 16px', background: THEME.colors.info, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>👁️ Ver contacto</button>
-                )}
               </div>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <Badge color={match.estado === 'favorito' ? 'success' : match.estado === 'descartado' ? 'gray' : 'warning'}>{match.estado || 'nuevo'}</Badge>
-                {match.estado === 'favorito' && (<button onClick={() => { setSelectedMatch(match); setShowScheduleModal(true); }} style={{ padding: '10px 20px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}> Agendar</button>)}
-                {match.estado !== 'favorito' && (<button onClick={() => updateEstado(match.id, 'favorito')} style={{ padding: '10px 20px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Favorito</button>)}
-                {match.estado !== 'descartado' && (<button onClick={() => updateEstado(match.id, 'descartado')} style={{ padding: '10px 20px', background: 'white', color: THEME.colors.textLight, border: `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 700 }}>Descartar</button>)}
+                {match.estado === 'favorito' && (
+                  <button onClick={() => { setSelectedMatch(match); setShowRequestModal(true); }} style={{ padding: '10px 20px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>
+                    📅 Solicitar visita
+                  </button>
+                )}
+                {match.estado !== 'favorito' && (
+                  <button onClick={() => updateEstado(match.id, 'favorito')} style={{ padding: '10px 20px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Favorito</button>
+                )}
+                {match.estado !== 'descartado' && (
+                  <button onClick={() => updateEstado(match.id, 'descartado')} style={{ padding: '10px 20px', background: 'white', color: THEME.colors.textLight, border: `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 700 }}>Descartar</button>
+                )}
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {showScheduleModal && selectedMatch && (
+      {showRequestModal && selectedMatch && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, maxWidth: '500px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3 style={{ marginBottom: '16px', color: THEME.colors.text }}>📅 Agendar Reunión</h3>
-            <p style={{ color: THEME.colors.textLight, marginBottom: '24px', fontSize: '0.9rem' }}>Inmueble: <strong>{selectedMatch.propiedades?.titulo}</strong><br/>Código: <strong>{selectedMatch.propiedades?.codigo_propiedad}</strong></p>
+          <div style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, maxWidth: '500px', width: '100%' }}>
+            <h3 style={{ marginBottom: '8px', color: THEME.colors.text }}>📅 Solicitar visita al inmueble</h3>
+            <p style={{ color: THEME.colors.textLight, marginBottom: '24px', fontSize: '0.9rem' }}>
+              Inmueble: <strong>{selectedMatch.propiedades?.titulo}</strong><br/>
+              <span style={{ color: THEME.colors.primary, fontSize: '0.85rem' }}>🔒 TerraMatch coordinará la cita presencial</span>
+            </p>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>Fecha propuesta *</label>
-            <input type="date" value={scheduleForm.fecha} onChange={(e) => setScheduleForm({...scheduleForm, fecha: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '16px', boxSizing: 'border-box', fontSize: '1rem' }} />
+            <input type="date" value={requestForm.fecha} onChange={(e) => setRequestForm({...requestForm, fecha: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '16px', boxSizing: 'border-box', fontSize: '1rem' }} />
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>Hora propuesta *</label>
-            <input type="time" value={scheduleForm.hora} onChange={(e) => setScheduleForm({...scheduleForm, hora: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '16px', boxSizing: 'border-box', fontSize: '1rem' }} />
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>Notas adicionales</label>
-            <textarea value={scheduleForm.notas} onChange={(e) => setScheduleForm({...scheduleForm, notas: e.target.value})} rows="3" placeholder="Ej: Quiero visitar el local en la mañana..." style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '24px', boxSizing: 'border-box', fontSize: '1rem', resize: 'vertical', fontFamily: 'Comfortaa' }} />
+            <input type="time" value={requestForm.hora} onChange={(e) => setRequestForm({...requestForm, hora: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '16px', boxSizing: 'border-box', fontSize: '1rem' }} />
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>Notas (opcional)</label>
+            <textarea value={requestForm.notas} onChange={(e) => setRequestForm({...requestForm, notas: e.target.value})} rows="3" placeholder="Ej: Me interesa conocer el local en persona..." style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '24px', boxSizing: 'border-box', fontSize: '1rem', resize: 'vertical', fontFamily: 'Comfortaa' }} />
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setShowScheduleModal(false)} style={{ flex: 1, padding: '12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
-              <button onClick={handleSchedule} disabled={scheduling} style={{ flex: 2, padding: '12px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: scheduling ? 'not-allowed' : 'pointer', opacity: scheduling ? 0.7 : 1 }}>{scheduling ? 'Agendando...' : 'Confirmar Reunión'}</button>
+              <button onClick={() => setShowRequestModal(false)} style={{ flex: 1, padding: '12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={handleRequestMeeting} disabled={requesting} style={{ flex: 2, padding: '12px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: requesting ? 'not-allowed' : 'pointer', opacity: requesting ? 0.7 : 1 }}>
+                {requesting ? 'Enviando...' : 'Enviar solicitud'}
+              </button>
             </div>
           </div>
         </div>
@@ -819,33 +867,65 @@ function IUBDetailView({ item, supabase, profile, onNavigate }) {
   );
 }
 
+// ==========================================
+// LOCAL DETAIL VIEW - BLINDADO (sin contacto del buscador)
+// ==========================================
 function LocalDetailView({ item, supabase, profile, onNavigate }) {
   const [iubsInteresados, setIubsInteresados] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showContact, setShowContact] = useState(null);
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedIUB, setSelectedIUB] = useState(null);
-  const [scheduleForm, setScheduleForm] = useState({ fecha: '', hora: '', notas: '' });
-  const [scheduling, setScheduling] = useState(false);
+  const [requestForm, setRequestForm] = useState({ fecha: '', hora: '', notas: '' });
+  const [requesting, setRequesting] = useState(false);
 
   useEffect(() => { loadIUBs(); }, [item]);
   async function loadIUBs() {
     try { setLoading(true); const { data } = await supabase.from('matches').select('*, iubs(*)').eq('propiedad_id', item.id); setIubsInteresados(data || []); } 
-    catch (error) { console.error('Error loading IUBs:', error); } finally { setLoading(false); }
+    catch (error) { console.error('Error:', error); } finally { setLoading(false); }
   }
 
-  const handleSchedule = async () => {
-    if (!selectedIUB || !scheduleForm.fecha || !scheduleForm.hora) { alert('Por favor completa fecha y hora'); return; }
-    setScheduling(true);
+  const handleRequestMeeting = async () => {
+    if (!selectedIUB || !requestForm.fecha || !requestForm.hora) { alert('Completa fecha y hora'); return; }
+    setRequesting(true);
     try {
       const match = iubsInteresados.find(m => m.iubs?.id === selectedIUB.id);
-      const { error } = await supabase.from('reuniones').insert([{ match_id: match?.id, iub_id: selectedIUB.id, propiedad_id: item.id, user_iub: selectedIUB.user_id, user_prop: item.user_id, fecha_propuesta: scheduleForm.fecha, hora_propuesta: scheduleForm.hora, estado: 'pendiente', notas: scheduleForm.notas }]);
+      const { data: solicitud, error } = await supabase.from('solicitudes_reunion').insert([{
+        match_id: match?.id,
+        iub_id: selectedIUB.id,
+        propiedad_id: item.id,
+        user_solicitante: item.user_id,
+        user_destinatario: selectedIUB.user_id,
+        tipo_solicitante: 'propietario',
+        fecha_propuesta: requestForm.fecha,
+        hora_propuesta: requestForm.hora,
+        notas: requestForm.notas,
+        estado: 'pendiente',
+        contacto_revelado: false
+      }]).select().single();
+      
       if (error) throw error;
-      await supabase.from('notificaciones').insert([{ user_id: selectedIUB.user_id, titulo: ' Solicitud de reunión', mensaje: `El propietario de ${item.titulo} quiere agendar una reunión para el ${scheduleForm.fecha} a las ${scheduleForm.hora}`, tipo: 'reunion' }]);
-      alert('✅ Reunión agendada. El buscador recibirá una notificación.');
-      setShowScheduleModal(false);
-      setScheduleForm({ fecha: '', hora: '', notas: '' });
-    } catch (err) { alert('Error: ' + err.message); } finally { setScheduling(false); }
+
+      await supabase.from('notificaciones').insert([{
+        user_id: selectedIUB.user_id,
+        titulo: ' Solicitud de reunión del propietario',
+        mensaje: `El propietario de ${item.titulo} (${item.codigo_propiedad}) quiere coordinar una cita el ${requestForm.fecha} a las ${requestForm.hora}.`,
+        tipo: 'solicitud_reunion'
+      }]);
+
+      const { data: adminProfile } = await supabase.from('profiles').select('id').eq('email', 'jcnieto.marketing@gmail.com').single();
+      if (adminProfile) {
+        await supabase.from('notificaciones').insert([{
+          user_id: adminProfile.id,
+          titulo: '🚨 Nueva solicitud requiere coordinación',
+          mensaje: `Solicitud #${solicitud.id?.slice(0,8)}: Propietario ${profile?.nombre} (${item.codigo_propiedad}) quiere citar a ${selectedIUB.nombre_completo}.`,
+          tipo: 'admin_coordinacion'
+        }]);
+      }
+
+      alert('✅ Solicitud enviada. TerraMatch coordinará la cita.');
+      setShowRequestModal(false);
+      setRequestForm({ fecha: '', hora: '', notas: '' });
+    } catch (err) { alert('Error: ' + err.message); } finally { setRequesting(false); }
   };
 
   return (
@@ -867,12 +947,23 @@ function LocalDetailView({ item, supabase, profile, onNavigate }) {
             <p style={{ margin: '0', color: THEME.colors.textLight }}>{item.direccion} · {item.ciudad}</p>
           </div>
           <div style={{ background: '#fff5f5', padding: '24px', borderRadius: THEME.radius.md, border: `1px solid ${THEME.colors.primary}30` }}>
-            <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px' }}>🔒 Contacto Propietario</h4>
+            <h4 style={{ color: THEME.colors.primary, marginTop: 0, marginBottom: '16px' }}>🔒 Mi contacto (propietario)</h4>
             <p style={{ margin: '8px 0', fontWeight: 700, color: THEME.colors.text }}>{profile?.nombre}</p>
-            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>📞 {profile?.celular}</p>
-            <p style={{ margin: '8px 0', color: THEME.colors.textLight }}>✉️ {profile?.email}</p>
+            <p style={{ margin: '8px 0', color: THEME.colors.textLight, fontSize: '0.9rem' }}>📞 {profile?.celular}</p>
+            <p style={{ margin: '8px 0', color: THEME.colors.textLight, fontSize: '0.9rem' }}>✉️ {profile?.email}</p>
             {item.matricula_inmobiliaria && <p style={{ margin: '8px 0', color: THEME.colors.textLight, fontSize: '0.85rem' }}>Matrícula: {item.matricula_inmobiliaria}</p>}
           </div>
+        </div>
+      </div>
+
+      {/* 🔒 AVISO DE PRIVACIDAD */}
+      <div style={{ background: `${THEME.colors.info}10`, border: `1px solid ${THEME.colors.info}30`, padding: '16px 20px', borderRadius: THEME.radius.md, marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <span style={{ fontSize: '1.5rem' }}>🔒</span>
+        <div>
+          <strong style={{ color: THEME.colors.text, fontSize: '0.9rem' }}>Información protegida por TerraMatch</strong>
+          <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: THEME.colors.textLight }}>
+            Los datos de los interesados no se revelan directamente. TerraMatch coordina todas las citas presenciales.
+          </p>
         </div>
       </div>
 
@@ -885,27 +976,26 @@ function LocalDetailView({ item, supabase, profile, onNavigate }) {
             <div key={match.id} style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: `2px solid ${match.estado === 'favorito' ? THEME.colors.success : 'transparent'}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexWrap: 'wrap', gap: '16px' }}>
                 <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: '0 0 8px 0', color: THEME.colors.text, fontSize: '1.1rem' }}><span style={{ fontFamily: 'monospace', color: THEME.colors.primary, fontWeight: 700 }}>{match.iubs?.codigo_iub}</span>{' - '}{match.iubs?.nombre_completo || 'Usuario'}</h4>
+                  <h4 style={{ margin: '0 0 8px 0', color: THEME.colors.text, fontSize: '1.1rem' }}>
+                    <span style={{ fontFamily: 'monospace', color: THEME.colors.primary, fontWeight: 700 }}>{match.iubs?.codigo_iub}</span>
+                    {' - '}{match.iubs?.nombre_completo || 'Usuario'}
+                  </h4>
                   <div style={{ display: 'flex', gap: '16px', color: THEME.colors.textLight, fontSize: '0.9rem', flexWrap: 'wrap' }}>
-                    <span> {match.iubs?.ciudad} - {match.iubs?.zona}</span>
-                    <span>📐 {match.iubs?.area_min} m²</span>
-                    <span> ${match.iubs?.canon_arriendo?.toLocaleString()}/mes</span>
+                    <span>📍 {match.iubs?.ciudad} - {match.iubs?.zona}</span>
+                    <span> {match.iubs?.area_min} m²</span>
+                    <span>💰 ${match.iubs?.canon_arriendo?.toLocaleString()}/mes</span>
                   </div>
-                  {showContact === match.id ? (
-                    <div style={{ background: '#f8f9fa', padding: '16px', borderRadius: THEME.radius.sm, marginTop: '12px', border: `1px solid ${THEME.colors.primary}30` }}>
-                      <h5 style={{ margin: '0 0 8px 0', color: THEME.colors.primary }}>🔒 Contacto del Buscador</h5>
-                      <p style={{ margin: '4px 0', fontSize: '0.9rem' }}><strong>Nombre:</strong> {match.iubs?.nombre_completo}</p>
-                      <p style={{ margin: '4px 0', fontSize: '0.9rem' }}><strong>Email:</strong> {match.iubs?.email_contacto}</p>
-                      <p style={{ margin: '4px 0', fontSize: '0.9rem' }}><strong>Teléfono:</strong> {match.iubs?.celular}</p>
-                      <button onClick={() => setShowContact(null)} style={{ marginTop: '8px', padding: '6px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontSize: '0.85rem', cursor: 'pointer' }}>Ocultar</button>
-                    </div>
-                  ) : (
-                    <button onClick={() => setShowContact(match.id)} style={{ marginTop: '12px', padding: '8px 16px', background: THEME.colors.info, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>👁️ Ver contacto</button>
-                  )}
+                  <p style={{ margin: '12px 0 0 0', fontSize: '0.85rem', color: THEME.colors.textLight, fontStyle: 'italic' }}>
+                    🔒 Contacto protegido. Solicita una cita para conocer al interesado.
+                  </p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <Badge color={match.estado === 'favorito' ? 'success' : match.estado === 'descartado' ? 'gray' : 'warning'}>{match.estado || 'nuevo'}</Badge>
-                  {match.estado === 'favorito' && (<button onClick={() => { setSelectedIUB(match.iubs); setShowScheduleModal(true); }} style={{ padding: '10px 20px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>📅 Agendar</button>)}
+                  {match.estado === 'favorito' && (
+                    <button onClick={() => { setSelectedIUB(match.iubs); setShowRequestModal(true); }} style={{ padding: '10px 20px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>
+                      📅 Solicitar cita
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -913,20 +1003,25 @@ function LocalDetailView({ item, supabase, profile, onNavigate }) {
         </div>
       )}
 
-      {showScheduleModal && selectedIUB && (
+      {showRequestModal && selectedIUB && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, maxWidth: '500px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3 style={{ marginBottom: '16px', color: THEME.colors.text }}>📅 Agendar Reunión</h3>
-            <p style={{ color: THEME.colors.textLight, marginBottom: '24px', fontSize: '0.9rem' }}>Buscador: <strong>{selectedIUB.nombre_completo}</strong><br/>Código IUB: <strong>{selectedIUB.codigo_iub}</strong></p>
+          <div style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, maxWidth: '500px', width: '100%' }}>
+            <h3 style={{ marginBottom: '8px', color: THEME.colors.text }}>📅 Solicitar cita con el buscador</h3>
+            <p style={{ color: THEME.colors.textLight, marginBottom: '24px', fontSize: '0.9rem' }}>
+              Buscador: <strong>{selectedIUB.nombre_completo}</strong><br/>
+              <span style={{ color: THEME.colors.primary, fontSize: '0.85rem' }}> TerraMatch coordinará la cita</span>
+            </p>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>Fecha propuesta *</label>
-            <input type="date" value={scheduleForm.fecha} onChange={(e) => setScheduleForm({...scheduleForm, fecha: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '16px', boxSizing: 'border-box', fontSize: '1rem' }} />
+            <input type="date" value={requestForm.fecha} onChange={(e) => setRequestForm({...requestForm, fecha: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '16px', boxSizing: 'border-box', fontSize: '1rem' }} />
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>Hora propuesta *</label>
-            <input type="time" value={scheduleForm.hora} onChange={(e) => setScheduleForm({...scheduleForm, hora: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '16px', boxSizing: 'border-box', fontSize: '1rem' }} />
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>Notas adicionales</label>
-            <textarea value={scheduleForm.notas} onChange={(e) => setScheduleForm({...scheduleForm, notas: e.target.value})} rows="3" placeholder="Ej: Quiero mostrar el local en la mañana..." style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '24px', boxSizing: 'border-box', fontSize: '1rem', resize: 'vertical', fontFamily: 'Comfortaa' }} />
+            <input type="time" value={requestForm.hora} onChange={(e) => setRequestForm({...requestForm, hora: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '16px', boxSizing: 'border-box', fontSize: '1rem' }} />
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>Notas</label>
+            <textarea value={requestForm.notas} onChange={(e) => setRequestForm({...requestForm, notas: e.target.value})} rows="3" style={{ width: '100%', padding: '12px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, marginBottom: '24px', boxSizing: 'border-box', fontSize: '1rem', resize: 'vertical', fontFamily: 'Comfortaa' }} />
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setShowScheduleModal(false)} style={{ flex: 1, padding: '12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
-              <button onClick={handleSchedule} disabled={scheduling} style={{ flex: 2, padding: '12px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: scheduling ? 'not-allowed' : 'pointer', opacity: scheduling ? 0.7 : 1 }}>{scheduling ? 'Agendando...' : 'Confirmar Reunión'}</button>
+              <button onClick={() => setShowRequestModal(false)} style={{ flex: 1, padding: '12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={handleRequestMeeting} disabled={requesting} style={{ flex: 2, padding: '12px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: requesting ? 'not-allowed' : 'pointer', opacity: requesting ? 0.7 : 1 }}>
+                {requesting ? 'Enviando...' : 'Enviar solicitud'}
+              </button>
             </div>
           </div>
         </div>
