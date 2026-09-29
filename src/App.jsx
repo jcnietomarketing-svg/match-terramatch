@@ -145,7 +145,7 @@ export default function App() {
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 <li style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7 }}>✉️ contacto@terramatch.net</li>
                 <li style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7 }}>📱 +57 300 000 0000</li>
-                <li style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7 }}>📍 Bogotá, Colombia</li>
+                <li style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7 }}> Bogotá, Colombia</li>
               </ul>
             </div>
           </div>
@@ -163,15 +163,12 @@ export default function App() {
   );
 }
 
-// ==========================================
-// HOME VIEW
-// ==========================================
 function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
   const [tickerIndex, setTickerIndex] = useState(0);
   
   const tickerItems = [
     { icon: '🔥', text: '3 nuevos matches en Bogotá hace 5 min', type: 'terramatch' },
-    { icon: '🏪', text: 'Local en Chapinero arrendado en 48h', type: 'terramatch' },
+    { icon: '', text: 'Local en Chapinero arrendado en 48h', type: 'terramatch' },
     { icon: '🌤️', text: 'Bogotá: 18°C · Parcialmente nublado', type: 'clima' },
     { icon: '💱', text: 'TRM hoy: $4.125 COP/USD', type: 'trm' },
     { icon: '📈', text: '142 empresas buscando locales esta semana', type: 'terramatch' },
@@ -189,7 +186,7 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
 
   const currentTicker = tickerItems[tickerIndex];
   const categorias = [
-    { id: 'locales', icon: '🏪', titulo: 'Busco/Tengo Locales', desc: 'Locales comerciales para retail, restaurantes y servicios', color: THEME.colors.primary, disponible: true },
+    { id: 'locales', icon: '', titulo: 'Busco/Tengo Locales', desc: 'Locales comerciales para retail, restaurantes y servicios', color: THEME.colors.primary, disponible: true },
     { id: 'bodegas', icon: '🏭', titulo: 'Busco/Tengo Bodegas', desc: 'Bodegas industriales y centros de distribución', color: THEME.colors.warning, disponible: false },
     { id: 'oficinas', icon: '🏢', titulo: 'Busco/Tengo Oficinas', desc: 'Oficinas corporativas y centros de negocios', color: THEME.colors.info, disponible: false },
   ];
@@ -285,9 +282,6 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
   );
 }
 
-// ==========================================
-// VISTA PRÓXIMAMENTE (Para Bodegas y Oficinas)
-// ==========================================
 function ProximamenteView({ category, onNavigate, supabase, user }) {
   const [email, setEmail] = useState(user?.email || '');
   const [suscrito, setSuscrito] = useState(false);
@@ -301,7 +295,7 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
       descripcion: 'Bodegas industriales, centros de distribución y naves logísticas',
       campos: [
         { icon: '📏', texto: 'Área mínima y máxima en m²' },
-        { icon: '🏗️', texto: 'Altura libre (m) y capacidad de carga' },
+        { icon: '️', texto: 'Altura libre (m) y capacidad de carga' },
         { icon: '🚛', texto: 'Acceso para tractomulas y bahías de cargue' },
         { icon: '⚡', texto: 'Capacidad eléctrica (KVA) y servicios' },
         { icon: '🔥', texto: 'Certificaciones bomberos y riesgos' },
@@ -317,7 +311,7 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
       descripcion: 'Oficinas corporativas, centros de negocios y coworking',
       campos: [
         { icon: '👥', texto: 'Número de puestos de trabajo' },
-        { icon: '🪑', texto: 'Oficinas privadas vs abiertas' },
+        { icon: '', texto: 'Oficinas privadas vs abiertas' },
         { icon: '🏢', texto: 'Piso y vistas (exterior/interior)' },
         { icon: '🅿️', texto: 'Parqueaderos incluidos' },
         { icon: '🛗', texto: 'Número de ascensores y tiempos' },
@@ -334,7 +328,6 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
     if (!email) { alert('Por favor ingresa tu email'); return; }
     setLoading(true);
     try {
-      // Guardar en tabla de interesados (si existe)
       await supabase.from('interesados_proximamente').insert([{
         email: email,
         categoria: category,
@@ -342,7 +335,7 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
       }]).catch(() => console.log('Tabla no existe, pero se registró el interés'));
       setSuscrito(true);
     } catch (err) {
-      setSuscrito(true); // Igual mostramos el mensaje de éxito
+      setSuscrito(true);
     } finally {
       setLoading(false);
     }
@@ -350,7 +343,6 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
 
   return (
     <div style={{ padding: '60px 32px', maxWidth: '1000px', margin: '0 auto' }}>
-      {/* Header con ícono grande */}
       <div style={{ textAlign: 'center', marginBottom: '48px' }}>
         <div className="pulse-animation" style={{ width: '120px', height: '120px', background: `${info.color}15`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', margin: '0 auto 24px', border: `3px solid ${info.color}` }}>
           {info.icon}
@@ -364,7 +356,6 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
         </p>
       </div>
 
-      {/* Card principal */}
       <div style={{ background: THEME.colors.white, padding: '48px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, marginBottom: '32px' }}>
         <h2 style={{ color: THEME.colors.text, marginBottom: '24px', fontSize: '1.5rem' }}>
           🎯 ¿Qué podrás hacer cuando esté disponible?
@@ -387,7 +378,6 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
           </p>
         </div>
 
-        {/* Formulario de suscripción */}
         {!suscrito ? (
           <div style={{ background: '#f8f9fa', padding: '32px', borderRadius: THEME.radius.md, textAlign: 'center' }}>
             <h3 style={{ color: THEME.colors.text, marginTop: 0, marginBottom: '12px' }}>🔔 Sé el primero en saberlo</h3>
@@ -422,7 +412,6 @@ function ProximamenteView({ category, onNavigate, supabase, user }) {
         )}
       </div>
 
-      {/* Botones de acción */}
       <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
         <button 
           onClick={() => onNavigate('home')}
@@ -566,7 +555,7 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem, s
           {iubs.length === 0 ? <div style={{ padding: '60px', textAlign: 'center', color: THEME.colors.textLight }}><div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div><h3>Aún no tienes IUBs</h3><button onClick={() => onNavigate('iub-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Crear mi primer IUB</button></div> : (
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead><tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>IUB</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA (M²)</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TIPO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>MATCHES</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ESTADO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th></tr></thead>
-              <tbody>{iubs.map((iub) => (<tr key={iub.id} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem(iub); onNavigate('iub-detail'); }}><td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{iub.codigo_iub}</td><td style={{ padding: '16px' }}>{iub.area_min}-{iub.area_max} m²</td><td style={{ padding: '16px' }}>{iub.ciudad}</td><td style={{ padding: '16px' }}>{iub.tipo_negocio}</td><td style={{ padding: '16px' }}><Badge color="primary">{matchCounts.iubs[iub.id] || 0}</Badge></td><td style={{ padding: '16px' }}><Badge color={iub.estado === 'activo' ? 'success' : 'gray'}>{iub.estado}</Badge></td><td style={{ padding: '16px' }}><button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer' }}>Ver Matches →</button></td></tr>))}</tbody>
+              <tbody>{iubs.map((iub) => (<tr key={iub.id} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem(iub); onNavigate('iub-detail'); }}><td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{iub.codigo_iub}</td><td style={{ padding: '16px' }}>{iub.area_min} m²</td><td style={{ padding: '16px' }}>{iub.ciudad}</td><td style={{ padding: '16px' }}>{iub.tipo_negocio}</td><td style={{ padding: '16px' }}><Badge color="primary">{matchCounts.iubs[iub.id] || 0}</Badge></td><td style={{ padding: '16px' }}><Badge color={iub.estado === 'activo' ? 'success' : 'gray'}>{iub.estado}</Badge></td><td style={{ padding: '16px' }}><button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer' }}>Ver Matches →</button></td></tr>))}</tbody>
             </table>
           )}
         </div>
@@ -590,7 +579,7 @@ function IUBWizard({ user, profile, supabase, category, onNavigate }) {
   const [form, setForm] = useState({
     nombre: profile?.nombre || '', cedula: '', matricula: '', email: profile?.email || '', celular: profile?.celular || '',
     ciudad: 'Bogotá', zona: 'Norte', barrio: '',
-    tipo_negocio: 'Arriendo', uso_suelo: 'Comercial', area_total: '', area_construida: '',
+    tipo_negocio: 'Arriendo', uso_suelo: 'Comercial', area_total: '',
     caracteristicas: [],
     canon_arriendo: '', presupuesto_compra: '', horizonte: 'Corto (1-3 meses)', actividad: ''
   });
@@ -603,13 +592,14 @@ function IUBWizard({ user, profile, supabase, category, onNavigate }) {
     setLoading(true);
     try {
       const codigoIub = `IUB${Math.floor(Math.random() * 900000) + 100000}`;
+      const area = form.area_total ? parseFloat(form.area_total) : null;
       const { error } = await supabase.from('iubs').insert([{
         user_id: user.id, codigo_iub: codigoIub, segmentos: categoriaLabels[category] || 'Locales',
         nombre_completo: form.nombre, nit_cedula: form.cedula, matricula_inmobiliaria: form.matricula || null,
         email_contacto: form.email, celular: form.celular, ciudad: form.ciudad, zona: form.zona, barrio: form.barrio,
         tipo_negocio: form.tipo_negocio, uso_suelo: form.uso_suelo,
-        area_min: form.area_total ? parseFloat(form.area_total) : null,
-        area_max: form.area_construida ? parseFloat(form.area_construida) : null,
+        area_min: area,
+        area_max: area,
         canon_arriendo: form.canon_arriendo ? parseFloat(form.canon_arriendo) : null,
         presupuesto_compra: form.presupuesto_compra ? parseFloat(form.presupuesto_compra) : null,
         caracteristicas: JSON.stringify(form.caracteristicas), horizonte: form.horizonte,
@@ -623,6 +613,7 @@ function IUBWizard({ user, profile, supabase, category, onNavigate }) {
 
   const inputStyle = { width: '100%', padding: '14px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, boxSizing: 'border-box', fontSize: '1rem', fontFamily: 'Comfortaa', marginBottom: '16px' };
   const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem', color: THEME.colors.text };
+  const areaNum = parseFloat(form.area_total) || 0;
 
   return (
     <div style={{ padding: '40px 32px', maxWidth: '800px', margin: '0 auto' }}>
@@ -652,7 +643,7 @@ function IUBWizard({ user, profile, supabase, category, onNavigate }) {
 
         {step === 2 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>📍 2. Ubicación y Características</h3>
+            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>📍 2. Ubicación y Área</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={labelStyle}>Barrio / Zona preferida</label><input value={form.barrio} onChange={e => update('barrio', e.target.value)} style={inputStyle} /></div>
               <div><label style={labelStyle}>Zona</label><select value={form.zona} onChange={e => update('zona', e.target.value)} style={inputStyle}><option>Norte</option><option>Sur</option><option>Centro</option></select></div>
@@ -661,10 +652,11 @@ function IUBWizard({ user, profile, supabase, category, onNavigate }) {
               <div><label style={labelStyle}>Tipo de Negocio</label><select value={form.tipo_negocio} onChange={e => update('tipo_negocio', e.target.value)} style={inputStyle}><option>Arriendo</option><option>Venta</option><option>Leasing comercial</option></select></div>
               <div><label style={labelStyle}>Uso del Suelo</label><select value={form.uso_suelo} onChange={e => update('uso_suelo', e.target.value)} style={inputStyle}><option>Mixto</option><option>Comercial</option><option>Industrial</option><option>Residencial</option></select></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div><label style={labelStyle}>Área Total (m²)</label><input type="number" value={form.area_total} onChange={e => update('area_total', e.target.value)} style={inputStyle} /></div>
-              <div><label style={labelStyle}>Área Construida (m²)</label><input type="number" value={form.area_construida} onChange={e => update('area_construida', e.target.value)} style={inputStyle} /></div>
-            </div>
+            <label style={labelStyle}>Área aproximada (m²) *</label>
+            <input type="number" value={form.area_total} onChange={e => update('area_total', e.target.value)} style={inputStyle} placeholder="Ej: 100" />
+            <p style={{ fontSize: '0.85rem', color: THEME.colors.textLight, marginTop: '-8px', marginBottom: '16px' }}>
+              💡 Buscaremos inmuebles entre {Math.round(areaNum * 0.9)} y {Math.round(areaNum * 1.1)} m²
+            </p>
             <label style={labelStyle}>Características Especiales</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
               {['Esquinero', 'Vía Principal', 'Doble Altura', 'Mezzanine', 'Extracción', 'Cocina industrial'].map(c => (
@@ -950,7 +942,7 @@ function IUBDetailView({ item, supabase, onNavigate }) {
           <span style={{ fontFamily: 'monospace', fontSize: '1.2rem', color: THEME.colors.primary, fontWeight: 700 }}>{item.codigo_iub}</span>
         </div>
         <h2 style={{ margin: '0 0 16px 0', color: THEME.colors.text, fontSize: '1.5rem' }}>{item.cantidad_locales || 1} {item.segmentos || 'Locales'} en {item.ciudad} zona {item.zona}</h2>
-        <p style={{ margin: '0 0 16px 0', color: THEME.colors.text, fontSize: '1.1rem' }}>{item.area_min}-{item.area_max} m² · <strong>${(item.canon_arriendo || 0).toLocaleString()}/mes</strong></p>
+        <p style={{ margin: '0 0 16px 0', color: THEME.colors.text, fontSize: '1.1rem' }}>{item.area_min} m² · <strong>${(item.canon_arriendo || 0).toLocaleString()}/mes</strong></p>
         {item.caracteristicas && (
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {safeParseJSON(item.caracteristicas).map((c, i) => (<span key={i} style={{ padding: '6px 14px', background: `${THEME.colors.secondary}30`, color: THEME.colors.text, borderRadius: THEME.radius.full, fontSize: '0.85rem', fontWeight: 600 }}>{c}</span>))}
@@ -968,7 +960,7 @@ function IUBDetailView({ item, supabase, onNavigate }) {
               <div style={{ flex: 1, minWidth: '250px' }}>
                 <h4 style={{ margin: '0 0 8px 0', color: THEME.colors.text, fontSize: '1.1rem' }}>{match.propiedades?.titulo || 'Inmueble'}</h4>
                 <div style={{ display: 'flex', gap: '16px', color: THEME.colors.textLight, fontSize: '0.9rem', marginBottom: '12px', flexWrap: 'wrap' }}>
-                  <span>📍 {match.propiedades?.ciudad} - {match.propiedades?.zona}</span>
+                  <span> {match.propiedades?.ciudad} - {match.propiedades?.zona}</span>
                   <span>📐 {match.propiedades?.area_total} m²</span>
                   <span>💰 ${match.propiedades?.precio?.toLocaleString()}/mes</span>
                 </div>
@@ -1040,7 +1032,7 @@ function LocalDetailView({ item, supabase, profile, onNavigate }) {
                   <td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{match.iubs?.codigo_iub}</td>
                   <td style={{ padding: '16px', fontWeight: 600 }}>{match.iubs?.nombre_completo || 'Usuario'}</td>
                   <td style={{ padding: '16px' }}>{match.iubs?.ciudad}</td>
-                  <td style={{ padding: '16px' }}>{match.iubs?.area_min}-{match.iubs?.area_max} m²</td>
+                  <td style={{ padding: '16px' }}>{match.iubs?.area_min} m²</td>
                   <td style={{ padding: '16px' }}><Badge color={match.estado === 'favorito' ? 'success' : match.estado === 'descartado' ? 'gray' : 'warning'}>{match.estado || 'nuevo'}</Badge></td>
                 </tr>
               ))}
@@ -1098,7 +1090,7 @@ function AdminPanel({ supabase, onNavigate, setSelectedItem }) {
           {iubs.length === 0 ? <div style={{ padding: '60px', textAlign: 'center' }}>No hay IUBs registrados</div> : (
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead><tr style={{ background: '#f8f9fa', borderBottom: `2px solid #e2e8f0` }}><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>IUB</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>MATCHES</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TIPO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ESTADO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th></tr></thead>
-              <tbody>{iubs.map((iub) => (<tr key={iub.id} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem(iub); onNavigate('iub-detail'); }}><td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{iub.codigo_iub}</td><td style={{ padding: '16px' }}>{iub.area_min}-{iub.area_max} m²</td><td style={{ padding: '16px' }}><Badge color="primary">{matchCounts.iubs[iub.id] || 0}</Badge></td><td style={{ padding: '16px' }}>{iub.ciudad}</td><td style={{ padding: '16px' }}>{iub.tipo_negocio}</td><td style={{ padding: '16px' }}><Badge color={iub.estado === 'activo' ? 'success' : 'gray'}>{iub.estado}</Badge></td><td style={{ padding: '16px' }}><button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer' }}>Ver detalles →</button></td></tr>))}</tbody>
+              <tbody>{iubs.map((iub) => (<tr key={iub.id} style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => { setSelectedItem(iub); onNavigate('iub-detail'); }}><td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{iub.codigo_iub}</td><td style={{ padding: '16px' }}>{iub.area_min} m²</td><td style={{ padding: '16px' }}><Badge color="primary">{matchCounts.iubs[iub.id] || 0}</Badge></td><td style={{ padding: '16px' }}>{iub.ciudad}</td><td style={{ padding: '16px' }}>{iub.tipo_negocio}</td><td style={{ padding: '16px' }}><Badge color={iub.estado === 'activo' ? 'success' : 'gray'}>{iub.estado}</Badge></td><td style={{ padding: '16px' }}><button style={{ background: 'none', border: 'none', color: THEME.colors.primary, fontWeight: 700, cursor: 'pointer' }}>Ver detalles →</button></td></tr>))}</tbody>
             </table>
           )}
         </div>
@@ -1115,3 +1107,4 @@ function AdminPanel({ supabase, onNavigate, setSelectedItem }) {
     </div>
   );
 }
+// FIN DEL ARCHIVO - Si ves esto, el archivo está completo y sin cortes.
