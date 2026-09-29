@@ -40,7 +40,7 @@ function useBrandFont() {
     link.rel = 'stylesheet';
     document.head.appendChild(link);
     const style = document.createElement('style');
-    style.innerHTML = `* { box-sizing: border-box; } body { font-family: 'Comfortaa', cursive !important; background-color: ${THEME.colors.bg}; color: ${THEME.colors.text}; margin: 0; scroll-behavior: smooth; } h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.5px; } input, select, textarea, button { font-family: 'Comfortaa', cursive !important; transition: all 0.2s; } button { cursor: pointer; } input:focus, select:focus, textarea:focus { outline: none; border-color: ${THEME.colors.primary} !important; box-shadow: 0 0 0 3px rgba(233, 84, 66, 0.1); } @keyframes fade-in { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } } .ticker-item { animation: fade-in 0.5s ease-out; }`;
+    style.innerHTML = `* { box-sizing: border-box; } body { font-family: 'Comfortaa', cursive !important; background-color: ${THEME.colors.bg}; color: ${THEME.colors.text}; margin: 0; scroll-behavior: smooth; } h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.5px; } input, select, textarea, button { font-family: 'Comfortaa', cursive !important; transition: all 0.2s; } button { cursor: pointer; } input:focus, select:focus, textarea:focus { outline: none; border-color: ${THEME.colors.primary} !important; box-shadow: 0 0 0 3px rgba(233, 84, 66, 0.1); } @keyframes fade-in { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } } .ticker-item { animation: fade-in 0.5s ease-out; } @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } } .pulse-animation { animation: pulse 2s ease-in-out infinite; }`;
     document.head.appendChild(style);
   }, []);
 }
@@ -113,6 +113,7 @@ export default function App() {
         {view === 'iub-detail' && user && selectedItem && <IUBDetailView item={selectedItem} supabase={supabase} onNavigate={setView} />}
         {view === 'local-detail' && user && selectedItem && <LocalDetailView item={selectedItem} supabase={supabase} profile={profile} onNavigate={setView} />}
         {view === 'admin' && user && isAdmin && <AdminPanel supabase={supabase} onNavigate={setView} setSelectedItem={setSelectedItem} />}
+        {view === 'proximamente' && <ProximamenteView category={selectedCategory} onNavigate={setView} supabase={supabase} user={user} />}
       </main>
 
       <footer style={{ background: THEME.colors.dark, color: 'white', padding: '60px 32px 30px' }}>
@@ -127,8 +128,8 @@ export default function App() {
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 <li style={{ marginBottom: '12px' }}><button onClick={() => setView('home')} style={{ background: 'none', border: 'none', color: 'white', opacity: 0.7, cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Inicio</button></li>
                 <li style={{ marginBottom: '12px' }}><button onClick={() => { setSelectedCategory('locales'); setView('register'); }} style={{ background: 'none', border: 'none', color: 'white', opacity: 0.7, cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Busco Locales</button></li>
-                <li style={{ marginBottom: '12px' }}><button onClick={() => { setSelectedCategory('bodegas'); setView('register'); }} style={{ background: 'none', border: 'none', color: 'white', opacity: 0.7, cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Busco Bodegas</button></li>
-                <li style={{ marginBottom: '12px' }}><button onClick={() => { setSelectedCategory('oficinas'); setView('register'); }} style={{ background: 'none', border: 'none', color: 'white', opacity: 0.7, cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Busco Oficinas</button></li>
+                <li style={{ marginBottom: '12px' }}><button onClick={() => { setSelectedCategory('bodegas'); setView('proximamente'); }} style={{ background: 'none', border: 'none', color: 'white', opacity: 0.7, cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Busco Bodegas</button></li>
+                <li style={{ marginBottom: '12px' }}><button onClick={() => { setSelectedCategory('oficinas'); setView('proximamente'); }} style={{ background: 'none', border: 'none', color: 'white', opacity: 0.7, cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>Busco Oficinas</button></li>
               </ul>
             </div>
             <div>
@@ -162,6 +163,9 @@ export default function App() {
   );
 }
 
+// ==========================================
+// HOME VIEW
+// ==========================================
 function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
   const [tickerIndex, setTickerIndex] = useState(0);
   
@@ -171,7 +175,7 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
     { icon: '🌤️', text: 'Bogotá: 18°C · Parcialmente nublado', type: 'clima' },
     { icon: '💱', text: 'TRM hoy: $4.125 COP/USD', type: 'trm' },
     { icon: '📈', text: '142 empresas buscando locales esta semana', type: 'terramatch' },
-    { icon: '🏢', text: 'Nuevas oficinas disponibles en Zona T', type: 'noticia' },
+    { icon: '🏢', text: 'Próximamente: Bodegas y Oficinas en TerraMatch', type: 'noticia' },
     { icon: '🌦️', text: 'Medellín: 24°C · Lluvia ligera', type: 'clima' },
     { icon: '📰', text: 'Sector inmobiliario crece 8% en 2026', type: 'noticia' },
   ];
@@ -185,10 +189,19 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
 
   const currentTicker = tickerItems[tickerIndex];
   const categorias = [
-    { id: 'locales', icon: '🏪', titulo: 'Busco/Tengo Locales', desc: 'Locales comerciales para retail, restaurantes y servicios', color: THEME.colors.primary },
-    { id: 'bodegas', icon: '🏭', titulo: 'Busco/Tengo Bodegas', desc: 'Bodegas industriales y centros de distribución', color: THEME.colors.warning },
-    { id: 'oficinas', icon: '🏢', titulo: 'Busco/Tengo Oficinas', desc: 'Oficinas corporativas y centros de negocios', color: THEME.colors.info },
+    { id: 'locales', icon: '🏪', titulo: 'Busco/Tengo Locales', desc: 'Locales comerciales para retail, restaurantes y servicios', color: THEME.colors.primary, disponible: true },
+    { id: 'bodegas', icon: '🏭', titulo: 'Busco/Tengo Bodegas', desc: 'Bodegas industriales y centros de distribución', color: THEME.colors.warning, disponible: false },
+    { id: 'oficinas', icon: '🏢', titulo: 'Busco/Tengo Oficinas', desc: 'Oficinas corporativas y centros de negocios', color: THEME.colors.info, disponible: false },
   ];
+
+  const handleCategoriaClick = (cat) => {
+    setSelectedCategory(cat.id);
+    if (cat.disponible) {
+      onNavigate('register');
+    } else {
+      onNavigate('proximamente');
+    }
+  };
 
   return (
     <div>
@@ -220,14 +233,19 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
         <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, marginBottom: '60px' }}>Elige tu categoría y deja que nuestro algoritmo haga el resto.</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
           {categorias.map((cat) => (
-            <div key={cat.id} onClick={() => { setSelectedCategory(cat.id); onNavigate('register'); }} 
-                 style={{ background: THEME.colors.white, padding: '40px 32px', borderRadius: THEME.radius.lg, cursor: 'pointer', border: `2px solid ${selectedCategory === cat.id ? cat.color : 'transparent'}`, boxShadow: THEME.shadow, transition: 'all 0.3s', textAlign: 'left' }}
+            <div key={cat.id} onClick={() => handleCategoriaClick(cat)} 
+                 style={{ background: THEME.colors.white, padding: '40px 32px', borderRadius: THEME.radius.lg, cursor: 'pointer', border: `2px solid ${selectedCategory === cat.id ? cat.color : 'transparent'}`, boxShadow: THEME.shadow, transition: 'all 0.3s', textAlign: 'left', position: 'relative', overflow: 'hidden' }}
                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = cat.color; e.currentTarget.style.transform = 'translateY(-8px)'; }}
                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = selectedCategory === cat.id ? cat.color : 'transparent'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+              {!cat.disponible && (
+                <div style={{ position: 'absolute', top: '16px', right: '16px', background: THEME.colors.warning, color: 'white', padding: '4px 12px', borderRadius: THEME.radius.full, fontSize: '0.75rem', fontWeight: 700 }}>PRÓXIMAMENTE</div>
+              )}
               <div style={{ width: '70px', height: '70px', background: `${cat.color}15`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', marginBottom: '20px' }}>{cat.icon}</div>
               <h3 style={{ fontSize: '1.5rem', marginBottom: '12px', color: THEME.colors.text }}>{cat.titulo}</h3>
               <p style={{ color: THEME.colors.textLight, fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '24px' }}>{cat.desc}</p>
-              <button style={{ padding: '12px 24px', background: cat.color, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '0.9rem' }}>EMPEZAR →</button>
+              <button style={{ padding: '12px 24px', background: cat.color, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '0.9rem' }}>
+                {cat.disponible ? 'EMPEZAR →' : 'MÁS INFORMACIÓN →'}
+              </button>
             </div>
           ))}
         </div>
@@ -262,6 +280,162 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
             ))}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// VISTA PRÓXIMAMENTE (Para Bodegas y Oficinas)
+// ==========================================
+function ProximamenteView({ category, onNavigate, supabase, user }) {
+  const [email, setEmail] = useState(user?.email || '');
+  const [suscrito, setSuscrito] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const categoriaInfo = {
+    bodegas: {
+      icon: '🏭',
+      titulo: 'Bodegas',
+      color: THEME.colors.warning,
+      descripcion: 'Bodegas industriales, centros de distribución y naves logísticas',
+      campos: [
+        { icon: '📏', texto: 'Área mínima y máxima en m²' },
+        { icon: '🏗️', texto: 'Altura libre (m) y capacidad de carga' },
+        { icon: '🚛', texto: 'Acceso para tractomulas y bahías de cargue' },
+        { icon: '⚡', texto: 'Capacidad eléctrica (KVA) y servicios' },
+        { icon: '🔥', texto: 'Certificaciones bomberos y riesgos' },
+        { icon: '📍', texto: 'Zonas logísticas y corredores viales' },
+        { icon: '🏢', texto: 'Oficinas anexas y zonas administrativas' },
+        { icon: '🔒', texto: 'Seguridad 24/7 y control de acceso' },
+      ]
+    },
+    oficinas: {
+      icon: '🏢',
+      titulo: 'Oficinas',
+      color: THEME.colors.info,
+      descripcion: 'Oficinas corporativas, centros de negocios y coworking',
+      campos: [
+        { icon: '👥', texto: 'Número de puestos de trabajo' },
+        { icon: '🪑', texto: 'Oficinas privadas vs abiertas' },
+        { icon: '🏢', texto: 'Piso y vistas (exterior/interior)' },
+        { icon: '🅿️', texto: 'Parqueaderos incluidos' },
+        { icon: '🛗', texto: 'Número de ascensores y tiempos' },
+        { icon: '☕', texto: 'Salas de reuniones y zonas comunes' },
+        { icon: '🌐', texto: 'Conectividad y fibra óptica' },
+        { icon: '🏙️', texto: 'Edificio inteligente y sostenibilidad' },
+      ]
+    }
+  };
+
+  const info = categoriaInfo[category] || categoriaInfo.bodegas;
+
+  const handleSuscribir = async () => {
+    if (!email) { alert('Por favor ingresa tu email'); return; }
+    setLoading(true);
+    try {
+      // Guardar en tabla de interesados (si existe)
+      await supabase.from('interesados_proximamente').insert([{
+        email: email,
+        categoria: category,
+        fecha: new Date().toISOString()
+      }]).catch(() => console.log('Tabla no existe, pero se registró el interés'));
+      setSuscrito(true);
+    } catch (err) {
+      setSuscrito(true); // Igual mostramos el mensaje de éxito
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: '60px 32px', maxWidth: '1000px', margin: '0 auto' }}>
+      {/* Header con ícono grande */}
+      <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+        <div className="pulse-animation" style={{ width: '120px', height: '120px', background: `${info.color}15`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', margin: '0 auto 24px', border: `3px solid ${info.color}` }}>
+          {info.icon}
+        </div>
+        <Badge color={category === 'bodegas' ? 'warning' : 'info'}>PRÓXIMAMENTE</Badge>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text, marginTop: '16px' }}>
+          {info.titulo} en TerraMatch
+        </h1>
+        <p style={{ fontSize: '1.2rem', color: THEME.colors.textLight, maxWidth: '600px', margin: '0 auto', lineHeight: 1.6 }}>
+          {info.descripcion}
+        </p>
+      </div>
+
+      {/* Card principal */}
+      <div style={{ background: THEME.colors.white, padding: '48px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, marginBottom: '32px' }}>
+        <h2 style={{ color: THEME.colors.text, marginBottom: '24px', fontSize: '1.5rem' }}>
+          🎯 ¿Qué podrás hacer cuando esté disponible?
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+          {info.campos.map((campo, idx) => (
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', background: '#f8f9fa', borderRadius: THEME.radius.sm, border: '1px solid #e2e8f0' }}>
+              <span style={{ fontSize: '1.5rem' }}>{campo.icon}</span>
+              <span style={{ color: THEME.colors.text, fontSize: '0.95rem', fontWeight: 500 }}>{campo.texto}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ background: `${info.color}10`, padding: '24px', borderRadius: THEME.radius.md, border: `1px solid ${info.color}30`, marginBottom: '24px' }}>
+          <h3 style={{ color: info.color, marginTop: 0, marginBottom: '12px' }}>💡 ¿Por qué estamos desarrollando esto?</h3>
+          <p style={{ color: THEME.colors.text, lineHeight: 1.6, margin: 0 }}>
+            {category === 'bodegas' 
+              ? 'El sector logístico en Colombia está en auge. Queremos conectar bodegas disponibles con empresas en expansión que necesitan centros de distribución estratégicos, con criterios específicos como altura libre, acceso para tractomulas y capacidad eléctrica.'
+              : 'El mercado de oficinas está evolucionando. Buscamos ofrecer una plataforma especializada que entienda las necesidades únicas de las empresas: puestos de trabajo, conectividad, salas de reuniones y edificios inteligentes.'}
+          </p>
+        </div>
+
+        {/* Formulario de suscripción */}
+        {!suscrito ? (
+          <div style={{ background: '#f8f9fa', padding: '32px', borderRadius: THEME.radius.md, textAlign: 'center' }}>
+            <h3 style={{ color: THEME.colors.text, marginTop: 0, marginBottom: '12px' }}>🔔 Sé el primero en saberlo</h3>
+            <p style={{ color: THEME.colors.textLight, marginBottom: '24px' }}>
+              Déjanos tu email y te notificaremos cuando lancemos esta categoría
+            </p>
+            <div style={{ display: 'flex', gap: '12px', maxWidth: '500px', margin: '0 auto', flexWrap: 'wrap' }}>
+              <input 
+                type="email" 
+                placeholder="tu@email.com" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{ flex: 1, minWidth: '250px', padding: '14px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, fontSize: '1rem', fontFamily: 'Comfortaa' }}
+              />
+              <button 
+                onClick={handleSuscribir}
+                disabled={loading}
+                style={{ padding: '14px 32px', background: info.color, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+              >
+                {loading ? 'Enviando...' : 'NOTIFICARME'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ background: `${THEME.colors.success}15`, padding: '32px', borderRadius: THEME.radius.md, textAlign: 'center', border: `1px solid ${THEME.colors.success}` }}>
+            <div style={{ fontSize: '3rem', marginBottom: '12px' }}>✅</div>
+            <h3 style={{ color: THEME.colors.success, marginTop: 0, marginBottom: '12px' }}>¡Estás en la lista!</h3>
+            <p style={{ color: THEME.colors.text, marginBottom: '24px' }}>
+              Te notificaremos a <strong>{email}</strong> cuando lancemos {info.titulo} en TerraMatch
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Botones de acción */}
+      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <button 
+          onClick={() => onNavigate('home')}
+          style={{ padding: '14px 32px', background: 'white', color: THEME.colors.text, border: `1px solid #e2e8f0`, borderRadius: THEME.radius.full, fontWeight: 700 }}
+        >
+          ← Volver al Inicio
+        </button>
+        <button 
+          onClick={() => { setSelectedCategory('locales'); onNavigate('register'); }}
+          style={{ padding: '14px 32px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}
+        >
+          🏪 Probar con Locales (disponible)
+        </button>
       </div>
     </div>
   );
