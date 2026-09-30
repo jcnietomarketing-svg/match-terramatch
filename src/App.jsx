@@ -278,20 +278,49 @@ function RegisterView({ supabase, category, onSuccess, onNavigate }) {
 }
 
 function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
-  const [tickerIndex, setTickerIndex] = useState(0);
-  const tickerItems = [
-    { icon: '🔥', text: '3 nuevos matches en Bogotá hace 5 min', type: 'terramatch' },
-    { icon: '🏪', text: 'Local en Chapinero arrendado en 48h', type: 'terramatch' },
-    { icon: '🌤️', text: 'Bogotá: 18°C · Parcialmente nublado', type: 'clima' },
-    { icon: '💱', text: 'TRM hoy: $4.125 COP/USD', type: 'trm' },
-    { icon: '📈', text: '142 empresas buscando locales esta semana', type: 'terramatch' },
-    { icon: '🏢', text: 'Próximamente: Bodegas y Oficinas', type: 'noticia' },
-  ];
+  const [trm, setTrm] = useState('$3.341 COP/USD');
+  const [climaBogota, setClimaBogota] = useState('18°C');
+  const [climaMedellin, setClimaMedellin] = useState('24°C');
+
+  // Obtener TRM real desde API gratuita
   useEffect(() => {
-    const interval = setInterval(() => { setTickerIndex((prev) => (prev + 1) % tickerItems.length); }, 4000);
+    const fetchTRM = async () => {
+      try {
+        const response = await fetch('https://open.er-api.com/v6/latest/USD');
+        const data = await response.json();
+        if (data && data.rates && data.rates.COP) {
+          const trmValor = Math.round(data.rates.COP);
+          setTrm(`$${trmValor.toLocaleString()} COP/USD`);
+        }
+      } catch (error) {
+        console.error('Error cargando TRM:', error);
+        setTrm('$3.341 COP/USD');
+      }
+    };
+    fetchTRM();
+    const interval = setInterval(fetchTRM, 30 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
-  const currentTicker = tickerItems[tickerIndex];
+
+  // Obtener clima real desde Open-Meteo (API gratuita sin key)
+  useEffect(() => {
+    const fetchClima = async () => {
+      try {
+        const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=4.7110,6.2442&longitude=-74.0721,-75.5906&current_weather=true');
+        const data = await response.json();
+        if (data && data.length === 2) {
+          setClimaBogota(`${Math.round(data[0].current_weather.temperature)}°C`);
+          setClimaMedellin(`${Math.round(data[1].current_weather.temperature)}°C`);
+        }
+      } catch (error) {
+        console.error('Error cargando clima:', error);
+      }
+    };
+    fetchClima();
+    const interval = setInterval(fetchClima, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const categorias = [
     { id: 'locales', icon: '🏪', titulo: 'Busco/Tengo Locales', desc: 'Locales comerciales para retail, restaurantes y servicios', color: THEME.colors.primary, disponible: true },
     { id: 'bodegas', icon: '🏭', titulo: 'Busco/Tengo Bodegas', desc: 'Bodegas industriales y centros de distribución', color: THEME.colors.warning, disponible: false },
@@ -301,16 +330,87 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
 
   return (
     <div>
-      <div style={{ background: THEME.colors.dark, color: 'white', padding: '10px 0', overflow: 'hidden', fontSize: '0.85rem', minHeight: '38px', display: 'flex', alignItems: 'center' }}>
-        <div key={tickerIndex} className="ticker-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '32px', width: '100%' }}>
-          <span style={{ fontSize: '1rem' }}>{currentTicker.icon}</span>
-          <span style={{ fontWeight: 600, color: currentTicker.type === 'terramatch' ? THEME.colors.success : THEME.colors.secondary }}>
-            {currentTicker.type === 'clima' ? 'CLIMA · ' : currentTicker.type === 'trm' ? 'TRM · ' : currentTicker.type === 'noticia' ? 'NOTICIA · ' : 'TERRAMATCH · '}
-          </span>
-          <span>{currentTicker.text}</span>
+      {/* 🎬 TICKER MARQUESINA INFINITA */}
+      <style>{`
+        @keyframes ticker-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .ticker-container {
+          overflow: hidden;
+          white-space: nowrap;
+          position: relative;
+        }
+        .ticker-content {
+          display: inline-flex;
+          animation: ticker-scroll 60s linear infinite;
+        }
+        .ticker-content:hover {
+          animation-play-state: paused;
+        }
+        .ticker-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 0 32px;
+          font-size: 0.85rem;
+        }
+      `}</style>
+      
+      <div style={{ background: THEME.colors.dark, color: 'white', padding: '10px 0', minHeight: '38px', display: 'flex', alignItems: 'center' }}>
+        <div className="ticker-container" style={{ width: '100%' }}>
+          <div className="ticker-content">
+            {[...Array(2)].map((_, dupIndex) => (
+              <div key={dupIndex} style={{ display: 'inline-flex' }}>
+                <div className="ticker-item">
+                  <span>🔥</span>
+                  <span style={{ fontWeight: 600, color: THEME.colors.success }}>TERRAMATCH ·</span>
+                  <span>3 nuevos matches en Bogotá hace 5 min</span>
+                </div>
+                <div className="ticker-item">
+                  <span></span>
+                  <span style={{ fontWeight: 600, color: THEME.colors.success }}>TERRAMATCH ·</span>
+                  <span>Local en Chapinero arrendado en 48h</span>
+                </div>
+                <div className="ticker-item">
+                  <span>🌤️</span>
+                  <span style={{ fontWeight: 600, color: THEME.colors.secondary }}>CLIMA ·</span>
+                  <span>Bogotá: {climaBogota} · Parcialmente nublado</span>
+                </div>
+                <div className="ticker-item">
+                  <span>💱</span>
+                  <span style={{ fontWeight: 600, color: THEME.colors.secondary }}>TRM HOY ·</span>
+                  <span>{trm}</span>
+                </div>
+                <div className="ticker-item">
+                  <span>📈</span>
+                  <span style={{ fontWeight: 600, color: THEME.colors.success }}>TERRAMATCH ·</span>
+                  <span>142 empresas buscando locales esta semana</span>
+                </div>
+                <div className="ticker-item">
+                  <span>🏢</span>
+                  <span style={{ fontWeight: 600, color: THEME.colors.warning }}>PRÓXIMAMENTE ·</span>
+                  <span>Bodegas y Oficinas en TerraMatch</span>
+                </div>
+                <div className="ticker-item">
+                  <span>️</span>
+                  <span style={{ fontWeight: 600, color: THEME.colors.secondary }}>CLIMA ·</span>
+                  <span>Medellín: {climaMedellin} · Lluvia ligera</span>
+                </div>
+                <div className="ticker-item">
+                  <span>📰</span>
+                  <span style={{ fontWeight: 600, color: THEME.colors.warning }}>NOTICIA ·</span>
+                  <span>Sector inmobiliario crece 8% en 2026</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
+
+      {/* HERO SECTION */}
       <div style={{ position: 'relative', minHeight: '80vh', display: 'flex', alignItems: 'center', background: `linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80') center/cover`, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '10%', right: '10%', width: '300px', height: '300px', border: `2px solid ${THEME.colors.secondary}`, borderRadius: '50%', opacity: 0.4 }}></div>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 32px', textAlign: 'center', position: 'relative', zIndex: 1, width: '100%' }}>
           <div style={{ display: 'inline-block', background: `${THEME.colors.primary}15`, color: THEME.colors.primary, padding: '8px 20px', borderRadius: THEME.radius.full, fontSize: '0.9rem', fontWeight: 700, marginBottom: '24px' }}>La mayor comunidad de búsqueda inteligente</div>
           <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '24px', lineHeight: 1.1, margin: '0 0 24px 0', color: THEME.colors.text }}>Hagamos Match entre tu<br/><span style={{ color: THEME.colors.primary }}>Inmueble y el Negocio Perfecto</span></h1>
@@ -318,6 +418,8 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
           <button onClick={() => onNavigate('register')} style={{ padding: '16px 40px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '1.1rem', boxShadow: '0 10px 30px rgba(233,84,66,0.3)' }}>Regístrate gratis y empieza →</button>
         </div>
       </div>
+
+      {/* CATEGORÍAS */}
       <div style={{ padding: '80px 32px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
         <h2 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text }}>¿Qué tipo de inmueble necesitas?</h2>
         <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, marginBottom: '60px' }}>Elige tu categoría y deja que nuestro algoritmo haga el resto.</p>
@@ -333,6 +435,34 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
               <button style={{ padding: '12px 24px', background: cat.color, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700, fontSize: '0.9rem' }}>{cat.disponible ? 'EMPEZAR →' : 'MÁS INFORMACIÓN →'}</button>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* CÓMO FUNCIONA */}
+      <div style={{ padding: '80px 32px', background: THEME.colors.white }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+            <h2 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text }}>¿Cómo funciona la <span style={{ color: THEME.colors.primary }}>TerraMagia</span>?</h2>
+            <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, maxWidth: '600px', margin: '0 auto' }}>Nuestro motor de matching trabaja 24/7 para cruzar oferta y demanda.</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+            {[
+              { icon: '📝', title: '1. Crea tu IUB', desc: 'Define tu búsqueda ideal (ubicación, área, presupuesto) y genera tu Indicador Único de Búsqueda.', img: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80' },
+              { icon: '', title: '2. El Algoritmo Busca', desc: 'Nuestro motor cruza tu IUB con miles de inmuebles en tiempo real, filtrando duplicados y ruido.', img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80' },
+              { icon: '🤝', title: '3. Match y Cierre', desc: 'Recibe notificaciones de matches compatibles. Acepta, agenda visita y cierra el negocio.', img: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=600&q=80' }
+            ].map((step, i) => (
+              <div key={i} style={{ background: THEME.colors.bg, borderRadius: THEME.radius.lg, overflow: 'hidden', boxShadow: THEME.shadow, transition: 'transform 0.3s' }}
+                   onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-10px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+                <div style={{ height: '200px', background: `url(${step.img}) center/cover`, position: 'relative' }}>
+                  <div style={{ position: 'absolute', top: '20px', left: '20px', width: '60px', height: '60px', background: THEME.colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}>{step.icon}</div>
+                </div>
+                <div style={{ padding: '32px' }}>
+                  <h3 style={{ marginTop: 0, marginBottom: '12px', fontSize: '1.3rem', color: THEME.colors.text }}>{step.title}</h3>
+                  <p style={{ color: THEME.colors.textLight, lineHeight: 1.6, margin: 0 }}>{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -462,7 +592,7 @@ function IUBWizard({ user, profile, supabase, category, onNavigate }) {
         <h2 style={{ textAlign: 'center', marginBottom: '32px' }}>Indicador Único de Búsqueda</h2>
         {step === 1 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>👤 1. Identificación</h3>
+            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}> 1. Identificación</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={labelStyle}>Nombre / Empresa *</label><input value={form.nombre} onChange={e => update('nombre', e.target.value)} style={inputStyle} /></div>
               <div><label style={labelStyle}>Identificación (C.C. / NIT) *</label><input value={form.cedula} onChange={e => update('cedula', e.target.value)} style={inputStyle} /></div>
@@ -595,7 +725,7 @@ function IUBDetailView({ item, supabase, profile, onNavigate }) {
           {matches.map(match => (
             <div key={match.id} style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
               <h4 style={{ margin: '0 0 8px 0', color: THEME.colors.text }}>{match.propiedades?.titulo}</h4>
-              <p style={{ color: THEME.colors.textLight, fontSize: '0.9rem' }}>📍 {match.propiedades?.ciudad} · 📐 {match.propiedades?.area_total} m² · 💰 ${match.propiedades?.precio?.toLocaleString()}</p>
+              <p style={{ color: THEME.colors.textLight, fontSize: '0.9rem' }}> {match.propiedades?.ciudad} ·  {match.propiedades?.area_total} m² · 💰 ${match.propiedades?.precio?.toLocaleString()}</p>
             </div>
           ))}
         </div>
@@ -627,7 +757,7 @@ function LocalDetailView({ item, supabase, profile, onNavigate }) {
             <div key={match.id} style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
               <h4 style={{ margin: '0 0 8px 0', color: THEME.colors.text }}>{match.iubs?.codigo_iub} - {match.iubs?.nombre_completo}</h4>
               <p style={{ color: THEME.colors.textLight, fontSize: '0.9rem' }}>📍 {match.iubs?.ciudad} · 📐 {match.iubs?.area_min} m²</p>
-              <p style={{ marginTop: '12px', fontSize: '0.85rem', color: THEME.colors.textLight, fontStyle: 'italic' }}>🔒 Contacto protegido. Solicita una cita para conocer al interesado.</p>
+              <p style={{ marginTop: '12px', fontSize: '0.85rem', color: THEME.colors.textLight, fontStyle: 'italic' }}> Contacto protegido. Solicita una cita para conocer al interesado.</p>
             </div>
           ))}
         </div>
@@ -660,7 +790,7 @@ function AdminPanel({ supabase, onNavigate }) {
   return (
     <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ background: THEME.colors.dark, color: 'white', padding: '32px', borderRadius: THEME.radius.lg, marginBottom: '32px' }}>
-        <h2 style={{ margin: '0 0 8px 0' }}>🛡️ Torre de Control (Admin)</h2>
+        <h2 style={{ margin: '0 0 8px 0' }}>️ Torre de Control (Admin)</h2>
         <p style={{ margin: 0, opacity: 0.8 }}>Gestión global de Usuarios, IUBs y Locales</p>
       </div>
 
