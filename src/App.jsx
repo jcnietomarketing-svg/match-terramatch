@@ -70,38 +70,69 @@ export default function App() {
   const isAdmin = profile?.email === 'jcnieto.marketing@gmail.com';
 
   useEffect(() => { checkSession(); }, []);
-  useEffect(() => { if (user) loadNotifications(); }, [user]);
+  useEffect(() => { if (user) loadProfile(user.email); }, [user]);
+
+  async function checkSession() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) { 
+        setUser(session.user); 
+        await loadProfile(session.user.email); 
+        setView('dashboard'); 
+      } else { 
+        setView('home'); 
+      }
+    } catch (error) { 
+      console.error('Error en checkSession:', error);
+      setView('home'); 
+    } finally { 
+      setLoading(false); 
+    }
+  }
 
   async function loadProfile(userEmail) {
-  try { 
-    const { data, error } = await supabase.from('profiles').select('*').eq('email', userEmail).single();
-    
-    if (data) {
-      setProfile(data);
-    } else {
-      // Si no existe el perfil, crearlo automáticamente
-      const { data: newUser } = await supabase.auth.getUser();
-      if (newUser?.user) {
-        const { data: newProfile } = await supabase.from('profiles').insert([{
-          id: newUser.user.id,
-          nombre: 'Nuevo',
-          apellido: 'Usuario',
-          email: userEmail,
-          celular: '',
-          categoria_preferida: 'locales',
-          acepto_terminos: false,
-          creado_en: new Date().toISOString()
-        }]).select().single();
-        
-        setProfile(newProfile || { nombre: 'Usuario', email: userEmail });
+    if (!userEmail) return;
+    try { 
+      const { data, error } = await supabase.from('profiles').select('*').eq('email', userEmail).single();
+      
+      if (data) {
+        setProfile(data);
+      } else {
+        // Perfil no existe, crear uno básico
+        const { data: authUser } = await supabase.auth.getUser();
+        if (authUser?.user) {
+          const { data: newProfile, error: insertError } = await supabase.from('profiles').insert([{
+            id: authUser.user.id,
+            nombre: authUser.user.user_metadata?.nombre || 'Usuario',
+            apellido: authUser.user.user_metadata?.apellido || '',
+            email: userEmail,
+            celular: authUser.user.user_metadata?.celular || '',
+            categoria_preferida: 'locales',
+            acepto_terminos: false,
+            creado_en: new Date().toISOString()
+          }]).select().single();
+          
+          if (insertError) {
+            console.error('Error creando perfil:', insertError);
+          }
+          
+          setProfile(newProfile || { nombre: 'Usuario', email: userEmail });
+        }
       }
+    } catch (error) { 
+      console.error('Error en loadProfile:', error);
+      setProfile({ nombre: 'Usuario', email: userEmail }); 
     }
-  } 
-  catch (error) { 
-    console.error('Error cargando perfil:', error);
-    setProfile({ nombre: 'Usuario', email: userEmail }); 
   }
-}
+
+  async function loadNotifications() {
+    if (!user) return;
+    try {
+      const { data } = await supabase.from('notificaciones').select('*').eq('user_id', user.id).order('creado_en', { ascending: false }).limit(20);
+      setNotifications(data || []);
+      setUnreadCount((data || []).filter(n => !n.leida).length);
+    } catch (error) { console.error('Error cargando notificaciones:', error); }
+  }
 
   async function markAsRead(id) {
     try {
@@ -110,7 +141,14 @@ export default function App() {
     } catch (error) { console.error('Error:', error); }
   }
 
-  async function handleLogout() { await supabase.auth.signOut(); setUser(null); setProfile(null); setView('home'); setNotifications([]); setUnreadCount(0); }
+  async function handleLogout() { 
+    await supabase.auth.signOut(); 
+    setUser(null); 
+    setProfile(null); 
+    setView('home'); 
+    setNotifications([]); 
+    setUnreadCount(0); 
+  }
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Logo size={120} /></div>;
 
@@ -122,7 +160,7 @@ export default function App() {
           <button onClick={() => setView('home')} style={{ background: 'none', border: 'none', fontWeight: 600, color: THEME.colors.text, padding: '8px 16px' }}>Inicio</button>
           {user ? (
             <>
-              <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Hola, <span style={{ color: THEME.colors.primary }}>{profile?.nombre}</span></span>
+              <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Hola, <span style={{ color: THEME.colors.primary }}>{profile?.nombre || 'Usuario'}</span></span>
               <div style={{ position: 'relative' }}>
                 <button onClick={() => setShowNotifs(!showNotifs)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', padding: '8px', position: 'relative', cursor: 'pointer' }}>
                   🔔
@@ -166,8 +204,8 @@ export default function App() {
 
       <main style={{ flex: 1 }}>
         {view === 'home' && <HomeView onNavigate={setView} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />}
-        {view === 'register' && <RegisterView supabase={supabase} category={selectedCategory} onSuccess={(u) => { setUser(u); loadProfile(u.email); setView('dashboard'); }} onNavigate={setView} />}
-        {view === 'login' && <LoginView supabase={supabase} onSuccess={(u) => { setUser(u); loadProfile(u.email); setView('dashboard'); }} onNavigate={setView} />}
+        {view === 'register' && <RegisterView supabase={supabase} category={selectedCategory} onSuccess={(u) => { setUser(u); setView('dashboard'); }} onNavigate={setView} />}
+        {view === 'login' && <LoginView supabase={supabase} onSuccess={(u) => { setUser(u); setView('dashboard'); }} onNavigate={setView} />}
         {view === 'dashboard' && user && <DashboardView user={user} profile={profile} supabase={supabase} onNavigate={setView} setSelectedItem={setSelectedItem} setSelectedCategory={setSelectedCategory} />}
         {view === 'iub-wizard' && user && <IUBWizard user={user} profile={profile} supabase={supabase} category={selectedCategory} onNavigate={setView} />}
         {view === 'oferta-wizard' && user && <OfertaWizard user={user} profile={profile} supabase={supabase} category={selectedCategory} onNavigate={setView} />}
@@ -237,11 +275,28 @@ function RegisterView({ supabase, category, onSuccess, onNavigate }) {
     
     setLoading(true); setError('');
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({ email: form.email, password: form.password });
+      const { data: authData, error: authError } = await supabase.auth.signUp({ 
+        email: form.email, 
+        password: form.password,
+        options: {
+          data: {
+            nombre: form.nombre,
+            apellido: form.apellido,
+            celular: form.celular
+          }
+        }
+      });
       if (authError) throw authError;
       
       await supabase.from('profiles').insert([{ 
-        id: authData.user.id, nombre: form.nombre, apellido: form.apellido, email: form.email, celular: form.celular, categoria_preferida: category, acepto_terminos: true 
+        id: authData.user.id, 
+        nombre: form.nombre, 
+        apellido: form.apellido, 
+        email: form.email, 
+        celular: form.celular, 
+        categoria_preferida: category, 
+        acepto_terminos: true,
+        creado_en: new Date().toISOString()
       }]);
 
       const templateParams = { to_name: form.nombre, to_email: form.email };
@@ -249,7 +304,11 @@ function RegisterView({ supabase, category, onSuccess, onNavigate }) {
       catch (emailError) { console.error('Error email:', emailError); }
 
       onSuccess(authData.user);
-    } catch (err) { setError(err.message || 'Error al crear cuenta.'); } finally { setLoading(false); }
+    } catch (err) { 
+      setError(err.message || 'Error al crear cuenta.'); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const inputStyle = { width: '100%', padding: '14px', marginBottom: '16px', border: '1px solid #e2e8f0', borderRadius: THEME.radius.sm, boxSizing: 'border-box', fontSize: '1rem' };
@@ -291,7 +350,6 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
   const [climaBogota, setClimaBogota] = useState('18°C');
   const [climaMedellin, setClimaMedellin] = useState('24°C');
 
-  // Obtener TRM real desde API gratuita
   useEffect(() => {
     const fetchTRM = async () => {
       try {
@@ -311,7 +369,6 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Obtener clima real desde Open-Meteo (API gratuita sin key)
   useEffect(() => {
     const fetchClima = async () => {
       try {
@@ -339,7 +396,6 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
 
   return (
     <div>
-      {/* 🎬 TICKER MARQUESINA INFINITA */}
       <style>{`
         @keyframes ticker-scroll {
           0% { transform: translateX(0); }
@@ -382,7 +438,7 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
                   <span>Local en Chapinero arrendado en 48h</span>
                 </div>
                 <div className="ticker-item">
-                  <span>🌤️</span>
+                  <span>️</span>
                   <span style={{ fontWeight: 600, color: THEME.colors.secondary }}>CLIMA ·</span>
                   <span>Bogotá: {climaBogota} · Parcialmente nublado</span>
                 </div>
@@ -402,7 +458,7 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
                   <span>Bodegas y Oficinas en TerraMatch</span>
                 </div>
                 <div className="ticker-item">
-                  <span>️</span>
+                  <span>🌦️</span>
                   <span style={{ fontWeight: 600, color: THEME.colors.secondary }}>CLIMA ·</span>
                   <span>Medellín: {climaMedellin} · Lluvia ligera</span>
                 </div>
@@ -417,7 +473,6 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
         </div>
       </div>
 
-      {/* HERO SECTION */}
       <div style={{ position: 'relative', minHeight: '80vh', display: 'flex', alignItems: 'center', background: `linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80') center/cover`, overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '10%', right: '10%', width: '300px', height: '300px', border: `2px solid ${THEME.colors.secondary}`, borderRadius: '50%', opacity: 0.4 }}></div>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 32px', textAlign: 'center', position: 'relative', zIndex: 1, width: '100%' }}>
@@ -428,7 +483,6 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
         </div>
       </div>
 
-      {/* CATEGORÍAS */}
       <div style={{ padding: '80px 32px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
         <h2 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text }}>¿Qué tipo de inmueble necesitas?</h2>
         <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, marginBottom: '60px' }}>Elige tu categoría y deja que nuestro algoritmo haga el resto.</p>
@@ -447,7 +501,6 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
         </div>
       </div>
 
-      {/* CÓMO FUNCIONA */}
       <div style={{ padding: '80px 32px', background: THEME.colors.white }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '60px' }}>
@@ -457,7 +510,7 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
             {[
               { icon: '📝', title: '1. Crea tu IUB', desc: 'Define tu búsqueda ideal (ubicación, área, presupuesto) y genera tu Indicador Único de Búsqueda.', img: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80' },
-              { icon: '', title: '2. El Algoritmo Busca', desc: 'Nuestro motor cruza tu IUB con miles de inmuebles en tiempo real, filtrando duplicados y ruido.', img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80' },
+              { icon: '🔍', title: '2. El Algoritmo Busca', desc: 'Nuestro motor cruza tu IUB con miles de inmuebles en tiempo real, filtrando duplicados y ruido.', img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80' },
               { icon: '🤝', title: '3. Match y Cierre', desc: 'Recibe notificaciones de matches compatibles. Acepta, agenda visita y cierra el negocio.', img: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=600&q=80' }
             ].map((step, i) => (
               <div key={i} style={{ background: THEME.colors.bg, borderRadius: THEME.radius.lg, overflow: 'hidden', boxShadow: THEME.shadow, transition: 'transform 0.3s' }}
@@ -540,7 +593,7 @@ function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem, s
   return (
     <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-        <div><h2 style={{ margin: 0, color: THEME.colors.text }}>Hola, {profile?.nombre} 👋</h2><p style={{ margin: '8px 0 0 0', color: THEME.colors.textLight }}>Bienvenido a tu centro de control TerraMatch</p></div>
+        <div><h2 style={{ margin: 0, color: THEME.colors.text }}>Hola, {profile?.nombre || 'Usuario'} 👋</h2><p style={{ margin: '8px 0 0 0', color: THEME.colors.textLight }}>Bienvenido a tu centro de control TerraMatch</p></div>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button onClick={() => { setSelectedCategory('locales'); onNavigate('iub-wizard'); }} style={{ padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>+ Crear IUB</button>
           <button onClick={() => { setSelectedCategory('locales'); onNavigate('oferta-wizard'); }} style={{ padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>+ Cargar Local</button>
@@ -601,7 +654,7 @@ function IUBWizard({ user, profile, supabase, category, onNavigate }) {
         <h2 style={{ textAlign: 'center', marginBottom: '32px' }}>Indicador Único de Búsqueda</h2>
         {step === 1 && (
           <div>
-            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}> 1. Identificación</h3>
+            <h3 style={{ color: THEME.colors.primary, marginBottom: '24px' }}>👤 1. Identificación</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={labelStyle}>Nombre / Empresa *</label><input value={form.nombre} onChange={e => update('nombre', e.target.value)} style={inputStyle} /></div>
               <div><label style={labelStyle}>Identificación (C.C. / NIT) *</label><input value={form.cedula} onChange={e => update('cedula', e.target.value)} style={inputStyle} /></div>
@@ -734,7 +787,7 @@ function IUBDetailView({ item, supabase, profile, onNavigate }) {
           {matches.map(match => (
             <div key={match.id} style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
               <h4 style={{ margin: '0 0 8px 0', color: THEME.colors.text }}>{match.propiedades?.titulo}</h4>
-              <p style={{ color: THEME.colors.textLight, fontSize: '0.9rem' }}> {match.propiedades?.ciudad} ·  {match.propiedades?.area_total} m² · 💰 ${match.propiedades?.precio?.toLocaleString()}</p>
+              <p style={{ color: THEME.colors.textLight, fontSize: '0.9rem' }}>📍 {match.propiedades?.ciudad} · 📐 {match.propiedades?.area_total} m² ·  ${match.propiedades?.precio?.toLocaleString()}</p>
             </div>
           ))}
         </div>
@@ -755,7 +808,7 @@ function LocalDetailView({ item, supabase, profile, onNavigate }) {
       <button onClick={() => onNavigate('dashboard')} style={{ background: 'none', border: 'none', color: THEME.colors.primary, cursor: 'pointer', padding: 0, marginBottom: '24px' }}>← Volver al Dashboard</button>
       <div style={{ background: THEME.colors.white, padding: '32px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow, marginBottom: '32px' }}>
         <h2 style={{ margin: '0 0 16px 0', color: THEME.colors.text }}>{item.titulo}</h2>
-        <p style={{ color: THEME.colors.textLight }}>📍 {item.ciudad} · 📐 {item.area_total} m² · 💰 ${item.precio?.toLocaleString()}</p>
+        <p style={{ color: THEME.colors.textLight }}>📍 {item.ciudad} ·  {item.area_total} m² · 💰 ${item.precio?.toLocaleString()}</p>
       </div>
       <h3 style={{ color: THEME.colors.text, marginBottom: '24px' }}>IUBs interesados: {iubsInteresados.length}</h3>
       {loading ? <div style={{ textAlign: 'center', padding: '40px' }}>Cargando...</div> : iubsInteresados.length === 0 ? (
@@ -766,7 +819,7 @@ function LocalDetailView({ item, supabase, profile, onNavigate }) {
             <div key={match.id} style={{ background: THEME.colors.white, padding: '24px', borderRadius: THEME.radius.md, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
               <h4 style={{ margin: '0 0 8px 0', color: THEME.colors.text }}>{match.iubs?.codigo_iub} - {match.iubs?.nombre_completo}</h4>
               <p style={{ color: THEME.colors.textLight, fontSize: '0.9rem' }}>📍 {match.iubs?.ciudad} · 📐 {match.iubs?.area_min} m²</p>
-              <p style={{ marginTop: '12px', fontSize: '0.85rem', color: THEME.colors.textLight, fontStyle: 'italic' }}> Contacto protegido. Solicita una cita para conocer al interesado.</p>
+              <p style={{ marginTop: '12px', fontSize: '0.85rem', color: THEME.colors.textLight, fontStyle: 'italic' }}>🔒 Contacto protegido. Solicita una cita para conocer al interesado.</p>
             </div>
           ))}
         </div>
@@ -799,7 +852,7 @@ function AdminPanel({ supabase, onNavigate }) {
   return (
     <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ background: THEME.colors.dark, color: 'white', padding: '32px', borderRadius: THEME.radius.lg, marginBottom: '32px' }}>
-        <h2 style={{ margin: '0 0 8px 0' }}>️ Torre de Control (Admin)</h2>
+        <h2 style={{ margin: '0 0 8px 0' }}>🛡️ Torre de Control (Admin)</h2>
         <p style={{ margin: 0, opacity: 0.8 }}>Gestión global de Usuarios, IUBs y Locales</p>
       </div>
 
