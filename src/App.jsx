@@ -72,27 +72,36 @@ export default function App() {
   useEffect(() => { checkSession(); }, []);
   useEffect(() => { if (user) loadNotifications(); }, [user]);
 
-  async function checkSession() {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) { setUser(session.user); await loadProfile(session.user.email); setView('dashboard'); } 
-      else { setView('home'); }
-    } catch (error) { setView('home'); } finally { setLoading(false); }
-  }
-
   async function loadProfile(userEmail) {
-    try { const { data } = await supabase.from('profiles').select('*').eq('email', userEmail).single(); setProfile(data || { nombre: 'Usuario', email: userEmail }); } 
-    catch (error) { setProfile({ nombre: 'Usuario', email: userEmail }); }
+  try { 
+    const { data, error } = await supabase.from('profiles').select('*').eq('email', userEmail).single();
+    
+    if (data) {
+      setProfile(data);
+    } else {
+      // Si no existe el perfil, crearlo automáticamente
+      const { data: newUser } = await supabase.auth.getUser();
+      if (newUser?.user) {
+        const { data: newProfile } = await supabase.from('profiles').insert([{
+          id: newUser.user.id,
+          nombre: 'Nuevo',
+          apellido: 'Usuario',
+          email: userEmail,
+          celular: '',
+          categoria_preferida: 'locales',
+          acepto_terminos: false,
+          creado_en: new Date().toISOString()
+        }]).select().single();
+        
+        setProfile(newProfile || { nombre: 'Usuario', email: userEmail });
+      }
+    }
+  } 
+  catch (error) { 
+    console.error('Error cargando perfil:', error);
+    setProfile({ nombre: 'Usuario', email: userEmail }); 
   }
-
-  async function loadNotifications() {
-    if (!user) return;
-    try {
-      const { data } = await supabase.from('notificaciones').select('*').eq('user_id', user.id).order('creado_en', { ascending: false }).limit(20);
-      setNotifications(data || []);
-      setUnreadCount((data || []).filter(n => !n.leida).length);
-    } catch (error) { console.error('Error cargando notificaciones:', error); }
-  }
+}
 
   async function markAsRead(id) {
     try {
