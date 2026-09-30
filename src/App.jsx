@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import emailjs from '@emailjs/browser'; // <-- NUEVO: Importar EmailJS
+import emailjs from '@emailjs/browser';
 
 const SUPABASE_URL = 'https://wqzwwzmeetykcvhekerl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indxend3em1lZXR5a2N2aGVrZXJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNDg3OTcsImV4cCI6MjEwNTkyNDc5N30.6NJ0fA475cC5EKWGW4EYJyuSHOI9XPor41PTnWNHsRY';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ⚠️ REEMPLAZA ESTOS VALORES CON LOS TUYOS DE EMAILJS
-const EMAILJS_SERVICE_ID = 'TU_SERVICE_ID'; 
-const EMAILJS_TEMPLATE_ID = 'TU_TEMPLATE_ID';
-const EMAILJS_PUBLIC_KEY = 'TU_PUBLIC_KEY';
+// ✅ TUS CREDENCIALES DE EMAILJS YA INSERTADAS
+const EMAILJS_SERVICE_ID = 'service_ttphx4p'; 
+const EMAILJS_TEMPLATE_ID = 'template_niyhgdg';
+const EMAILJS_PUBLIC_KEY = 'xUhjgFvO907Lhhq0M';
 
 const THEME = {
   colors: { primary: '#e95442', secondary: '#b9d3dc', text: '#2d3748', textLight: '#718096', bg: '#fafafa', white: '#ffffff', success: '#48bb78', warning: '#ed8936', dark: '#1a202c', info: '#4299e1' },
@@ -216,10 +216,9 @@ export default function App() {
   );
 }
 
-// ... (Mantén HomeView, ProximamenteView, LoginView, DashboardView, IUBWizard, OfertaWizard, MasivaWizard, IUBDetailView, LocalDetailView, AdminPanel exactamente igual que en la versión anterior) ...
-// Para ahorrar espacio, aquí solo muestro la RegisterView actualizada. 
-// Asegúrate de que el resto de funciones estén en tu archivo.
-
+// ==========================================
+// REGISTER VIEW (CON EMAILJS Y CHECKBOX ACTUALIZADO)
+// ==========================================
 function RegisterView({ supabase, category, onSuccess, onNavigate }) {
   const [form, setForm] = useState({ nombre: '', apellido: '', cedula: '', email: '', celular: '' });
   const [acepta, setAcepta] = useState(false);
@@ -255,12 +254,11 @@ function RegisterView({ supabase, category, onSuccess, onNavigate }) {
         console.log('Correo de bienvenida enviado exitosamente');
       } catch (emailError) {
         console.error('Error enviando correo:', emailError);
-        // No bloqueamos el registro si falla el correo, pero lo registramos
       }
 
       onSuccess(authData.user);
     } catch (err) { 
-      setError(err.message || 'Error al crear cuenta. Es posible que el correo ya esté registrado.'); 
+      setError(err.message || 'Error al crear cuenta.'); 
     } finally { 
       setLoading(false); 
     }
@@ -286,7 +284,6 @@ function RegisterView({ supabase, category, onSuccess, onNavigate }) {
           <div><label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>Celular *</label><input placeholder="Escribe tu n° de celular" value={form.celular} onChange={e => setForm({...form, celular: e.target.value})} style={inputStyle} /></div>
         </div>
         
-        {/* ✅ CHECKBOX ACTUALIZADO CON ENLACE A TÉRMINOS */}
         <label style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '24px', cursor: 'pointer' }}>
           <input type="checkbox" checked={acepta} onChange={e => setAcepta(e.target.checked)} style={{ marginTop: '4px', transform: 'scale(1.2)' }} />
           <span style={{ fontSize: '0.9rem', color: THEME.colors.textLight, lineHeight: 1.4 }}>
@@ -301,3 +298,7 @@ function RegisterView({ supabase, category, onSuccess, onNavigate }) {
     </div>
   );
 }
+
+// ==========================================
+// (AQUÍ VAN EL RESTO DE TUS COMPONENTES: HomeView, ProximamenteView, LoginView, DashboardView, IUBWizard, OfertaWizard, MasivaWizard, IUBDetailView, LocalDetailView, AdminPanel)
+// Asegúrate de copiarlos de tu versión anterior y pegarlos justo debajo de esta línea para que el archivo esté completo.
