@@ -55,6 +55,63 @@ function Badge({ children, color = 'primary' }) {
   return <span style={{ background: colors[color].bg, color: colors[color].text, padding: '6px 14px', borderRadius: THEME.radius.full, fontSize: '0.85rem', fontWeight: 700, display: 'inline-block' }}>{children}</span>;
 }
 
+// ✅ COMPONENTE TICKER REUTILIZABLE (para Home y Dashboard)
+function TickerBar({ trm, climaBogota, climaMedellin }) {
+  return (
+    <div style={{ background: THEME.colors.dark, color: 'white', padding: '10px 0', minHeight: '38px', display: 'flex', alignItems: 'center' }}>
+      <div className="ticker-container" style={{ width: '100%' }}>
+        <div className="ticker-content">
+          {[...Array(2)].map((_, dupIndex) => (
+            <div key={dupIndex} style={{ display: 'inline-flex' }}>
+              <div className="ticker-item"><span>🔥</span><span style={{ fontWeight: 600, color: THEME.colors.success }}>TERRAMATCH ·</span><span>3 nuevos matches en Bogotá</span></div>
+              <div className="ticker-item"><span>🌤️</span><span style={{ fontWeight: 600, color: THEME.colors.secondary }}>CLIMA ·</span><span>Bogotá: {climaBogota}</span></div>
+              <div className="ticker-item"><span>💱</span><span style={{ fontWeight: 600, color: THEME.colors.secondary }}>TRM HOY ·</span><span>{trm}</span></div>
+              <div className="ticker-item"><span>📈</span><span style={{ fontWeight: 600, color: THEME.colors.success }}>TERRAMATCH ·</span><span>142 empresas buscando locales esta semana</span></div>
+              <div className="ticker-item"><span></span><span style={{ fontWeight: 600, color: THEME.colors.warning }}>PRÓXIMAMENTE ·</span><span>Bodegas y Oficinas en TerraMatch</span></div>
+              <div className="ticker-item"><span>🌦️</span><span style={{ fontWeight: 600, color: THEME.colors.secondary }}>CLIMA ·</span><span>Medellín: {climaMedellin}</span></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ✅ HOOK REUTILIZABLE para datos del ticker
+function useTickerData() {
+  const [trm, setTrm] = useState('$3.341 COP/USD');
+  const [climaBogota, setClimaBogota] = useState('18°C');
+  const [climaMedellin, setClimaMedellin] = useState('24°C');
+
+  useEffect(() => {
+    const fetchTRM = async () => {
+      try {
+        const response = await fetch('https://open.er-api.com/v6/latest/USD');
+        const data = await response.json();
+        if (data?.rates?.COP) setTrm(`$${Math.round(data.rates.COP).toLocaleString()} COP/USD`);
+      } catch (error) { setTrm('$3.341 COP/USD'); }
+    };
+    fetchTRM();
+    const interval = setInterval(fetchTRM, 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const fetchClima = async () => {
+      try {
+        const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=4.7110,6.2442&longitude=-74.0721,-75.5906&current_weather=true');
+        const data = await response.json();
+        if (data && data.length === 2) { setClimaBogota(`${Math.round(data[0].current_weather.temperature)}°C`); setClimaMedellin(`${Math.round(data[1].current_weather.temperature)}°C`); }
+      } catch (error) { console.error('Error clima:', error); }
+    };
+    fetchClima();
+    const interval = setInterval(fetchClima, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return { trm, climaBogota, climaMedellin };
+}
+
 export default function App() {
   useBrandFont();
   const [view, setView] = useState('home');
@@ -129,7 +186,7 @@ export default function App() {
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           {user ? (
             <>
-              <button onClick={() => setView('home')} style={{ background: 'none', border: 'none', fontWeight: 600, color: THEME.colors.text, padding: '8px 16px' }}>🏠 Inicio</button>
+              <button onClick={() => setView('home')} style={{ background: 'none', border: 'none', fontWeight: 600, color: THEME.colors.text, padding: '8px 16px' }}> Inicio</button>
               <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Hola, <span style={{ color: THEME.colors.primary }}>{profile?.nombre || 'Usuario'}</span></span>
               <div style={{ position: 'relative' }}>
                 <button onClick={() => setShowNotifs(!showNotifs)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', padding: '8px', cursor: 'pointer' }}>🔔{unreadCount > 0 && <span style={{ position: 'absolute', top: '0', right: '0', background: THEME.colors.primary, color: 'white', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: THEME.radius.full }}>{unreadCount}</span>}</button>
@@ -160,7 +217,9 @@ export default function App() {
         {view === 'login' && <LoginView supabase={supabase} onSuccess={(u) => { setUser(u); setView('dashboard'); }} onNavigate={setView} />}
         {view === 'dashboard' && user && <DashboardView user={user} profile={profile} supabase={supabase} onNavigate={setView} setSelectedItem={setSelectedItem} setSelectedCategory={setSelectedCategory} />}
         {view === 'iub-wizard' && user && <IUBWizard user={user} profile={profile} supabase={supabase} category={selectedCategory} onNavigate={setView} />}
+        {view === 'edit-iub' && user && selectedItem && <IUBWizard user={user} profile={profile} supabase={supabase} category={selectedCategory} onNavigate={setView} itemToEdit={selectedItem} />}
         {view === 'oferta-wizard' && user && <OfertaWizard user={user} profile={profile} supabase={supabase} category={selectedCategory} onNavigate={setView} />}
+        {view === 'edit-local' && user && selectedItem && <OfertaWizard user={user} profile={profile} supabase={supabase} category={selectedCategory} onNavigate={setView} itemToEdit={selectedItem} />}
         {view === 'masiva-wizard' && user && <MasivaWizard onNavigate={setView} />}
         {view === 'iub-detail' && user && selectedItem && <IUBDetailView item={selectedItem} supabase={supabase} onNavigate={setView} />}
         {view === 'local-detail' && user && selectedItem && <LocalDetailView item={selectedItem} supabase={supabase} onNavigate={setView} />}
@@ -245,62 +304,21 @@ function RegisterView({ supabase, category, onSuccess, onNavigate }) {
 }
 
 function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
-  const [trm, setTrm] = useState('$3.341 COP/USD');
-  const [climaBogota, setClimaBogota] = useState('18°C');
-  const [climaMedellin, setClimaMedellin] = useState('24°C');
-
-  useEffect(() => {
-    const fetchTRM = async () => {
-      try {
-        const response = await fetch('https://open.er-api.com/v6/latest/USD');
-        const data = await response.json();
-        if (data?.rates?.COP) setTrm(`$${Math.round(data.rates.COP).toLocaleString()} COP/USD`);
-      } catch (error) { setTrm('$3.341 COP/USD'); }
-    };
-    fetchTRM();
-    const interval = setInterval(fetchTRM, 30 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    const fetchClima = async () => {
-      try {
-        const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=4.7110,6.2442&longitude=-74.0721,-75.5906&current_weather=true');
-        const data = await response.json();
-        if (data && data.length === 2) { setClimaBogota(`${Math.round(data[0].current_weather.temperature)}°C`); setClimaMedellin(`${Math.round(data[1].current_weather.temperature)}°C`); }
-      } catch (error) { console.error('Error clima:', error); }
-    };
-    fetchClima();
-    const interval = setInterval(fetchClima, 60 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
+  const { trm, climaBogota, climaMedellin } = useTickerData();
 
   const categorias = [
     { id: 'locales', icon: '🏪', titulo: 'Busco/Tengo Locales', desc: 'Locales comerciales para retail, restaurantes y servicios', color: THEME.colors.primary, disponible: true },
-    { id: 'bodegas', icon: '🏭', titulo: 'Busco/Tengo Bodegas', desc: 'Bodegas industriales y centros de distribución', color: THEME.colors.warning, disponible: false },
+    { id: 'bodegas', icon: '', titulo: 'Busco/Tengo Bodegas', desc: 'Bodegas industriales y centros de distribución', color: THEME.colors.warning, disponible: false },
     { id: 'oficinas', icon: '🏢', titulo: 'Busco/Tengo Oficinas', desc: 'Oficinas corporativas y centros de negocios', color: THEME.colors.info, disponible: false },
   ];
   const handleCategoriaClick = (cat) => { setSelectedCategory(cat.id); if (cat.disponible) onNavigate('register'); else onNavigate('proximamente'); };
 
   return (
     <div>
-      <div style={{ background: THEME.colors.dark, color: 'white', padding: '10px 0', minHeight: '38px', display: 'flex', alignItems: 'center' }}>
-        <div className="ticker-container" style={{ width: '100%' }}>
-          <div className="ticker-content">
-            {[...Array(2)].map((_, dupIndex) => (
-              <div key={dupIndex} style={{ display: 'inline-flex' }}>
-                <div className="ticker-item"><span>🔥</span><span style={{ fontWeight: 600, color: THEME.colors.success }}>TERRAMATCH ·</span><span>3 nuevos matches en Bogotá</span></div>
-                <div className="ticker-item"><span>️</span><span style={{ fontWeight: 600, color: THEME.colors.secondary }}>CLIMA ·</span><span>Bogotá: {climaBogota}</span></div>
-                <div className="ticker-item"><span>💱</span><span style={{ fontWeight: 600, color: THEME.colors.secondary }}>TRM HOY ·</span><span>{trm}</span></div>
-                <div className="ticker-item"><span>📈</span><span style={{ fontWeight: 600, color: THEME.colors.success }}>TERRAMATCH ·</span><span>142 empresas buscando locales esta semana</span></div>
-                <div className="ticker-item"><span>🏢</span><span style={{ fontWeight: 600, color: THEME.colors.warning }}>PRÓXIMAMENTE ·</span><span>Bodegas y Oficinas en TerraMatch</span></div>
-                <div className="ticker-item"><span>🌦️</span><span style={{ fontWeight: 600, color: THEME.colors.secondary }}>CLIMA ·</span><span>Medellín: {climaMedellin}</span></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* ✅ TICKER EN HOME */}
+      <TickerBar trm={trm} climaBogota={climaBogota} climaMedellin={climaMedellin} />
 
+      {/* HERO */}
       <div style={{ position: 'relative', minHeight: '80vh', display: 'flex', alignItems: 'center', background: `linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80') center/cover` }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 32px', textAlign: 'center', width: '100%' }}>
           <div style={{ display: 'inline-block', background: `${THEME.colors.primary}15`, color: THEME.colors.primary, padding: '8px 20px', borderRadius: THEME.radius.full, fontSize: '0.9rem', fontWeight: 700, marginBottom: '24px' }}>La mayor comunidad de búsqueda inteligente</div>
@@ -310,6 +328,7 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
         </div>
       </div>
 
+      {/* CATEGORÍAS */}
       <div style={{ padding: '80px 32px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
         <h2 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text }}>¿Qué tipo de inmueble necesitas?</h2>
         <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, marginBottom: '60px' }}>Elige tu categoría y deja que nuestro algoritmo haga el resto.</p>
@@ -327,6 +346,109 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
           ))}
         </div>
       </div>
+
+      {/* ✅ TERRAMAGIA RESTAURADA */}
+      <div style={{ padding: '80px 32px', background: THEME.colors.white }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+            <h2 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text }}>¿Cómo funciona la <span style={{ color: THEME.colors.primary }}>TerraMagia</span>?</h2>
+            <p style={{ fontSize: '1.1rem', color: THEME.colors.textLight, maxWidth: '600px', margin: '0 auto' }}>Nuestro motor de matching trabaja 24/7 para cruzar oferta y demanda.</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+            {[
+              { icon: '📝', title: '1. Crea tu IUB', desc: 'Define tu búsqueda ideal (ubicación, área, presupuesto) y genera tu Indicador Único de Búsqueda.', img: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80' },
+              { icon: '🔍', title: '2. El Algoritmo Busca', desc: 'Nuestro motor cruza tu IUB con miles de inmuebles en tiempo real, filtrando duplicados y ruido.', img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80' },
+              { icon: '🤝', title: '3. Match y Cierre', desc: 'Recibe notificaciones de matches compatibles. Acepta, agenda visita y cierra el negocio.', img: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=600&q=80' }
+            ].map((step, i) => (
+              <div key={i} style={{ background: THEME.colors.bg, borderRadius: THEME.radius.lg, overflow: 'hidden', boxShadow: THEME.shadow, transition: 'transform 0.3s' }}
+                   onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-10px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+                <div style={{ height: '200px', background: `url(${step.img}) center/cover`, position: 'relative' }}>
+                  <div style={{ position: 'absolute', top: '20px', left: '20px', width: '60px', height: '60px', background: THEME.colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}>{step.icon}</div>
+                </div>
+                <div style={{ padding: '32px' }}>
+                  <h3 style={{ marginTop: 0, marginBottom: '12px', fontSize: '1.3rem', color: THEME.colors.text }}>{step.title}</h3>
+                  <p style={{ color: THEME.colors.textLight, lineHeight: 1.6, margin: 0 }}>{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ✅ DASHBOARD CON TICKER INTEGRADO
+function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem, setSelectedCategory }) {
+  const { trm, climaBogota, climaMedellin } = useTickerData();
+  const [tab, setTab] = useState('iubs');
+  const [iubs, setIubs] = useState([]);
+  const [locales, setLocales] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { loadData(); }, [user]);
+  async function loadData() {
+    try {
+      setLoading(true);
+      const { data: iubsData } = await supabase.from('iubs').select('*').eq('user_id', user.id).order('creado_en', { ascending: false });
+      setIubs(iubsData || []);
+      const { data: propsData } = await supabase.from('propiedades').select('*').eq('user_id', user.id).order('creado_en', { ascending: false });
+      setLocales(propsData || []);
+    } catch (error) { console.error('Error:', error); } finally { setLoading(false); }
+  }
+
+  const handleDelete = async (table, id) => {
+    if (!window.confirm('¿Estás seguro de eliminar este registro? Esta acción no se puede deshacer.')) return;
+    try {
+      const { error } = await supabase.from(table).delete().eq('id', id);
+      if (error) throw error;
+      loadData();
+    } catch (error) { alert('Error al eliminar: ' + error.message); }
+  };
+
+  return (
+    <div>
+      {/* ✅ TICKER TAMBIÉN EN DASHBOARD */}
+      <TickerBar trm={trm} climaBogota={climaBogota} climaMedellin={climaMedellin} />
+      
+      <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+          <div><h2 style={{ margin: 0, color: THEME.colors.text }}>Hola, {profile?.nombre || 'Usuario'} 👋</h2><p style={{ margin: '8px 0 0 0', color: THEME.colors.textLight }}>Bienvenido a tu centro de control TerraMatch</p></div>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button onClick={() => { setSelectedCategory('locales'); onNavigate('iub-wizard'); }} style={{ padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>+ Crear IUB (Búsqueda)</button>
+            <button onClick={() => { setSelectedCategory('locales'); onNavigate('oferta-wizard'); }} style={{ padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>+ Cargar Local (Oferta)</button>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+          <button onClick={() => setTab('iubs')} style={{ padding: '12px 24px', background: tab === 'iubs' ? THEME.colors.primary : THEME.colors.white, color: tab === 'iubs' ? 'white' : THEME.colors.text, border: tab === 'iubs' ? 'none' : '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>Mis Búsquedas / IUBs ({iubs.length})</button>
+          <button onClick={() => setTab('locales')} style={{ padding: '12px 24px', background: tab === 'locales' ? THEME.colors.primary : THEME.colors.white, color: tab === 'locales' ? 'white' : THEME.colors.text, border: tab === 'locales' ? 'none' : '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>Mis Locales ({locales.length})</button>
+        </div>
+        {loading ? <div style={{ textAlign: 'center', padding: '60px' }}>Cargando...</div> : tab === 'iubs' ? (
+          <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
+            {iubs.length === 0 ? <div style={{ padding: '60px', textAlign: 'center' }}><div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div><h3>Aún no tienes IUBs</h3><p style={{color: THEME.colors.textLight, maxWidth: '500px', margin: '16px auto'}}>Un <strong>IUB (Indicador Único de Búsqueda)</strong> es el perfil de lo que estás buscando. Crea uno para empezar a recibir matches de inmuebles compatibles.</p><button onClick={() => onNavigate('iub-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Crear mi primer IUB</button></div> : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead><tr style={{ background: '#f8f9fa', borderBottom: '2px solid #e2e8f0' }}><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>IUB</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th></tr></thead>
+                <tbody>{iubs.map((iub) => (<tr key={iub.id} style={{ borderBottom: '1px solid #e2e8f0' }}><td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{iub.codigo_iub}</td><td style={{ padding: '16px' }}>{iub.area_min || 'N/A'} m²</td><td style={{ padding: '16px' }}>{iub.ciudad}</td><td style={{ padding: '16px' }}>
+                  <button onClick={(e) => { e.stopPropagation(); setSelectedItem(iub); onNavigate('edit-iub'); }} style={{ background: THEME.colors.info, color: 'white', border: 'none', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontSize: '0.85rem', marginRight: '8px' }}>️ Editar</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleDelete('iubs', iub.id); }} style={{ background: THEME.colors.danger, color: 'white', border: 'none', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontSize: '0.85rem' }}>🗑️ Eliminar</button>
+                </td></tr>))}</tbody>
+              </table>
+            )}
+          </div>
+        ) : (
+          <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
+            {locales.length === 0 ? <div style={{ padding: '60px', textAlign: 'center' }}><div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏪</div><h3>Aún no has publicado locales</h3><button onClick={() => onNavigate('oferta-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Publicar mi primer local</button></div> : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead><tr style={{ background: '#f8f9fa', borderBottom: '2px solid #e2e8f0' }}><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CÓDIGO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TÍTULO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th></tr></thead>
+                <tbody>{locales.map((local) => (<tr key={local.id} style={{ borderBottom: '1px solid #e2e8f0' }}><td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{local.codigo_propiedad || 'SIN ID'}</td><td style={{ padding: '16px', fontWeight: 600 }}>{local.titulo || 'Sin título'}</td><td style={{ padding: '16px' }}>{local.ciudad}</td><td style={{ padding: '16px' }}>
+                  <button onClick={(e) => { e.stopPropagation(); setSelectedItem(local); onNavigate('edit-local'); }} style={{ background: THEME.colors.info, color: 'white', border: 'none', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontSize: '0.85rem', marginRight: '8px' }}>✏️ Editar</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleDelete('propiedades', local.id); }} style={{ background: THEME.colors.danger, color: 'white', border: 'none', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontSize: '0.85rem' }}>🗑️ Eliminar</button>
+                </td></tr>))}</tbody>
+              </table>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -334,7 +456,7 @@ function HomeView({ onNavigate, selectedCategory, setSelectedCategory }) {
 function ProximamenteView({ category, onNavigate }) {
   return (
     <div style={{ padding: '60px 32px', maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text }}>️ Próximamente</h1>
+      <h1 style={{ fontSize: '2.5rem', marginBottom: '16px', color: THEME.colors.text }}>🏗️ Próximamente</h1>
       <p style={{ fontSize: '1.2rem', color: THEME.colors.textLight, marginBottom: '32px' }}>Estamos preparando esta categoría con campos específicos para ti.</p>
       <button onClick={() => onNavigate('home')} style={{ padding: '14px 32px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>← Volver al Inicio</button>
     </div>
@@ -370,82 +492,22 @@ function LoginView({ supabase, onSuccess, onNavigate }) {
   );
 }
 
-function DashboardView({ user, profile, supabase, onNavigate, setSelectedItem, setSelectedCategory }) {
-  const [tab, setTab] = useState('iubs');
-  const [iubs, setIubs] = useState([]);
-  const [locales, setLocales] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => { loadData(); }, [user]);
-  async function loadData() {
-    try {
-      setLoading(true);
-      const { data: iubsData } = await supabase.from('iubs').select('*').eq('user_id', user.id).order('creado_en', { ascending: false });
-      setIubs(iubsData || []);
-      const { data: propsData } = await supabase.from('propiedades').select('*').eq('user_id', user.id).order('creado_en', { ascending: false });
-      setLocales(propsData || []);
-    } catch (error) { console.error('Error:', error); } finally { setLoading(false); }
-  }
-
-  const handleDelete = async (table, id) => {
-    if (!window.confirm('¿Estás seguro de eliminar este registro? Esta acción no se puede deshacer.')) return;
-    try {
-      const { error } = await supabase.from(table).delete().eq('id', id);
-      if (error) throw error;
-      loadData();
-    } catch (error) { alert('Error al eliminar: ' + error.message); }
-  };
-
-  return (
-    <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-        <div><h2 style={{ margin: 0, color: THEME.colors.text }}>Hola, {profile?.nombre || 'Usuario'} 👋</h2><p style={{ margin: '8px 0 0 0', color: THEME.colors.textLight }}>Bienvenido a tu centro de control TerraMatch</p></div>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button onClick={() => { setSelectedCategory('locales'); onNavigate('iub-wizard'); }} style={{ padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>+ Crear IUB (Búsqueda)</button>
-          <button onClick={() => { setSelectedCategory('locales'); onNavigate('oferta-wizard'); }} style={{ padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>+ Cargar Local (Oferta)</button>
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-        <button onClick={() => setTab('iubs')} style={{ padding: '12px 24px', background: tab === 'iubs' ? THEME.colors.primary : THEME.colors.white, color: tab === 'iubs' ? 'white' : THEME.colors.text, border: tab === 'iubs' ? 'none' : '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>Mis Búsquedas / IUBs ({iubs.length})</button>
-        <button onClick={() => setTab('locales')} style={{ padding: '12px 24px', background: tab === 'locales' ? THEME.colors.primary : THEME.colors.white, color: tab === 'locales' ? 'white' : THEME.colors.text, border: tab === 'locales' ? 'none' : '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 700, cursor: 'pointer' }}>Mis Locales ({locales.length})</button>
-      </div>
-      {loading ? <div style={{ textAlign: 'center', padding: '60px' }}>Cargando...</div> : tab === 'iubs' ? (
-        <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
-          {iubs.length === 0 ? <div style={{ padding: '60px', textAlign: 'center' }}><div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div><h3>Aún no tienes IUBs</h3><p style={{color: THEME.colors.textLight, maxWidth: '500px', margin: '16px auto'}}>Un <strong>IUB (Indicador Único de Búsqueda)</strong> es el perfil de lo que estás buscando. Crea uno para empezar a recibir matches de inmuebles compatibles.</p><button onClick={() => onNavigate('iub-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Crear mi primer IUB</button></div> : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead><tr style={{ background: '#f8f9fa', borderBottom: '2px solid #e2e8f0' }}><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>IUB</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ÁREA</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th></tr></thead>
-              <tbody>{iubs.map((iub) => (<tr key={iub.id} style={{ borderBottom: '1px solid #e2e8f0' }}><td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{iub.codigo_iub}</td><td style={{ padding: '16px' }}>{iub.area_min || 'N/A'} m²</td><td style={{ padding: '16px' }}>{iub.ciudad}</td><td style={{ padding: '16px' }}><button onClick={() => handleDelete('iubs', iub.id)} style={{ background: THEME.colors.danger, color: 'white', border: 'none', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontSize: '0.85rem' }}>🗑️ Eliminar</button></td></tr>))}</tbody>
-            </table>
-          )}
-        </div>
-      ) : (
-        <div style={{ background: THEME.colors.white, borderRadius: THEME.radius.md, boxShadow: THEME.shadow, overflow: 'hidden' }}>
-          {locales.length === 0 ? <div style={{ padding: '60px', textAlign: 'center' }}><div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏪</div><h3>Aún no has publicado locales</h3><button onClick={() => onNavigate('oferta-wizard')} style={{ marginTop: '20px', padding: '12px 24px', background: THEME.colors.dark, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>Publicar mi primer local</button></div> : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead><tr style={{ background: '#f8f9fa', borderBottom: '2px solid #e2e8f0' }}><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CÓDIGO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>TÍTULO</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>CIUDAD</th><th style={{ padding: '16px', fontWeight: 700, color: THEME.colors.textLight, fontSize: '0.85rem' }}>ACCIÓN</th></tr></thead>
-              <tbody>{locales.map((local) => (<tr key={local.id} style={{ borderBottom: '1px solid #e2e8f0' }}><td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700, color: THEME.colors.primary }}>{local.codigo_propiedad || 'SIN ID'}</td><td style={{ padding: '16px', fontWeight: 600 }}>{local.titulo || 'Sin título'}</td><td style={{ padding: '16px' }}>{local.ciudad}</td><td style={{ padding: '16px' }}><button onClick={() => handleDelete('propiedades', local.id)} style={{ background: THEME.colors.danger, color: 'white', border: 'none', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontSize: '0.85rem' }}>️ Eliminar</button></td></tr>))}</tbody>
-            </table>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function IUBWizard({ user, profile, supabase, category, onNavigate }) {
+function IUBWizard({ user, profile, supabase, category, onNavigate, itemToEdit }) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // ✅ Si hay itemToEdit, pre-llenar con sus datos
   const [form, setForm] = useState({ 
-    nombre: profile?.nombre || '', 
-    cedula: '', 
-    email: profile?.email || '', 
-    celular: profile?.celular || '', 
-    ciudad: 'Bogotá', 
-    zona: 'Norte', 
-    tipo_negocio: 'Arriendo', 
-    area_total: '', 
-    canon_arriendo: '' 
+    nombre: itemToEdit?.nombre_completo || profile?.nombre || '', 
+    cedula: itemToEdit?.nit_cedula || '', 
+    email: itemToEdit?.email_contacto || profile?.email || '', 
+    celular: itemToEdit?.celular || profile?.celular || '', 
+    ciudad: itemToEdit?.ciudad || 'Bogotá', 
+    zona: itemToEdit?.zona || 'Norte', 
+    tipo_negocio: itemToEdit?.tipo_negocio || 'Arriendo', 
+    area_total: itemToEdit?.area_min ? String(itemToEdit.area_min) : '', 
+    canon_arriendo: itemToEdit?.canon_arriendo ? String(itemToEdit.canon_arriendo) : '' 
   });
   
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
@@ -456,13 +518,24 @@ function IUBWizard({ user, profile, supabase, category, onNavigate }) {
     
     setLoading(true); setError('');
     try {
-      const codigoIub = `IUB${Math.floor(Math.random() * 900000) + 100000}`;
       const area = parseFloat(form.area_total);
-      const { error } = await supabase.from('iubs').insert([{ 
-        user_id: user.id, codigo_iub: codigoIub, segmentos: 'Locales', nombre_completo: form.nombre, nit_cedula: form.cedula, email_contacto: form.email, celular: form.celular, ciudad: form.ciudad, zona: form.zona, tipo_negocio: form.tipo_negocio, area_min: area, area_max: area * 1.1, canon_arriendo: form.canon_arriendo ? parseFloat(form.canon_arriendo) : null, estado: 'activo' 
-      }]);
-      if (error) throw error;
-      alert(`¡IUB ${codigoIub} creado exitosamente!`);
+      
+      if (itemToEdit) {
+        // ✅ MODO EDICIÓN: Actualizar registro existente
+        const { error } = await supabase.from('iubs').update({ 
+          nombre_completo: form.nombre, nit_cedula: form.cedula, email_contacto: form.email, celular: form.celular, ciudad: form.ciudad, zona: form.zona, tipo_negocio: form.tipo_negocio, area_min: area, area_max: area * 1.1, canon_arriendo: form.canon_arriendo ? parseFloat(form.canon_arriendo) : null
+        }).eq('id', itemToEdit.id);
+        if (error) throw error;
+        alert(`✅ IUB ${itemToEdit.codigo_iub} actualizado exitosamente.`);
+      } else {
+        // ✅ MODO CREACIÓN: Insertar nuevo registro
+        const codigoIub = `IUB${Math.floor(Math.random() * 900000) + 100000}`;
+        const { error } = await supabase.from('iubs').insert([{ 
+          user_id: user.id, codigo_iub: codigoIub, segmentos: 'Locales', nombre_completo: form.nombre, nit_cedula: form.cedula, email_contacto: form.email, celular: form.celular, ciudad: form.ciudad, zona: form.zona, tipo_negocio: form.tipo_negocio, area_min: area, area_max: area * 1.1, canon_arriendo: form.canon_arriendo ? parseFloat(form.canon_arriendo) : null, estado: 'activo' 
+        }]);
+        if (error) throw error;
+        alert(`¡IUB ${codigoIub} creado exitosamente!`);
+      }
       onNavigate('dashboard');
     } catch (err) { setError('Error: ' + err.message); } finally { setLoading(false); }
   };
@@ -474,8 +547,8 @@ function IUBWizard({ user, profile, supabase, category, onNavigate }) {
     <div style={{ padding: '40px 32px', maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ background: THEME.colors.white, padding: '48px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow }}>
         <button onClick={() => onNavigate('dashboard')} style={{ background: 'none', border: 'none', color: THEME.colors.primary, cursor: 'pointer', padding: 0, marginBottom: '24px' }}>← Volver al Dashboard</button>
-        <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Crear IUB (Indicador Único de Búsqueda)</h2>
-        <p style={{ textAlign: 'center', color: THEME.colors.textLight, marginBottom: '32px' }}>Paso {step} de 2: Cuéntanos qué estás buscando.</p>
+        <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>{itemToEdit ? '✏️ Editar IUB' : 'Crear IUB'} (Indicador Único de Búsqueda)</h2>
+        <p style={{ textAlign: 'center', color: THEME.colors.textLight, marginBottom: '32px' }}>Paso {step} de 2: {itemToEdit ? 'Modifica los datos de tu búsqueda' : 'Cuéntanos qué estás buscando'}.</p>
         {error && <div style={{ background: '#fff5f5', color: THEME.colors.primary, padding: '12px', borderRadius: THEME.radius.sm, marginBottom: '16px', textAlign: 'center' }}>{error}</div>}
         
         {step === 1 && (
@@ -508,15 +581,22 @@ function IUBWizard({ user, profile, supabase, category, onNavigate }) {
         )}
         <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
           {step > 1 && <button onClick={() => { setStep(step - 1); setError(''); }} style={{ flex: 1, padding: '14px', background: 'white', border: '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 600 }}>ATRÁS</button>}
-          {step < 2 ? (<button onClick={() => { setError(''); setStep(step + 1); }} style={{ flex: 2, padding: '14px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>SIGUIENTE →</button>) : (<button onClick={handleSubmit} disabled={loading} style={{ flex: 2, padding: '14px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>{loading ? 'Creando...' : '✓ CREAR IUB'}</button>)}
+          {step < 2 ? (<button onClick={() => { setError(''); setStep(step + 1); }} style={{ flex: 2, padding: '14px', background: THEME.colors.primary, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>SIGUIENTE →</button>) : (<button onClick={handleSubmit} disabled={loading} style={{ flex: 2, padding: '14px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>{loading ? 'Guardando...' : (itemToEdit ? '✓ ACTUALIZAR IUB' : '✓ CREAR IUB')}</button>)}
         </div>
       </div>
     </div>
   );
 }
 
-function OfertaWizard({ user, profile, supabase, category, onNavigate }) {
-  const [form, setForm] = useState({ titulo: '', ciudad: 'Bogotá', direccion: '', area: '', valorCanon: '' });
+function OfertaWizard({ user, profile, supabase, category, onNavigate, itemToEdit }) {
+  const [form, setForm] = useState({ 
+    titulo: itemToEdit?.titulo || '', 
+    ciudad: itemToEdit?.ciudad || 'Bogotá', 
+    direccion: itemToEdit?.direccion || '', 
+    area: itemToEdit?.area_total ? String(itemToEdit.area_total) : '', 
+    valorCanon: itemToEdit?.precio ? String(itemToEdit.precio) : '',
+    operacion: itemToEdit?.operacion || 'arrendar'
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -525,12 +605,22 @@ function OfertaWizard({ user, profile, supabase, category, onNavigate }) {
     
     setLoading(true); setError('');
     try {
-      const codigoProp = `LOC${Math.floor(Math.random() * 900000) + 100000}`;
-      const { error } = await supabase.from('propiedades').insert([{ 
-        user_id: user.id, codigo_propiedad: codigoProp, titulo: form.titulo, ciudad: form.ciudad, direccion: form.direccion, segmento: 'locales', tipo_inmueble: 'local', operacion: 'arrendar', area_total: parseFloat(form.area), precio: parseFloat(form.valorCanon) || 0, disponible: true, estado: 'activo' 
-      }]);
-      if (error) throw error;
-      alert(`¡Local publicado exitosamente! Código: ${codigoProp}`);
+      const dataToUpdate = {
+        titulo: form.titulo, ciudad: form.ciudad, direccion: form.direccion, segmento: 'locales', tipo_inmueble: 'local', operacion: form.operacion, area_total: parseFloat(form.area), precio: parseFloat(form.valorCanon) || 0, disponible: true, estado: 'activo'
+      };
+      
+      if (itemToEdit) {
+        // ✅ MODO EDICIÓN
+        const { error } = await supabase.from('propiedades').update(dataToUpdate).eq('id', itemToEdit.id);
+        if (error) throw error;
+        alert(`✅ Local ${itemToEdit.codigo_propiedad} actualizado exitosamente.`);
+      } else {
+        // ✅ MODO CREACIÓN
+        const codigoProp = `LOC${Math.floor(Math.random() * 900000) + 100000}`;
+        const { error } = await supabase.from('propiedades').insert([{ user_id: user.id, codigo_propiedad: codigoProp, ...dataToUpdate }]);
+        if (error) throw error;
+        alert(`¡Local publicado exitosamente! Código: ${codigoProp}`);
+      }
       onNavigate('dashboard');
     } catch (err) { setError('Error: ' + err.message); } finally { setLoading(false); }
   };
@@ -542,8 +632,8 @@ function OfertaWizard({ user, profile, supabase, category, onNavigate }) {
     <div style={{ padding: '40px 32px', maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ background: THEME.colors.white, padding: '48px', borderRadius: THEME.radius.lg, boxShadow: THEME.shadow }}>
         <button onClick={() => onNavigate('dashboard')} style={{ background: 'none', border: 'none', color: THEME.colors.primary, cursor: 'pointer', padding: 0, marginBottom: '24px' }}>← Volver al Dashboard</button>
-        <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Cargar Local (Oferta)</h2>
-        <p style={{ textAlign: 'center', color: THEME.colors.textLight, marginBottom: '32px' }}>Completa los datos de tu inmueble.</p>
+        <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>{itemToEdit ? '✏️ Editar Local' : 'Cargar Local'} (Oferta)</h2>
+        <p style={{ textAlign: 'center', color: THEME.colors.textLight, marginBottom: '32px' }}>{itemToEdit ? 'Modifica los datos de tu inmueble' : 'Completa los datos de tu inmueble'}.</p>
         {error && <div style={{ background: '#fff5f5', color: THEME.colors.primary, padding: '12px', borderRadius: THEME.radius.sm, marginBottom: '16px', textAlign: 'center' }}>{error}</div>}
         
         <label style={labelStyle}>Nombre / Título del Inmueble *</label>
@@ -556,9 +646,14 @@ function OfertaWizard({ user, profile, supabase, category, onNavigate }) {
           <div><label style={labelStyle}>Área Total (m²) *</label><input type="number" placeholder="Ej: 100" value={form.area} onChange={e => setForm({...form, area: e.target.value})} style={inputStyle} /></div>
           <div><label style={labelStyle}>Valor canon mensual ($)</label><input type="number" placeholder="Ej: 5000000" value={form.valorCanon} onChange={e => setForm({...form, valorCanon: e.target.value})} style={inputStyle} /></div>
         </div>
+        <label style={labelStyle}>Tipo de Operación</label>
+        <select value={form.operacion} onChange={e => setForm({...form, operacion: e.target.value})} style={inputStyle}>
+          <option value="arrendar">Arriendo</option>
+          <option value="vender">Venta</option>
+        </select>
         <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
           <button onClick={() => onNavigate('dashboard')} style={{ flex: 1, padding: '14px', background: 'white', border: '1px solid #e2e8f0', borderRadius: THEME.radius.full, fontWeight: 600 }}>CANCELAR</button>
-          <button onClick={handleSubmit} disabled={loading} style={{ flex: 2, padding: '14px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>{loading ? 'Publicando...' : '✓ PUBLICAR LOCAL'}</button>
+          <button onClick={handleSubmit} disabled={loading} style={{ flex: 2, padding: '14px', background: THEME.colors.success, color: 'white', border: 'none', borderRadius: THEME.radius.full, fontWeight: 700 }}>{loading ? 'Guardando...' : (itemToEdit ? '✓ ACTUALIZAR LOCAL' : '✓ PUBLICAR LOCAL')}</button>
         </div>
       </div>
     </div>
@@ -662,7 +757,7 @@ function AdminPanel({ supabase, onNavigate, setSelectedItem }) {
   return (
     <div style={{ padding: '40px 32px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ background: THEME.colors.dark, color: 'white', padding: '32px', borderRadius: THEME.radius.lg, marginBottom: '32px' }}>
-        <h2 style={{ margin: '0 0 8px 0' }}>🛡️ Torre de Control (Admin)</h2>
+        <h2 style={{ margin: '0 0 8px 0' }}>️ Torre de Control (Admin)</h2>
         <p style={{ margin: 0, opacity: 0.8 }}>Gestión global de Usuarios, IUBs y Locales</p>
       </div>
 
